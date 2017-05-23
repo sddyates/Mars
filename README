@@ -1,3 +1,22 @@
-This is a README
 
-And this is some of the things I want to say
+    Moving mesh AstRophysics on a Stellar scale.
+    -           -  -              -
+    --------------------------------------------
+
+       \\\\\\\\\      /\     |\\\\\  /\\\\\
+       ||  ||  \\    //\\    ||   \\ ||
+       ||  ||  ||   //  \\   ||\\\\  \\\\\\
+       ||  ||  ||  //====\\  ||   \\     ||
+       ||  ||  || //      \\ ||   \\ \\\\\/ 0.1
+
+    --------------------------------------------
+  This Code is in tended to be used by the Astrophysics 
+  community as a tool to investigate hydrodynamics and 
+  magnetihydrodynamics on a stellar scale. That is to 
+  say, that this code is a responce to the many 
+  astrohysics fluid codes in the community which are 
+  written from the point of view of cosmology reseach.
+
+  While this area is an extreamly important (said to 
+  prevent my partner from killing me). Stellar scale 
+  astrophysics is
