@@ -184,7 +184,7 @@ class Evolve:
                     lower_flux[var] = FL[var, 1]
                 
                 # Upper face:
-                UFR = self.cons_to_prims(UFL, para)
+                UFR = self.cons_to_prims(FR, para)
                 lam = self.Eigenvalues(UFR[rho, :], UFR[prs, :], UFR[vx1, :], para)
                 smax = max(lam)
                 smin = min(lam)
