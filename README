@@ -1,6 +1,4 @@
 
-    Moving mesh AstRophysics on a Stellar scale.
-    -           -  -              -
     --------------------------------------------
 
        \\\\\\\\\      /\     |\\\\\  /\\\\\
@@ -10,13 +8,9 @@
        ||  ||  || //      \\ ||   \\ \\\\\/ 0.1
 
     --------------------------------------------
-  This Code is in tended to be used by the Astrophysics 
-  community as a tool to investigate hydrodynamics and 
-  magnetihydrodynamics on a stellar scale. That is to 
-  say, that this code is a responce to the many 
-  astrohysics fluid codes in the community which are 
-  written from the point of view of cosmology reseach.
+  This Code is in tended to be used by as a learning 
+  code and a test bed for python optimisation via the 
+  numpy and scipy modules.
 
-  While this area is an extreamly important (said to 
-  prevent my partner from killing me). Stellar scale 
-  astrophysics is
+  The code is heavily inspired by the code PLUTO and 
+  all creddit goes to its developers.
