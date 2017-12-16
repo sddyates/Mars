@@ -1,264 +1,355 @@
 import numpy as np
-from output import Mesh_plot
-from grid import Boundary 
+from globe import *
+import sys
+import matplotlib.pyplot as plt
+np.set_printoptions(precision=3)
 
 class Evolve:
 
-    def __call__(self, U, g, para):
-        t = 0.0
-        while (t < para['t_max']):
+    def __init__(self):
+        None
 
-            dt, vx_max, vy_max = self.time_step(U, g, para)
-            U = self.TimeStep(U, dt, g, para)
-            t += dt
-            Boundary(U, g, para)
-            if np.mod(int(t), 1) == 0:
-                Mesh_plot(U, g, t)
-            print('t = {:.5f}, dt = {:.5f}, vx_max = {:.5f}, vy_max = {:.5f}'.format(t, dt, vx_max, vy_max))
+    def incriment(self, U, dt, g, p):
+        """
+        Synopsis
+        --------
+        Evolve the simulation domain though one 
+        time step.
 
-    def TimeStep(self, U, dt, g, para):
+        Args
+        ----
+        U: numpy array-like
+            State vector containing the hole solution 
+            and all variables
 
-        rho = 0
-        prs = 1
-        vx = 2
-        vy =3
+        dt: double-like
+            Time step, in simulation units.
 
-        if para['time stepping'] == 'Euler':
-            U_old = U
-            U_new = np.zeros_like(U)
-            for i in range(g.ibeg(), g.iend()-1):                                       
-                for j in range(g.jbeg(), g.jend()-1):
-                    dFdx = self.Riemann(U[[rho, prs, vx, vy], i-g.nxg:i+g.nxg+1, j], g, para)
-                    dFdy = self.Riemann(U[[rho, prs, vy, vx], i, j-g.nyg:j+g.nyg+1], g, para)
-                    for var in range(g.nvar):
-                        U_new[var, i, j] = U_old[var, i, j] - dt*(dFdx[var] + dFdy[var])
+        g: object-like
+            Object containing all variables related to 
+            the grid, e.g. cell width.
 
-            
-        if para['time stepping'] == 'RK2':
-            U_old = U
-            U_new = np.zeros_like(U)
+        p: dic-like
+            Dictionary of user defined ps, e.g. 
+            maximum simulation time.        
 
-            # k1 step.         
-            for i in range(g.ibeg(), g.iend()-1):                                       
-                for j in range(g.jbeg(), g.jend()-1):
-                    dFdx = self.Riemann(U[[0, 1, 2, 3], i-g.nxg:i+g.nxg+1, j], g, para)
-                    dFdy = self.Riemann(U[[0, 1, 3, 2], i, j-g.nyg:j+g.nyg+1], g, para)
-                    for var in range(g.nvar):
-                        U[var, i, j] = U_old[var, i, j] - 0.5*dt*(dFdx[var] + dFdy[var])
+        Attributes
+        ----------
+        None.
+
+        TODO
+        ----
+        None
+        """
+
+        # Convert primitive to conservative variables.
+        Q = self._prims_to_cons(U, p['gamma'], p['Dimensions'])
+
+        # Time step with Euler.
+        if p['time stepping'] == 'Euler':
+            Q_new = Q + dt/g.dxi*self._flux(Q, g, p)
+
+        
+        # Time step with RK2.
+        elif p['time stepping'] == 'RK2':
+
+            # k1 step.
+            Q_star = Q + 0.5*dt*self._flux(Q, g, p)
 
             # Reaply boundary conditions.
-            Boundary(U, g, para)
+            g.boundary(Q_star, p)
 
             # k2 step.
-            for i in range(g.ibeg(), g.iend()-1):                                       
-                for j in range(g.jbeg(), g.jend()-1):
-                    dFdx = self.Riemann(U[[0, 1, 2, 3], i-g.nxg:i+g.nxg+1, j], g, para)
-                    dFdy = self.Riemann(U[[0, 1, 3, 2], i, j-g.nyg:j+g.nyg+1], g, para)
-                    for var in range(g.nvar):
-                        U_new[var, i, j] = U_old[var, i, j] - 0.5*dt*(dFdx[var] + dFdy[var])
+            Q_new = Q_star + 0.5*dt*self._flux(Q_star, g, p)
+        
+        else:
+            print('Error: Invalid integrator.')
+            sys.exit()
 
-        if para['time stepping'] == 'ChrT':
-            q = self.prims_to_cons(U, para)
-            del(U)
+        # Convert primitive to conservative variables.
+        U = self._cons_to_prims(Q_new, p['gamma'], p['Dimensions'])
 
-            # Do space loop and Reimann.
+        if np.isnan(np.sum(U)):
+            print("Error, nan in array, function: incriment")
+            sys.exit()
 
-            U = self.cons_to_prims(q, para)
-            del(q)
+        return U
 
-        return U_new
+    def _flux(self, Q, g, p):
 
-    def Reconstruction(self, a, g, para):
+        dflux_x1 = np.zeros(shape=Q.shape)
+
+        if p['Dimensions'] == '1D':
+            face_flux_x1 = self._riemann(Q, g, p, 'i')
+            dflux_x1[:, g.ibeg:g.iend] = (face_flux_x1[:, :-1] - face_flux_x1[:, 1:])
+
+            dflux = dflux_x1
+
         '''
-        flat:
-            L   R
-           0 1 0 1
-         ___|___|___
-        |   |   |   | 0
-        |___|___|___|
-          0   1   2  
-              i
+        if p['Dimensions'] == '2D':
+            dflux_x2 = np.zeros(shape=Q.shape)
+            # Transvers loop over columns in x1.
+            for j in range(g.jbeg, g.jend):
+                face_flux_x1 = self._riemann(Q[:, j, :], g, p, 'i')
+                dflux_x1[:, j, g.ibeg:g.iend] = -1.0/g.da*(g.dx2*face_flux_x1[:, :-1] - g.dx2*face_flux_x1[:, 1:])
 
-        Linear:
-                L   R
-               0 1 0 1
-         ___ ___|___|___ ___
-        |   |   |   |   |   |
-        |___|___|___|___|___|
-          0   1   2   3   4
+            # Transvers loop over columns in x2.
+            for i in range(g.ibeg, g.iend):                                       
+                face_flux_x2 = self._riemann(Q[:, :, i], g, p, 'j')
+                dflux_x2[:, g.jbeg:g.jend, i] = -1.0/g.da*(g.dx1*face_flux_x2[:, :-1] - g.dx1*face_flux_x2[:, 1:])
+
+            dflux = dflux_x1 + dflux_x2
+        '''
+
+        if np.isnan(np.sum(dflux)):
+            print("Error, nan in array, function: flux")
+            sys.exit()
+
+        return dflux
+
+
+    def _reconstruction(self, y, g, p, axis):
+        '''
+                                  
+                    G                         G
+          ^  ___ ___|_____ ...________________|_______
+        y | |   |   |   |     |   |   |   |   |   |   |
+            |___|___|___|_ ...|___|___|___|___|___|___|
+              0   1   2    ...   
                   i
+                 _______ ...__________________
+             L  |   |   |     |   |   |   |   |
+                |___|___|...__|___|___|___|___|
+
+                     _______ ...__________________
+                  R |   |   |     |   |   |   |   |
+                    |___|___|...__|___|___|___|___|
+
+                   _______ ...__________________
+             flux |   |   |     |   |   |   |   |
+                  |___|___|...__|___|___|___|___|
+
         '''
-        L = np.zeros((g.nvar, 2))
-        R = np.zeros_like(L)
-        if para['reconstruction'] == 'flat':
-            L[:, 0] = a[:, 0]
-            L[:, 1] = a[:, 1]
-            R[:, 0] = a[:, 1]
-            R[:, 1] = a[:, 2]
+        if axis == 'i':
+            dxi = g.dx1
+        if axis == 'j':
+            dxi = g.dx2
 
-        if para['reconstruction'] == 'linear':
+        if p['reconstruction'] == 'flat':
+            L = y[:, :-g.ghost_zones]
+            R = y[:, g.ghost_zones:]
 
-            def linear(a, dx, nvar, para):
-                
-                if para['limiter'] == None:
-                    grad = (a[:, 2] - a[:, 0])/(2.0*dx)
+        elif p['reconstruction'] == 'linear':
 
-                if para['limiter'] == 'minmod':
-                    grad = np.zeros(nvar)
-                    for var in range(nvar):
-                        b = (a[var, 1] - a[var, 0])/dx
-                        c = (a[var, 2] - a[var, 1])/dx
-                        if abs(b) < abs(c) and b*c > 0.0:
-                            grad[var] = b
-                        elif abs(b) > abs(c) and b*c > 0.0:
-                            grad[var] = c
-                        else:
-                            grad[var] = 0.0
-                    
-                return a[:, 1] + grad*dx/2.0 
+            def linear(y, dxi, p, side):                
 
-            ''' These are the states on either side of the left 
-                and right hand interfaces of the cell. '''
-            L[:, 0] = linear(a[:, 0:3], g.dx(), g.nvar, para)
-            L[:, 1] = linear(a[:, 1:4], g.dx(), g.nvar, para)
-            R[:, 0] = linear(a[:, 1:4], g.dx(), g.nvar, para)
-            R[:, 1] = linear(a[:, 2:5], g.dx(), g.nvar, para)
+                if p['limiter'] == None:                    
+                    m = np.gradient(y, dxi, axis=1)
+
+                elif p['limiter'] == 'minmod':               
+                    a = (y[:, 1:-1] - y[:, :-g.ghost_zones])/dxi 
+                    b = (y[:, g.ghost_zones:] - y[:, 1:-1])/dxi
+                    m = np.zeros(shape=a.shape)
+
+                    # Pythonic witchcraft:
+                    slicing1 = np.where((abs(a) < abs(b)) & (a*b > 0.0))
+                    slicing2 = np.where((abs(a) > abs(b)) & (a*b > 0.0))
+                    slicing3 = np.where(a*b < 0.0)
+                    m[slicing1] = a[slicing1]
+                    m[slicing2] = b[slicing2]
+                    m[slicing3] = 0.0
+
+                else:
+                    print('Error: Invalid limiter.')
+                    sys.exit()
+
+                if side == 'left':
+                    return y[:, g.ghost_zones - 1:-g.ghost_zones] \
+                           + m[:, :-1]/2.0*dxi
+                if side == 'right':
+                    return y[:, g.ghost_zones:-g.ghost_zones + 1] \
+                          - m[:, 1:]/2.0*dxi
+
+            L = linear(y, dxi, p, 'left')
+            R = linear(y, dxi, p, 'right')
+
+        else:
+            print('Error: Invalid reconstructor.')
+            sys.exit()
+
+        if np.isnan(np.sum(L)) or np.isnan(np.sum(R)):
+            print("Error, nan in array, function: reconstruction")
+            sys.exit()
 
         return L, R
 
-    def Riemann(self, U, g, para):
+
+    def _riemann(self, Q, g, p, axis):
         '''
         Returns the difference in flux dF/dxi 
         between the left and right cell edges
-        for both the x and y dimensions.
+        in the .
         '''
-        rho = 0
-        prs = 1
-        vx1 = 2
-        vx2 = 3
 
-        rho = 0
-        eng = 1
-        mvx1 = 2
-        mvx2 = 3
+        #Initialise arrays to hold flux vales.
+        if axis == 'i':
+            flux = np.zeros(shape=g.shape_flux_x1)
+            FR = np.zeros(shape=g.shape_flux_x1)
+            FL = np.zeros(shape=g.shape_flux_x1)
+        if axis == 'j':
+            flux = np.zeros(shape=g.shape_flux_x2)
+            FR = np.zeros(shape=g.shape_flux_x2)
+            FL = np.zeros(shape=g.shape_flux_x2)
 
-        #U = np.array([RHO, PRS, VX1, VX2])
+        # Obtain the states on the left (L) and right (R) faces of 
+        # the cell for the conservative variables.
+        QL, QR = self._reconstruction(Q, g, p, axis)
 
-        FL = np.zeros((g.nvar, 2))
-        FR = np.zeros_like(FL)
+        # Construct the flux tensor 
+        # either side of interface.
+        FL = self._flux_tensor(QL, axis, p['gamma'], p['Dimensions'])
+        FR = self._flux_tensor(QR, axis, p['gamma'], p['Dimensions'])
 
-        lower_flux = np.zeros(g.nvar)
-        upper_flux = np.zeros(g.nvar)
+        if p['riemann'] == 'hll':
 
-        q = self.prims_to_cons(U, para)
-        qL, qR = self.Reconstruction(q, g, para)
-        UL, UR = self.Reconstruction(U, g, para)
+            SL, SR = self._eigenvalues(QL, QR, p['gamma'], axis, p['Dimensions'])
 
-        if para['riemann'] == 'hll':
+            slicing1 = np.where(SL > 0.0)
+            slicing2 = np.where((SL <= 0.0) & (0.0 <= SR))
+            slicing3 = np.where(SR < 0.0)
 
-            for m in range(2):
-                # Left of face:
-                FL[rho, m] = UL[rho, m]*UL[vx1, m]
-                FL[eng, m] = UL[vx1, m]*(qL[eng, m] + UL[prs, m]) #(UL[prs, m]*qL[eng, m] + 0.5*UL[rho, m]*UL[vx1, m]*UL[vx1, m] + UL[prs, m])*UL[vx1, m]
-                FL[mvx1, m] = UL[rho, m]*UL[vx1, m]*UL[vx1, m] + UL[prs, m]
-                FL[mvx2, m] = UL[rho, m]*UL[vx2, m]*UL[vx1, m]
-
-                # Right of face:
-                FR[rho, m] = UR[rho, m]*UR[vx1, m]
-                FR[eng, m] = UR[vx1, m]*(qR[eng, m] + UR[prs, m]) #(UR[prs, m]*qR[eng, m] + 0.5*UR[rho, m]*UR[vx1, m]*UR[vx1, m] + UR[prs, m])*UR[vx1, m]
-                FR[mvx1, m] = UR[rho, m]*UR[vx1, m]*UR[vx1, m] + UR[prs, m]
-                FR[mvx2, m] = UR[rho, m]*UR[vx2, m]*UR[vx1, m]
-
-            for var in range(g.nvar):
-
-                # Lower face:
-                UFL = self.cons_to_prims(FL, para)
-                lam = self.Eigenvalues(UFL[rho, :], UFL[prs, :], UFL[vx1, :], para)
-                smax = max(lam)
-                smin = min(lam)
-                if (smin >= 0.0):
-                    lower_flux[var] = FL[var, 0]
-                if (smin <= 0.0 <= smax):
-                    lower_flux[var] = smax*FL[var, 0] - smin*FL[var, 1] + smin*smax*(qL[var, 1] - qL[var, 0])/(smax-smin)
-                if (smax <= 0.0):
-                    lower_flux[var] = FL[var, 1]
+            flux[:, slicing1] = FL[:, slicing1]
+            flux[:, slicing2] = SR[slicing2]*FL[:, slicing2] \
+                                - SL[slicing2]*FR[:, slicing2] \
+                                + SL[slicing2]*SR[slicing2] *(QR[:, slicing2] \
+                                - QL[:, slicing2])/(SR[slicing2] - SL[slicing2])
+            flux[:, slicing3] = FR[:, slicing3]
                 
-                # Upper face:
-                UFR = self.cons_to_prims(FR, para)
-                lam = self.Eigenvalues(UFR[rho, :], UFR[prs, :], UFR[vx1, :], para)
-                smax = max(lam)
-                smin = min(lam)
-                if (smin >= 0.0):
-                    upper_flux[var] = FR[var, 0] 
-                if (smin <= 0.0 <= smax):
-                    upper_flux[var] = smax*FR[var, 0] - smin*FR[var, 1] + smin*smax*(qR[var, 1] - qR[var, 0])/(smax-smin) 
-                if (smax <= 0.0):
-                    upper_flux[var] = FR[var, 1]
-  
-            lower_flux = self.cons_to_prims(lower_flux, para)
-            upper_flux = self.cons_to_prims(upper_flux, para)
+        if np.isnan(np.sum(flux)):
+            print("Error, nan in array, function: riemann")
+            sys.exit()
+
+        return flux
+
+    def _flux_tensor(self, Q, axis, gamma, dim):
+
+        F = np.zeros(shape=Q.shape)
+
+        U = self._cons_to_prims(Q, gamma, dim)
+
+        if dim == '1D':
+            F[rho] = U[rho]*U[vx1]
+            F[mvx1] = U[rho]*U[vx1]**2 + U[prs]
+            F[eng] = U[vx1]*(Q[eng] + U[prs])
+
+        if axis == 'i' and dim == '2D':
+            F[rho] = U[rho]*U[vx1]
+            F[mvx1] = U[rho]*U[vx1]**2 + U[prs]
+            F[mvx2] = U[rho]*U[vx1]*U[vx1]
+            F[eng] = U[vx1]*(Q[eng] + U[prs])
+        elif axis == 'j' and dim == '2D':
+            F[rho] = U[rho]*U[vx2]
+            F[mvx1] = U[rho]*U[vx1]*U[vx2]
+            F[mvx2] = U[rho]*U[vx2]**2 + U[prs]
+            F[eng] = U[vx2]*(Q[eng] + U[prs])
+
+        return F
+
+
+    def _eigenvalues(self, QL, QR, gamma, axis, dim):
+
+        UL = self._cons_to_prims(QL, gamma, dim)
+        UR = self._cons_to_prims(QR, gamma, dim)
+
+        csL = np.sqrt(gamma*UL[prs]/UL[rho])
+        csR = np.sqrt(gamma*UR[prs]/UR[rho])
+
+        if(np.isnan(csL).any() or np.isnan(csR).any()):
+            print("Erroar, nan found in eigenvalues:")
+            print('csL=', csL)
+            print('csR=', csR)
+            print('prs=', UL[prs])
+            print('rho=', UL[rho])
+            sys.exit()
+
+        if axis == 'i':
+            Sp = np.maximum(abs(UL[u]) + csL, abs(UR[u]) + csR)
+        elif axis == 'j':
+            Sp = np.maximum(abs(UL[v]) + csL, abs(UR[v]) + csR)
+
+        SL = -Sp
+        SR = Sp
+
+        return SL, SR
+
+
+    def _cons_to_prims(self, Q, gamma, dim):
+
+        U = np.zeros(shape=Q.shape)
+
+        m2 = Q[mvx1]*Q[mvx1]
+        if dim == '2D':
+            m2 += Q[mvx2]*Q[mvx2]
+
+        kinE = 0.5*m2/Q[rho]
+
+        U[rho] = Q[rho]
+        U[vx1] = Q[mvx1]/Q[rho]
+        U[prs] = (gamma - 1.0)*(Q[eng] - kinE)
         
-            dFdx = (upper_flux - lower_flux)/g.dx()
+        if dim == '2D':
+            U[vx2] = Q[mvx2]/Q[rho]
 
-        return dFdx
+        if np.isnan(U).any():
+            print("Error, nan in cons_to_prims")
+            sys.exit()
 
-    def Eigenvalues(self, rho, prs, v, para):
-        csL = np.sqrt(para['gamma']*prs[0]/rho[0])
-        csR = np.sqrt(para['gamma']*prs[1]/rho[1])
-        if(np.isnan(csL) or np.isnan(csR)):
-            print(csL, csR, rho, prs, v)
-        lam = [v[0] - csL, 
-               v[0], 
-               v[0], 
-               v[0] + csL, 
-               v[1] - csR, 
-               v[1], 
-               v[1], 
-               v[1] + csR] 
-        return lam
-
-    def cons_to_prims(self, q, para):
-        rho = 0
-        prs = 1
-        vx1 = 2
-        vx2 = 3
-        eng = 1
-        mvx1 = 2
-        mvx2 = 3
-        gamma = para['gamma']
-        U = np.zeros_like(q)
-        U[rho] = q[rho]
-        U[prs] = q[rho]*q[eng]*(gamma - 1.0)
-        U[vx1] = q[mvx1]/U[rho]
-        U[vx2] = q[mvx2]/U[rho]
-        U[np.isnan(U[:])] = 0.0
         return U
 
-    def prims_to_cons(self, U, para):
-        rho = 0
-        prs = 1
-        vx1 = 2
-        vx2 = 3
-        eng = 1
-        mvx1 = 2
-        mvx2 = 3
-        gamma = para['gamma']
-        q = np.zeros_like(U)
-        q[rho, :] = U[rho,:]
-        q[eng, :] = U[prs,:]/(U[rho,:]*(gamma - 1.0))
-        q[mvx1, :] = U[rho,:]*U[vx1,:]
-        q[mvx2, :] = U[rho,:]*U[vx2,:]
-        q[np.isnan(q[:, :])] = 0.0
-        return q       
 
-    def time_step(self, U, g, para):
-        rho = 0
-        prs = 1
-        vx1 = 2
-        vx2 = 3
-        cs = np.sqrt(para['gamma']*U[prs, g.ibeg():g.iend(), g.jbeg():g.jend()] \
-                          /U[rho, g.ibeg():g.iend(), g.jbeg():g.jend()])
-        a = np.amax(abs(U[vx1, g.ibeg():g.iend(), g.jbeg():g.jend()]) + cs)
-        b = np.amax(abs(U[vx2, g.ibeg():g.iend(), g.jbeg():g.jend()]) + cs)
-        dt = para['cfl']*min(g.dx(), g.dy())/max(a, b) 
-        return dt, a, b
+    def _prims_to_cons(self, U, gamma, dim):
+
+        Q = np.zeros(shape=U.shape)
+
+        v2 = U[vx1]*U[vx1]
+        if dim == '2D':
+            v2 += U[vx2]*U[vx2]
+
+        Q[rho] = U[rho]
+        Q[mvx1] = U[rho]*U[vx1]
+        Q[eng] = 0.5*U[rho]*v2 + U[prs]/(gamma - 1.0)
+
+        if dim == '2D':
+            Q[mvx2] = U[rho]*U[vx2]
+
+        if np.isnan(Q).any():
+            print("Error, nan in prims_to_cons")
+            sys.exit()
+
+        return Q 
+
+
+    def time_step(self, U, g, gamma, cfl, dim):
+
+        cs = np.sqrt(gamma*U[prs]/U[rho])
+
+        if dim == '1D':
+            max_velocity = np.amax(abs(U[vx1]))
+            max_speed = np.amax(abs(U[vx1]) + cs)
+            dt = cfl*g.dx1/max_speed 
+            mach_number = np.amax(abs(U[vx1])/cs)
+        elif dim == '2D':
+            max_velocity = np.amax(abs(U[vx1:vx2]))
+            max_speed = np.amax(abs(U[vx1:vx2]) + cs)
+            dt = cfl*min(g.dx1, g.dx2)/max_speed 
+            mach_number = np.amax(abs(U[vx1:vx2])/cs)
+
+        if np.isnan(dt):
+            print("Error, nan in time_step", cs)
+            sys.exit()
+
+        return dt, max_velocity, mach_number
+
+
+
+

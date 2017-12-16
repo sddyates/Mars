@@ -2,123 +2,151 @@ import numpy as np
 
 class Grid:
 
-    def __init__(self, para):
-        self.xmin = para['xmin']
-        self.ymin = para['ymin']
-        self.xmax = para['xmax']
-        self.ymax = para['xmax']
-        self.nx = para['nx']
-        self.ny = para['ny']
+    def __init__(self, p):
 
-        if para['reconstruction'] == 'flat':
-            self.nxg = 1
-            self.nyg = 1
-        if para['reconstruction'] == 'linear':
-            self.nxg = 2
-            self.nyg = 2
-        elif para['reconstruction'] == 'parabolic':
-            self.nxg = 3
-            self.nyg = 3
+        self.x1min = p['x1 min']
+        self.x1max = p['x1 max']
 
-        if para['method'] == 'hydro':
-            self.nvar = 4
-        elif para['method'] == 'mhd':
-            self.nvar = 6
+        self.nx1 = p['resolution x1']
 
-    def imax(self):
-        return self.upper_bc_iend()
+        self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
 
-    def jmax(self):
-        return self.upper_bc_jend()
+        if p['reconstruction'] == 'flat':
+            self.ghost_zones = 1
+        elif p['reconstruction'] == 'linear':
+            self.ghost_zones = 2
+        elif p['reconstruction'] == 'pbolic':
+            self.ghost_zones = 3
 
-    def x(self):
-        a = self.xmin - self.dx()*self.nxg
-        b = self.xmax + self.dx()*self.nxg
-        c = self.nx + 2*self.nxg
+        self.ibeg = self.ghost_zones
+        self.iend = self.nx1 + self.ghost_zones 
+
+        self.lower_bc_ibeg = 0
+        self.lower_bc_iend = self.ghost_zones - 1
+
+        self.upper_bc_ibeg = self.nx1 + self.ghost_zones
+        self.upper_bc_iend = self.nx1 + 2*self.ghost_zones - 1 
+
+        self.imax = self.upper_bc_iend
+
+        self.x1 = self._x1()
+
+        if p['Dimensions'] == '1D':
+
+            if p['method'] == 'hydro':
+                self.nvar = 3
+            elif p['method'] == 'mhd':
+                self.nvar = 4
+
+            self.shape_internal = [self.nvar, self.nx1]
+            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
+
+        if p['Dimensions'] == '2D':
+
+            self.x2min = p['x2 min']
+            self.x2max = p['x2 max']
+
+            self.nx2 = p['resolution x2']
+
+            self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
+
+            self.da = self.dx1*self.dx2
+
+            self.jbeg = self.ghost_zones
+
+            self.jend = self.nx2 + self.ghost_zones 
+
+            self.lower_bc_jbeg = 0
+ 
+            self.lower_bc_jend = self.ghost_zones - 1
+
+            self.upper_bc_jbeg = self.nx2 + self.ghost_zones
+
+            self.upper_bc_jend = self.nx2 + 2*self.ghost_zones - 1
+
+            self.jmax = self.upper_bc_jend
+
+            if p['method'] == 'hydro':
+                self.nvar = 4
+            elif p['method'] == 'mhd':
+                self.nvar = 6
+
+            self.shape_internal = [self.nvar, self.nx2, self.nx1]
+            self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
+
+            self.x1 = self._x1()
+            self.x2 = self._x2()
+
+    def _x1(self):
+        a = self.x1min - self.dx1*self.ghost_zones
+        b = self.x1max + self.dx1*self.ghost_zones
+        c = self.nx1 + 2*self.ghost_zones
         return np.linspace(a, b, c)
 
-    def y(self):
-        a = self.ymin - self.dy()*self.nyg
-        b = self.ymax + self.dy()*self.nyg
-        c = self.ny + 2*self.nyg
+    def _x2(self):
+        a = self.x2min - self.dx2*self.ghost_zones
+        b = self.x2max + self.dx2*self.ghost_zones
+        c = self.nx2 + 2*self.ghost_zones
         return np.linspace(a, b, c)
 
-    def state_vector(self):
-        x_extent = 2*self.nxg + self.nx
-        y_extent = 2*self.nyg + self.ny
-        return np.zeros((self.nvar, x_extent, y_extent))
+    def state_vector(self, p):
+        if p['Dimensions'] == '1D':
+            return np.zeros((self.nvar, 
+                             2*self.ghost_zones + self.nx1))
+        if p['Dimensions'] == '2D':
+            return np.zeros((self.nvar, 
+                             2*self.ghost_zones + self.nx2, 
+                             2*self.ghost_zones + self.nx1))
 
-    def dx(self):
-        return (abs(self.xmin) + abs(self.xmax))/self.nx
+    def boundary(self, U, p):
+        self.LowerXBC(U, p['lower x1 boundary'], p['Dimensions'])
+        self.UpperXBC(U, p['upper x1 boundary'], p['Dimensions'])
+        if p['Dimensions'] == '2D':
+            self.LowerYBC(U, p['lower x2 boundary'], p['Dimensions'])
+            self.UpperYBC(U, p['upper x2 boundary'], p['Dimensions'])
 
-    def dy(self):
-        return (abs(self.ymin) + abs(self.ymax))/self.ny
+    def LowerXBC(self, U, bc_type, dim):
 
-    def ibeg(self):
-        return self.nxg
+        if bc_type == 'reciprocal' and dim == '1D':
+            U[:, :self.ghost_zones] = \
+                U[:, self.nx1:self.nx1 + self.ghost_zones] 
 
-    def jbeg(self):
-        return self.nyg
+        if bc_type == 'outflow' and dim == '1D':
+            U[:, :self.ghost_zones] = \
+                U[:, self.ghost_zones + 1].reshape((3, 1))
 
-    def iend(self):
-        return self.nx + self.nxg 
-
-    def jend(self):
-        return self.ny + self.nyg 
-
-    def lower_bc_ibeg(self):
-        return 0
-
-    def lower_bc_jbeg(self):
-        return 0
-
-    def lower_bc_iend(self):
-        return self.nxg - 1
-
-    def lower_bc_jend(self):
-        return self.nyg - 1
-
-    def upper_bc_ibeg(self):
-        return self.nx + self.nxg
-
-    def upper_bc_jbeg(self):
-        return self.ny + self.nyg
-
-    def upper_bc_iend(self):
-        return self.nx + 2*self.nxg - 1 
-
-    def upper_bc_jend(self):
-        return self.ny + 2*self.nyg - 1
-
-class Boundary:
-
-    def __init__(self, a, g, para):
-        self.LowerXBC(a, g, para['lower_bc_x'])
-        self.UpperXBC(a, g, para['upper_bc_x'])
-        self.LowerYBC(a, g, para['lower_bc_y'])
-        self.UpperYBC(a, g, para['upper_bc_y'])
-
-    def LowerXBC(self, a, g, bc_type):
-        if bc_type == 'reciprocal':
-            a[:, :g.nxg, g.jbeg():g.jend()] = \
-                a[:, g.nx:g.nx+g.nxg, g.jbeg():g.jend()] 
-
-    def UpperXBC(self, a, g, bc_type):
-        if bc_type == 'reciprocal':
-            a[:, g.upper_bc_ibeg():, g.jbeg():g.jend()] = \
-                a[:, g.nxg:g.nxg+1, g.jbeg():g.jend()] 
-
-    def LowerYBC(self, a, g, bc_type):
-        if bc_type == 'reciprocal':
-            a[:, g.ibeg():g.iend(), :g.nyg] = \
-                a[:, g.ibeg():g.iend(), g.ny:g.ny+g.nyg] 
-
-    def UpperYBC(self, a, g, bc_type):
-        if bc_type == 'reciprocal':
-            a[:, g.ibeg():g.iend(), g.upper_bc_jbeg():] = \
-                a[:, g.ibeg():g.iend(), g.nyg:g.nyg+1] 
+        if bc_type == 'reciprocal' and dim == '2D':
+            U[:, :, :self.ghost_zones] = \
+                U[:, :, self.nx1:self.nx1 + self.ghost_zones] 
 
 
+    def UpperXBC(self, U, bc_type, dim):
+
+        if bc_type == 'reciprocal' and dim == '1D':
+            U[:, self.upper_bc_ibeg:] = \
+                U[:, self.ghost_zones:self.ghost_zones + 1] 
+
+        if bc_type == 'outflow' and dim == '1D':
+            U[:, self.upper_bc_ibeg:] = \
+                U[:, self.upper_bc_ibeg - 1].reshape((3, 1))
+
+        if bc_type == 'reciprocal' and dim == '2D':
+            U[:, :, self.upper_bc_ibeg:] = \
+                U[:, :, self.ghost_zones:self.ghost_zones + 1] 
+
+
+    def LowerYBC(self, U, bc_type, dim):
+
+        if bc_type == 'reciprocal' and dim == '2D':
+            U[:, :self.ghost_zones, :] = \
+                U[:, self.nx2:self.nx2 + self.ghost_zones, :] 
+
+
+    def UpperYBC(self, U, bc_type, dim):
+
+        if bc_type == 'reciprocal' and dim == '2D':
+            U[:, self.upper_bc_ibeg:, :] = \
+                U[:, self.ghost_zones:self.ghost_zones + 1, :] 
 
 
 

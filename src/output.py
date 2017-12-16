@@ -2,32 +2,57 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from matplotlib import cm
+from globe import *
 
-def Mesh_plot(U, g, t):
+def mesh_plot(U, g, num):
 
     matplotlib.rcParams.update({'font.size': 10})
 
-    plt.figure(figsize=(10,10))
-    a = plt.imshow(U[0, g.ibeg():g.iend(), g.jbeg():g.jend()])
+    variables = [rho, prs, vx1, vx2]
+    var = ['rho', 'prs', 'vx1', 'vx2']
 
-    ax = plt.gca();
+    for i, variable in enumerate(variables):
+        plt.figure(figsize=(10,10))
+        a = plt.imshow(U[variable, :, :])
 
-    # Major ticks
-    ax.set_xticks(np.arange(g.lower_bc_ibeg(), g.imax() + 1, 10));
-    ax.set_yticks(np.arange(g.lower_bc_jbeg(), g.jmax() + 1, 10));
+        ax = plt.gca();
 
-    # Labels for major ticks
-    #ax.set_xticklabels(np.arange(g.lower_bc_ibeg(), g.imax() + 1, 1));
-    #ax.set_yticklabels(np.arange(g.lower_bc_jbeg(), g.jmax() + 1, 1));
+        # Major ticks
+        ax.set_xticks(np.arange(g.lower_bc_ibeg, g.imax + 1, 10));
+        ax.set_yticks(np.arange(g.lower_bc_jbeg, g.jmax + 1, 10));
 
-    # Minor ticks
-    #ax.set_xticks(np.arange(-.5, g.imax() + 1 + 0.5, 1), minor=True);
-    #ax.set_yticks(np.arange(-.5, g.jmax() + 1 + 0.5, 1), minor=True);
+        # Labels for major ticks
+        ax.set_xticklabels(np.arange(g.lower_bc_ibeg, g.imax + 1, 1));
+        ax.set_yticklabels(np.arange(g.lower_bc_jbeg, g.jmax + 1, 1));
 
-    # Gridlines based on minor ticks
-    ax.grid(which='minor', color='w', linestyle='-', linewidth=0.5)
-    plt.colorbar()
+        # Minor ticks
+        ax.set_xticks(np.arange(-.5, g.imax + 1 + 0.5, 1), minor=True);
+        ax.set_yticks(np.arange(-.5, g.jmax + 1 + 0.5, 1), minor=True);
 
-    plt.tight_layout()
-    plt.savefig('plots/grid_t_{:.8f}.png'.format(t))
+        # Gridlines based on minor ticks
+        ax.grid(which='minor', color='w', linestyle='-', linewidth=0.5)
+        plt.colorbar()
+
+        plt.tight_layout()
+        plt.savefig(f'plots/grid_{var[i]}_{num:04}.png')
+        plt.close()
+
+
+def line_plot(U, g, num):
+
+    f, ax1 = plt.subplots()
+    ax1.plot(g.x1, U[rho])
+    plt.savefig(f'plots/1D/density/line_density_{num:04}.png')
+    plt.close()
+
+    f, ax1 = plt.subplots()
+    ax1.plot(g.x1, U[prs])
+    plt.savefig(f'plots/1D/pressure/line_pressure_{num:04}.png')
+    plt.close()
+
+    f, ax1 = plt.subplots()
+    ax1.plot(g.x1, U[vx1])
+    plt.savefig(f'plots/1D/velocity_x1/line_velocity_x1_{num:04}.png')
+    plt.close()
+
 
