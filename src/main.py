@@ -25,24 +25,27 @@ def main():
 
     # Generate state vector to hold variables.
     print("    Creating arrays...")
-    U = grid.state_vector(me.p)
+    V = grid.state_vector(me.p)
 
     # Initialise the state vector.
     print("    Initialising data...")
-    me.initialise(U, grid)
+    me.initialise(V, grid)
 
-    if np.isnan(np.sum(U)):
+    if np.isnan(np.sum(V)):
         print("Error, nan in array, function: main")
         sys.exit()
 
     # Apply boundary conditions.
     print("    Applying boundary conditions...")
-    grid.boundary(U, me.p)
+    grid.boundary(V, me.p)
 
     # Check grid.
     print("    Plotting initial conditions...")
-    #mesh_plot(U, grid, 0)
-    line_plot(U, grid, 0)
+    if me.p['Dimensions'] == '2D':
+        #mesh_plot(V, grid, 0)
+        line_plot(V[:, int(grid.nx1/2), :], grid, 0)
+    if me.p['Dimensions'] == '1D':
+        line_plot(V, grid, 0)
 
     # Integrate in time.
     print("    Creating simulation...")
@@ -55,26 +58,33 @@ def main():
     t = 0.0
     i = 0
     num = 1
-    dt_new, max_velocity, mach_number = time(evolution, U, grid, me.p)
-    dt = me.p['initial dt']
 
     while t < me.p['max time']:
 
-        print(f'    Iteration:{i}, t = {t:.5f}, dt = {dt:.5f}, [{max_velocity:.5f}, {mach_number:.5f}]')
+        percent = 100.0*(t/me.p['max time'])
 
-        U = evolution.incriment(U, dt, grid, me.p)
-        grid.boundary(U, me.p)
+        if t == 0.0:
+            dt = me.p['initial dt']
 
-        dt_new, max_velocity, mach_number = time(evolution, U, grid, me.p)
+        dt_new, max_velocity, mach_number = time(evolution, V, grid, me.p)
         dt = min(dt_new, me.p['max dt increase']*dt)
+
+        print(f'    Iteration:{i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.5f}, {mach_number:.5f}]')
+
+        V = evolution.incriment(V, dt, grid, me.p)
+        grid.boundary(V, me.p)
+
 
         if t + dt > me.p['max time']:
             dt = me.p['max time'] - t
 
         if t + dt > num*me.p['plot frequency']:
             print(f"    Writing output file: {num:04}")
-            #mesh_plot(U, grid, num)
-            line_plot(U, grid, num)
+            if me.p['Dimensions'] == '2D':
+                #mesh_plot(V, grid, num)
+                line_plot(V[:, int(grid.nx1/2), :], grid, num)
+            if me.p['Dimensions'] == '1D':
+                line_plot(V, grid, num)
             num += 1
 
         t += dt
@@ -82,32 +92,36 @@ def main():
 
     else:
 
-        print(f'    Iteration:{i}, t = {t:.5f}, dt = {dt:.5f}, [{max_velocity:.5f}, {mach_number:.5f}]')
+        percent = 100.0*(t/me.p['max time'])
+        print(f'    Iteration:{i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.5f}, {mach_number:.5f}]')
 
-        U = evolution.incriment(U, dt, grid, me.p)
-        grid.boundary(U, me.p)
+        V = evolution.incriment(V, dt, grid, me.p)
+        grid.boundary(V, me.p)
 
         print(f"    Writing output file: {num:04}")
-        #Mesh_plot(U, grid, num) 
-        line_plot(U, grid, num)
+        if me.p['Dimensions'] == '2D':
+            mesh_plot(V, grid, num)
+            line_plot(V[:, int(grid.nx1/2), :], grid, num)
+        if me.p['Dimensions'] == '1D':
+            line_plot(V, grid, num)
 
     print("")
     print('    Simulation complete...')
     print("")
 
 
-def time(evolution, U, grid, p):
+def time(evolution, V, grid, p):
 
     if p['Dimensions'] == '1D':
         dt, max_velocity, mach_number = evolution.time_step(
-            U[:, grid.ibeg:grid.iend], 
+            V[:, grid.ibeg:grid.iend], 
             grid, 
             p['gamma'], 
             p['cfl'], 
             p['Dimensions'])
     elif p['Dimensions'] == '2D':
         dt, max_velocity, mach_number = evolution.time_step(
-            U[:, grid.jbeg:grid.jend, grid.ibeg:grid.iend], 
+            V[:, grid.jbeg:grid.jend, grid.ibeg:grid.iend], 
             grid, 
             p['gamma'], 
             p['cfl'], 

@@ -11,54 +11,89 @@ class User:
             'x1 max':1.0,
             'x2 max':1.0,
             'resolution x1':128,
-            'resolution x2':32,
+            'resolution x2':1,
             'cfl':0.3,
-            'initial dt':0.0001,
+            'initial dt':0.00001,
             'max dt increase':1.5,
             'max time':1.0,
             'plot frequency':0.1,
-            'gamma':5.0/3.0,
+            'gamma':1.4,
             'density unit':1.0,
             'length unit':1.0,
             'velocity unit':1.0,
-            'riemann':'hll',
-            'reconstruction':'linear',
+            'riemann':'tvdlf',
+            'reconstruction':'flat',
             'limiter':'minmod',
-            'time stepping':'RK2',
+            'time stepping':'Euler',
             'method':'hydro',
             'lower x1 boundary':'outflow',
-            'lower x2 boundary':'reciprocal',
+            'lower x2 boundary':'outflow',
             'upper x1 boundary':'outflow',
-            'upper x2 boundary':'reciprocal',
+            'upper x2 boundary':'outflow',
             'internal boundary':False
             }
 
-    def initialise(self, U, g):
-
+    def initialise(self, V, g):
+        
         if self.p['Dimensions'] == '1D':
             for i in range(g.ibeg, g.iend):
                 if g.x1[i] < 0.5:
-                    U[rho, i] = 1.0
-                    U[prs, i] = 1.0
-                    U[vx1, i] = 0.0
+                    V[rho, i] = 1.0
+                    V[prs, i] = 1.0
+                    V[vx1, i] = 0.0
                 else:
-                    U[rho, i] = 0.125
-                    U[prs, i] = 0.1
-                    U[vx1, i] = 0.0                    
+                    V[rho, i] = 0.125
+                    V[prs, i] = 0.1
+                    V[vx1, i] = 0.0                    
+        '''
+        if self.p['Dimensions'] == '2D':
+            for i in range(g.ibeg, g.iend):
+                for j in range(g.jbeg, g.jend):
+                    if g.x1[i] < 1.0:
+                        V[rho, j, i] = 1.0
+                        V[prs, j, i] = 1.0
+                        V[vx1, j, i] = 0.0
+                        V[vx2, j, i] = 0.0
+                    else:
+                        V[rho, j, i] = 0.125
+                        V[prs, j, i] = 0.1
+                        V[vx1, j, i] = 0.0
+                        V[vx2, j, i] = 0.0
+        
 
         if self.p['Dimensions'] == '2D':
             for i in range(g.ibeg, g.iend):
                 for j in range(g.jbeg, g.jend):
-                    if g.x1[i] < 0.5:
-                        U[rho, j, i] = 1.0
-                        U[prs, j, i] = 1.0
-                        U[vx1, j, i] = 0.0
-                        U[vx2, j, i] = 0.0
+                    
+                    xp = g.x1[i] - 0.8
+                    yp = g.x2[j] - 0.5
+                    r = np.sqrt(xp*xp + yp*yp)
+                    if (g.x1[i] < 0.6):
+                        V[rho, j, i] = 3.86859
+                        V[prs, j, i] = 167.345
+                        V[vx1, j, i] = 0.0
+                        V[vx2, j, i] = 0.0
+                    if (g.x1[i] > 0.6):
+                        V[rho, j, i] = 1.0
+                        V[prs, j, i] = 1.0
+                        V[vx1, j, i] = -11.2536
+                        V[vx2, j, i] = 0.0
+                    if r < 0.15:
+                        V[rho, j, i] = 10.0
+
+        '''
+        '''
+                    if abs(g.x2[j]) < 0.25:
+                        V[rho, j, i] = 2.0
+                        V[prs, j, i] = 2.5
+                        V[vx1, j, i] = 0.5 + (np.random.rand()*2.0 - 1)*0.001
+                        V[vx2, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
                     else:
-                        U[rho, j, i] = 0.125
-                        U[prs, j, i] = 0.1
-                        U[vx1, j, i] = 0.0
-                        U[vx2, j, i] = 0.0
-    
+                        V[rho, j, i] = 1.0
+                        V[prs, j, i] = 2.5
+                        V[vx1, j, i] = -0.5 + (np.random.rand()*2.0 - 1)*0.001
+                        V[vx2, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
+        '''
+ 
     def internal_bc():
         return None
