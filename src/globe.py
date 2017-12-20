@@ -10,3 +10,5 @@ mvx2 = 3
 # Flux velocites 
 u = 2
 v = 3
+
+SmallPressure = 1.0e-12

@@ -8,16 +8,12 @@ import numpy as np
 from grid import Grid
 from user import User
 from evolve import Evolve
-from output import mesh_plot, line_plot
+from output import mesh_plot, line_plot, numpy_dump
 import sys
 
-def main():
+def Main(me):
 
     print("")
-
-    # Create user.
-    print("    Creating user...")
-    me = User()
 
     # Initialise grid.
     print("    Creating grid...")
@@ -41,11 +37,7 @@ def main():
 
     # Check grid.
     print("    Plotting initial conditions...")
-    if me.p['Dimensions'] == '2D':
-        #mesh_plot(V, grid, 0)
-        line_plot(V[:, int(grid.nx1/2), :], grid, 0)
-    if me.p['Dimensions'] == '1D':
-        line_plot(V, grid, 0)
+    numpy_dump(V, grid, 0)
 
     # Integrate in time.
     print("    Creating simulation...")
@@ -80,11 +72,7 @@ def main():
 
         if t + dt > num*me.p['plot frequency']:
             print(f"    Writing output file: {num:04}")
-            if me.p['Dimensions'] == '2D':
-                #mesh_plot(V, grid, num)
-                line_plot(V[:, int(grid.nx1/2), :], grid, num)
-            if me.p['Dimensions'] == '1D':
-                line_plot(V, grid, num)
+            numpy_dump(V, grid, num)
             num += 1
 
         t += dt
@@ -99,11 +87,7 @@ def main():
         grid.boundary(V, me.p)
 
         print(f"    Writing output file: {num:04}")
-        if me.p['Dimensions'] == '2D':
-            mesh_plot(V, grid, num)
-            line_plot(V[:, int(grid.nx1/2), :], grid, num)
-        if me.p['Dimensions'] == '1D':
-            line_plot(V, grid, num)
+        numpy_dump(V, grid, num)
 
     print("")
     print('    Simulation complete...')
@@ -128,9 +112,4 @@ def time(evolution, V, grid, p):
             p['Dimensions'])
 
     return dt, max_velocity, mach_number
-
-
-main()
-
-
 

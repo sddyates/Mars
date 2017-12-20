@@ -75,6 +75,7 @@ class Evolve:
 
         return V
 
+
     def _RHSOperator(self, U, g, p):
 
         dflux_x1 = np.zeros(shape=U.shape)
@@ -92,14 +93,14 @@ class Evolve:
             dflux_x2 = np.zeros(shape=U.shape)
             # Transvers loop over columns in x1.
             for j in range(g.jbeg, g.jend):
-                face_flux_x1 = self._riemann(U[:, j, :], g, p, 'i')
+                face_flux_x1, press = self._riemann(U[:, j, :], g, p, 'i')
                 Fneg = face_flux_x1[:, :-1]
                 Fpos = face_flux_x1[:, 1:]
                 dflux_x1[:, j, g.ibeg:g.iend] = -(Fpos - Fneg)/g.dx1
 
             # Transvers loop over columns in x2.
             for i in range(g.ibeg, g.iend):                                       
-                face_flux_x2 = self._riemann(U[:, :, i], g, p, 'j')
+                face_flux_x2, press = self._riemann(U[:, :, i], g, p, 'j')
                 Fneg = face_flux_x2[:, :-1]
                 Fpos = face_flux_x2[:, 1:]
                 dflux_x2[:, g.jbeg:g.jend, i] = -(Fpos - Fneg)/g.dx2
@@ -149,24 +150,19 @@ class Evolve:
             def linear(y, dxi, p, side):                
 
                 if p['limiter'] == None:                    
-                    m = np.gradient(y, dxi, axis=1)
-                    m = m[:, g.gz - 1:-g.gz + 1]
+                    m = np.zeros(shape=y[:, 1:-1].shape)
+                    m = (y[:, 2:] - y[:, :-2])/(2.0*dxi)
 
                 elif p['limiter'] == 'minmod':               
 
                     m = np.zeros(shape=y[:, 1:-1].shape)
-                    for i in range(1, len(y)):
-
+                    for i in range(1, y.shape[1]-1):
                         for var in range(g.nvar):
                             a = (y[var, i] - y[var, i-1])/dxi
                             b = (y[var, i+1] - y[var, i])/dxi
-    
-                            if (abs(a) < abs(b)) & (a*b > 0.0):
-                                m[var, i] = a
-                            elif (abs(a) > abs(b)) & (a*b > 0.0):
-                                m[var, i] = b
-                            elif a*b <= 0.0:
-                                m[var, i] = 0.0
+
+                            gradient = a if abs(a) < abs(b) else b
+                            m[var, i-1] = gradient if a*b > 0.0 else 0.0
 
                     '''
                     a = (y[:, 1:-1] - y[:, :-g.gz])/dxi 
@@ -176,12 +172,11 @@ class Evolve:
                     slicing1 = np.where((abs(a) < abs(b)) & (a*b > 0.0))
                     slicing2 = np.where((abs(a) > abs(b)) & (a*b > 0.0))
                     slicing3 = np.where(a*b <= 0.0)
-                    '''
-                    #print(m)
-                    #m[slicing1] = a[slicing1]
-                    #m[slicing2] = b[slicing2]
-                    #m[slicing3] = 0.0
-                    #print('post',m)
+
+                    m[:, slicing1] = a[:, slicing1]
+                    m[:, slicing2] = b[:, slicing2]
+                    m[:, slicing3] = 0.0
+                    ''' 
 
                 else:
                     print('Error: Invalid limiter.')
@@ -190,7 +185,7 @@ class Evolve:
                 if side == 'left':
                     return y[:, g.gz - 1:-g.gz] \
                            + m[:, :-1]/2.0*dxi
-                if side == 'right':
+                elif side == 'right':
                     return y[:, g.gz:-g.gz + 1] \
                           - m[:, 1:]/2.0*dxi
 
@@ -225,7 +220,7 @@ class Evolve:
             flux = np.zeros(shape=g.shape_flux_x2)
             FR = np.zeros(shape=g.shape_flux_x2)
             FL = np.zeros(shape=g.shape_flux_x2)
-            press = np.zeros(shape=g.shape_flux_x2[2])
+            press = np.zeros(shape=g.shape_flux_x2[1])
 
         # Obtain the states on the left (L) and right (R) faces of 
         # the cell for the conservative variables.
@@ -347,9 +342,16 @@ class Evolve:
 
         kinE = 0.5*m2/U[rho]
 
+        if U[eng].any() < 0.0:
+            U[eng, U[eng, :] < 0.0] = SmallPressure/(gamma - 1.0) \
+                + kinE[U[eng, :] < 0.0]
+            print(U[eng])
+
         V[rho] = U[rho]
         V[vx1] = U[mvx1]/U[rho]
         V[prs] = (gamma - 1.0)*(U[eng] - kinE)
+
+        V[prs, V[prs, :] < 0.0] = SmallPressure
         
         if dim == '2D':
             V[vx2] = U[mvx2]/U[rho]

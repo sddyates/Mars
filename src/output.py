@@ -4,6 +4,10 @@ import numpy as np
 from matplotlib import cm
 from globe import *
 
+def numpy_dump(V, g, num):
+
+    np.save(f'output/2D/data.{num:04}.npy', (V, g.x1, g.x2))
+
 def mesh_plot(V, g, num):
 
     matplotlib.rcParams.update({'font.size': 10})
@@ -34,7 +38,7 @@ def mesh_plot(V, g, num):
         plt.colorbar()
 
         plt.tight_layout()
-        plt.savefig(f'plots/2D/{var[i]}/grid_{var[i]}_{num:04}.png')
+        plt.savefig(f'output/2D/{var[i]}/grid_{var[i]}_{num:04}.png')
         plt.close()
 
 

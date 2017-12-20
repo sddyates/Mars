@@ -125,7 +125,7 @@ class Grid:
 
         elif bc_type == 'outflow' and dim == '1D':
             V[:, :self.gz] = \
-                V[:, self.gz].reshape((self.nvar, self.gz))
+                V[:, self.gz].reshape(self.nvar, self.gz-1)
 
         elif bc_type == 'reciprocal' and dim == '2D':
             V[:, :, :self.gz] = \
@@ -149,7 +149,7 @@ class Grid:
 
         if bc_type == 'outflow' and dim == '1D':
             V[:, self.upper_bc_ibeg:] = \
-                V[:, self.upper_bc_ibeg - 1].reshape((self.nvar, self.gz))
+                V[:, self.upper_bc_ibeg - 1].reshape(self.nvar, self.gz-1)
 
         elif bc_type == 'reciprocal' and dim == '2D':
             V[:, :, self.upper_bc_ibeg:] = \
