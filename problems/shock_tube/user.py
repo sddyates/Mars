@@ -30,7 +30,7 @@ class User:
             'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',
-            'time stepping':'Euler',
+            'time stepping':'RK2',
             'method':'hydro',
 
             'lower x1 boundary':'outflow',

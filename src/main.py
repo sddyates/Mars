@@ -7,6 +7,7 @@ __license__ = "MIT"
 import numpy as np
 from grid import Grid
 from user import User
+from tools import time_step
 from evolve import Evolve
 from output import mesh_plot, line_plot, numpy_dump
 import sys
@@ -97,14 +98,14 @@ def Main(me):
 def time(evolution, V, grid, p):
 
     if p['Dimensions'] == '1D':
-        dt, max_velocity, mach_number = evolution.time_step(
+        dt, max_velocity, mach_number = time_step(
             V[:, grid.ibeg:grid.iend], 
             grid, 
             p['gamma'], 
             p['cfl'], 
             p['Dimensions'])
     elif p['Dimensions'] == '2D':
-        dt, max_velocity, mach_number = evolution.time_step(
+        dt, max_velocity, mach_number = time_step(
             V[:, grid.jbeg:grid.jend, grid.ibeg:grid.iend], 
             grid, 
             p['gamma'], 

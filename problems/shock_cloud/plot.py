@@ -28,7 +28,7 @@ def mesh_plot():
 
     matplotlib.rcParams.update({'font.size': 10})
 
-    for num in range(0, 200):
+    for num in range(0, 300):
 
         V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy')
 
