@@ -1,7 +1,8 @@
 import numpy as np
 from globe import *
+import sys
 
-def reconstruction(y, g, axis, recon_type):
+def reconstruction(y, g, p, axis):
 
     def flat(y, g):
         return y[:, :-g.gz], y[:, g.gz:]
@@ -35,9 +36,9 @@ def reconstruction(y, g, axis, recon_type):
     if axis == 'j':
         dxi = g.dx2
 
-    if recon_type == 'flat':
+    if p['reconstruction'] == 'flat':
         L, R = flat(y, g)
-    elif recon_type == 'linear':
+    elif p['reconstruction'] == 'linear':
         L, R = linear(y, g, dxi)  
     else:
         print('Error: Invalid reconstructor.')

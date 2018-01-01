@@ -1,13 +1,15 @@
 import numpy as np
 from globe import *
+import sys
 
-def eigenvalues(UL, UR, gamma, axis, dim):
 
-    VL = cons_to_prims(UL, gamma, dim)
-    VR = cons_to_prims(UR, gamma, dim)
+def eigenvalues(UL, UR, p, axis):
 
-    csL = np.sqrt(gamma*VL[prs]/VL[rho])
-    csR = np.sqrt(gamma*VR[prs]/VR[rho])
+    VL = cons_to_prims(UL, p)
+    VR = cons_to_prims(UR, p)
+
+    csL = np.sqrt(p['gamma']*VL[prs]/VL[rho])
+    csR = np.sqrt(p['gamma']*VR[prs]/VR[rho])
 
     if(np.isnan(csL).any() or np.isnan(csR).any()):
         print("Erroar, nan found in eigenvalues:")
@@ -30,28 +32,28 @@ def eigenvalues(UL, UR, gamma, axis, dim):
     return SL, SR
 
 
-def cons_to_prims(U, gamma, dim):
+def cons_to_prims(U, p):
 
     V = np.zeros(shape=U.shape)
 
     m2 = U[mvx1]*U[mvx1]
-    if dim == '2D':
+    if p['Dimensions'] == '2D':
         m2 += U[mvx2]*U[mvx2]
 
     kinE = 0.5*m2/U[rho]
 
     if (U[eng, U[eng, :] < 0.0] < 0.0).any():
-        U[eng, U[eng, :] < 0.0] = SmallPressure/(gamma - 1.0) \
+        U[eng, U[eng, :] < 0.0] = SmallPressure/(p['gamma'] - 1.0) \
             + kinE[U[eng, :] < 0.0]
 
     V[rho] = U[rho]
     V[vx1] = U[mvx1]/U[rho]
-    V[prs] = (gamma - 1.0)*(U[eng] - kinE)
+    V[prs] = (p['gamma'] - 1.0)*(U[eng] - kinE)
 
     if (V[prs, V[prs, :] < 0.0] < 0.0).any():
         V[prs, V[prs, :] < 0.0] = SmallPressure
         
-    if dim == '2D':
+    if p['Dimensions'] == '2D':
         V[vx2] = U[mvx2]/U[rho]
 
     if np.isnan(V).any():
@@ -61,19 +63,19 @@ def cons_to_prims(U, gamma, dim):
     return V
 
 
-def prims_to_cons(V, gamma, dim):
+def prims_to_cons(V, p):
 
     U = np.zeros(shape=V.shape)
 
     v2 = V[vx1]*V[vx1]
-    if dim == '2D':
+    if p['Dimensions'] == '2D':
         v2 += V[vx2]*V[vx2]
 
     U[rho] = V[rho]
     U[mvx1] = V[rho]*V[vx1]
-    U[eng] = 0.5*V[rho]*v2 + V[prs]/(gamma - 1.0)
+    U[eng] = 0.5*V[rho]*v2 + V[prs]/(p['gamma'] - 1.0)
 
-    if dim == '2D':
+    if p['Dimensions'] == '2D':
         U[mvx2] = V[rho]*V[vx2]
 
     if np.isnan(U).any():
@@ -83,19 +85,19 @@ def prims_to_cons(V, gamma, dim):
     return U 
 
 
-def time_step(V, g, gamma, cfl, dim):
+def time_step(V, g, p):
 
-    cs = np.sqrt(gamma*V[prs]/V[rho])
+    cs = np.sqrt(p['gamma']*V[prs]/V[rho])
 
-    if dim == '1D':
+    if p['Dimensions'] == '1D':
         max_velocity = np.amax(abs(V[vx1]))
         max_speed = np.amax(abs(V[vx1]) + cs)
-        dt = cfl*g.dx1/max_speed 
+        dt = p['cfl']*g.dx1/max_speed 
         mach_number = np.amax(abs(V[vx1])/cs)
-    elif dim == '2D':
+    elif p['Dimensions'] == '2D':
         max_velocity = np.amax(abs(V[vx1:vx2]))
         max_speed = np.amax(abs(V[vx1:vx2]) + cs)
-        dt = cfl*min(g.dx1, g.dx2)/max_speed 
+        dt = p['cfl']*min(g.dx1, g.dx2)/max_speed 
         mach_number = np.amax(abs(V[vx1:vx2])/cs)
 
     if np.isnan(dt):

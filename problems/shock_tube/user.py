@@ -27,7 +27,7 @@ class User:
             'length unit':1.0,
             'velocity unit':1.0,
 
-            'riemann':'hll',
+            'riemann':'hllc',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
