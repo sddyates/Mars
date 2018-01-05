@@ -1,7 +1,6 @@
 import numpy as np 
 from globe import *
 import sys
-from output import mesh_plot
 
 class Grid:
 

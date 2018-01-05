@@ -10,7 +10,7 @@ from user import User
 from tools import time_step
 from evolve import incriment
 from states import States
-from output import mesh_plot, line_plot, numpy_dump
+from output import numpy_dump
 import sys
 
 def Main(u):
@@ -18,14 +18,14 @@ def Main(u):
     print("")
 
     # Initialise g.
-    print("    Creating g...")
+    print("    Creating grid...")
     g = Grid(u.p)
 
     # Generate s vector to hold variables.
     print("    Creating arrays...")
     V = g.state_vector(u.p)
 
-    # Initialise the s vector.
+    # Initialise the state vector.
     print("    Initialising data...")
     u.initialise(V, g)
 

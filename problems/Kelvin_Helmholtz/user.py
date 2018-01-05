@@ -11,18 +11,18 @@ class User:
             'x1 max':0.5,
             'x2 max':0.5,
 
-            'resolution x1':128,
-            'resolution x2':1,
+            'resolution x1':512,
+            'resolution x2':512,
 
             'cfl':0.3,
             'initial dt':0.00001,
             'max dt increase':1.5,
-            'max time':1.0,
+            'max time':1.0e-4,
 
             'plot frequency':0.1,
             'print to file':False,
 
-            'gamma':1.666666,
+            'gamma':1.4,
             'density unit':1.0,
             'length unit':1.0,
             'velocity unit':1.0,

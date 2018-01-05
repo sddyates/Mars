@@ -24,4 +24,45 @@ def line_plot():
         plt.savefig(f'output/plots/line_{num:04}.png')
         plt.close()
 
-line_plot()
+def mesh_plot():
+
+    matplotlib.rcParams.update({'font.size': 10})
+
+    for num in range(0, 300):
+
+        V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy')
+
+
+        variables = [rho, prs, vx1, vx2]
+        var = ['density', 'pressure', 'velocity_x1', 'velocity_x2']
+
+        for i, variable in enumerate(variables):
+            plt.figure(figsize=(10,10))
+            a = plt.imshow(V[variable, :, :], extent=(x1.min(), x1.max(), 
+                           x2.min(), x2.max()))
+
+            ax = plt.gca();
+
+            # Major ticks
+            #ax.set_xticks(np.arange(g.lower_bc_ibeg, g.imax + 1, 10));
+            #ax.set_yticks(np.arange(g.lower_bc_jbeg, g.jmax + 1, 10));
+
+            # Labels for major ticks
+            #ax.set_xticklabels(np.arange(g.lower_bc_ibeg, g.imax + 1, 1));
+            #ax.set_yticklabels(np.arange(g.lower_bc_jbeg, g.jmax + 1, 1));
+
+            # Minor ticks
+            #ax.set_xticks(np.arange(-.5, g.imax + 1 + 0.5, 1), minor=True);
+            #ax.set_yticks(np.arange(-.5, g.jmax + 1 + 0.5, 1), minor=True);
+
+            # Gridlines based on minor ticks
+            ax.grid(which='minor', color='w', linestyle='-', linewidth=0.5)
+            plt.colorbar()
+
+            plt.tight_layout()
+            plt.savefig(f'output/plots/2D/{var[i]}/grid_{var[i]}_{num:04}.png')
+            plt.close()
+
+
+mesh_plot()
+#line_plot()

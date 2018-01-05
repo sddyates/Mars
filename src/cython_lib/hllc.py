@@ -2,29 +2,7 @@ import numpy as np
 from globe import *
 from tools import cons_to_prims, eigenvalues
 
-
-def tvdlf(s):
-    Smax = max(np.amax(abs(s.SL)), np.amax(abs(s.SR)))
-    return 0.5*(s.FL + s.FR - Smax*(s.UR - s.UL))
-
-
-def hll(s, g):
-    for var in range(g.nvar):
-        for i in range(len(s.flux[0, :])):
-            if s.SL[i] > 0.0:
-                s.flux[var, i] = s.FL[var, i]
-            elif (s.SR[i] < 0.0):
-                s.flux[var, i] = s.FR[var, i]
-            else:
-                s.flux[var, i] = (s.SR[i]*s.FL[var, i] \
-                               - s.SL[i]*s.FR[var, i] \
-                               + s.SL[i]*s.SR[i]*(s.UR[var, i] \
-                               - s.UL[var, i]))/(s.SR[i] - s.SL[i])
-                scrh = 1.0/(s.SR[i] - s.SL[i])
-    return
-
-
-def hllc(s, g, p, axis):
+def hllc(s, nvar, p, axis):
 
     if p['Dimensions'] == '1D':
         mxn = mvx1
@@ -79,6 +57,4 @@ def hllc(s, g, p, axis):
 
     return
  
-
-
 

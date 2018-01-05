@@ -1,15 +1,40 @@
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
-
 from globe import *
-from output import mesh_plot, line_plot
-from piecewise import reconstruction
-from solver import riennman
+from cython_lib.solvers import hll, hllc
+from cython_lib.piecewise import flat, minmod
 from tools import *
 
 
 def flux_tensor(U, p, axis):
+    """
+    Synopsis
+    --------
+    construct the flux tensor from the 
+    conservative and primative vaiables.
+
+    Args
+    ----
+    U: numpy array-like
+    State vector containing all 
+    conservative variables.
+
+    p: dic-like
+    Dictionary of user defined ps, e.g. 
+    maximum simulation time.        
+
+    axis: chr-like
+    Character specifying which axis the loop 
+    is over.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
 
     F = np.zeros(shape=U.shape)
 
@@ -34,7 +59,117 @@ def flux_tensor(U, p, axis):
     return F
 
 
+def riennman(s, g, p, axis):
+    """
+    Synopsis
+    --------
+    Execute the riemann solver specified by 
+    user via the p (parameters) dic. 
+
+    Args
+    ----
+    s: object-like
+    object containing all the fluxes needed to 
+    evolve the solution.
+
+    g: object-like
+    object containing all variables related to 
+    the grid, e.g. cell width.
+
+    p: dic-like
+    dictionary of user defined ps, e.g. 
+    maximum simulation time.        
+
+    axis: chr-like
+    Character specifying which axis the loop 
+    is over.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
+
+    if p['riemann'] == 'tvdlf':
+        tvdlf(s)
+    elif p['riemann'] == 'hll':
+        hll(s.flux, s.SL, s.SR, s.FL, s.FR, s.UL, s.UR)
+    elif p['riemann'] == 'hllc':
+        hllc(s.flux, s.SL, s.SR, s.FL, s.FR, s.UL, 
+             s.UR, s.VL, s.VR, p, axis)
+    else:
+        print('Error: invalid riennman solver.')
+        sys.exit()
+
+    if np.isnan(np.sum(s.flux)):
+        print("Error, nan in array, function: riemann")
+        sys.exit()
+
+    return
+
+
+def reconstruction(y, g, p, axis):
+
+    if axis == 'i':
+        dxi = g.dx1
+    if axis == 'j':
+        dxi = g.dx2
+
+    if p['reconstruction'] == 'flat':
+        L, R = flat(y, g)
+    elif p['reconstruction'] == 'linear':
+        L, R = minmod(y, g.gz, dxi)  
+    else:
+        print('Error: Invalid reconstructor.')
+        sys.exit()
+
+    if np.isnan(np.sum(L)) or np.isnan(np.sum(R)):
+        print("Error, nan in array, function: reconstruction")
+        sys.exit()
+
+    return L, R
+
+
 def face_flux(U, s, g, p, axis):
+    """
+    Synopsis
+    --------
+    Construct the fluxes through the cell 
+    faces normal to the direction of "axis".  
+
+    Args
+    ----
+    U: numpy array-like
+    state vector containing all 
+    conservative variables.
+
+    s: object-like
+    object containing all the fluxes needed to 
+    evolve the solution.
+
+    g: object-like
+    object containing all variables related to 
+    the grid, e.g. cell width.
+
+    p: dic-like
+    dictionary of user defined ps, e.g. 
+    maximum simulation time.        
+
+    axis: chr-like
+    Character specifying which axis the loop 
+    is over.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
 
     s.build(g, axis)
 
@@ -58,6 +193,42 @@ def face_flux(U, s, g, p, axis):
 
 
 def RHSOperator(U, s, g, p):
+    """
+    Synopsis
+    --------
+    Evolve the simulation domain though one 
+    time step.
+
+    Args
+    ----
+    U: numpy array-like
+    state vector containing all 
+    conservative variables.
+
+    s: object-like
+    object containing all the fluxes needed to 
+    evolve the solution.
+
+    g: object-like
+    object containing all variables related to 
+    the grid, e.g. cell width.
+
+    p: dic-like
+    dictionary of user defined ps, e.g. 
+    maximum simulation time.        
+
+    axis: chr-like
+    Character specifying which axis the loop 
+    is over.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
 
     if p['Dimensions'] == '1D':
 
@@ -103,7 +274,7 @@ def RHSOperator(U, s, g, p):
     return dflux
 
 
-def incriment(V, dt, flux, g, p):
+def incriment(V, dt, s, g, p):
     """
     Synopsis
     --------
@@ -113,19 +284,23 @@ def incriment(V, dt, flux, g, p):
     Args
     ----
     V: numpy array-like
-        State vector containing the hole solution 
-        and all variables
+    State vector containing the hole solution 
+    and all variables
 
     dt: double-like
-        Time step, in simulation units.
+    Time step, in simulation units.
+
+    s: object-like
+    object containing all the fluxes needed to 
+    evolve the solution.
 
     g: object-like
-       Object containing all variables related to 
-       the grid, e.g. cell width.
+    Object containing all variables related to 
+    the grid, e.g. cell width.
 
     p: dic-like
-       Dictionary of user defined ps, e.g. 
-       maximum simulation time.        
+    Dictionary of user defined ps, e.g. 
+    maximum simulation time.        
 
     Attributes
     ----------
@@ -139,12 +314,12 @@ def incriment(V, dt, flux, g, p):
     U = prims_to_cons(V, p)
 
     if p['time stepping'] == 'Euler':
-        U_new = U + dt*RHSOperator(U, flux, g, p)
+        U_new = U + dt*RHSOperator(U, s, g, p)
         
     elif p['time stepping'] == 'RK2':
-        K1 = dt*RHSOperator(U, flux, g, p)
+        K1 = dt*RHSOperator(U, s, g, p)
         g.boundary(K1, p)
-        K2 = dt*RHSOperator(U+K1, flux, g, p)
+        K2 = dt*RHSOperator(U+K1, s, g, p)
         U_new = U + 0.5*(K1 + K2) 
         
     else:
