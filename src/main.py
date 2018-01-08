@@ -66,8 +66,6 @@ def Main(u):
         print(f'    Iteration:{i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.5f}, {mach_number:.5f}]')
 
         V = incriment(V, dt, s, g, u.p)
-        g.boundary(V, u.p)
-
 
         if t + dt > u.p['max time']:
             dt = u.p['max time'] - t
@@ -86,7 +84,6 @@ def Main(u):
         print(f'    Iteration:{i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.5f}, {mach_number:.5f}]')
 
         V = incriment(V, dt, s, g, u.p)
-        g.boundary(V, u.p)
 
         print(f"    Writing output file: {num:04}")
         numpy_dump(V, g, num)

@@ -98,7 +98,6 @@ def riennman(s, g, p, axis):
     elif p['riemann'] == 'hll':
         hll(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, s.UR.T)
     elif p['riemann'] == 'hllc':
-        #print(s.flux.T.shape)
         hllc(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, 
              s.UR.T, s.VL.T, s.VR.T, p, axis)
     else:
@@ -316,13 +315,15 @@ def incriment(V, dt, s, g, p):
 
     if p['time stepping'] == 'Euler':
         U_new = U + dt*RHSOperator(U, s, g, p)
+        g.boundary(U_new, p)
         
     elif p['time stepping'] == 'RK2':
         K1 = dt*RHSOperator(U, s, g, p)
         g.boundary(K1, p)
         K2 = dt*RHSOperator(U+K1, s, g, p)
         U_new = U + 0.5*(K1 + K2) 
-        
+        g.boundary(U_new, p)
+       
     else:
         print('Error: Invalid integrator.')
         sys.exit()
