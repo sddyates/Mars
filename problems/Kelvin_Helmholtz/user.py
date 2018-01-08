@@ -17,7 +17,7 @@ class User:
             'cfl':0.3,
             'initial dt':0.00001,
             'max dt increase':1.5,
-            'max time':1.0e-4,
+            'max time':5.0,
 
             'plot frequency':0.1,
             'print to file':False,

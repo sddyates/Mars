@@ -96,10 +96,11 @@ def riennman(s, g, p, axis):
     if p['riemann'] == 'tvdlf':
         tvdlf(s)
     elif p['riemann'] == 'hll':
-        hll(s.flux, s.SL, s.SR, s.FL, s.FR, s.UL, s.UR)
+        hll(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, s.UR.T)
     elif p['riemann'] == 'hllc':
-        hllc(s.flux, s.SL, s.SR, s.FL, s.FR, s.UL, 
-             s.UR, s.VL, s.VR, p, axis)
+        #print(s.flux.T.shape)
+        hllc(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, 
+             s.UR.T, s.VL.T, s.VR.T, p, axis)
     else:
         print('Error: invalid riennman solver.')
         sys.exit()
