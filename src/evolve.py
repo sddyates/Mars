@@ -45,16 +45,35 @@ def flux_tensor(U, p, axis):
         F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
         F[eng] = V[vx1]*(U[eng] + V[prs])
 
-    if axis == 'i' and p['Dimensions'] == '2D':
+    if p['Dimensions'] and axis == 'i':
         F[rho] = V[rho]*V[vx1]
         F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
         F[mvx2] = V[rho]*V[vx1]*V[vx2]
         F[eng] = V[vx1]*(U[eng] + V[prs])
-    elif axis == 'j' and p['Dimensions'] == '2D':
+    elif p['Dimensions'] == '2D' and axis == 'j':
         F[rho] = V[rho]*V[vx2]
         F[mvx1] = V[rho]*V[vx1]*V[vx2]
         F[mvx2] = V[rho]*V[vx2]**2 + V[prs]
         F[eng] = V[vx2]*(U[eng] + V[prs])
+
+    if p['Dimensions'] == '3D' and axis == 'i':
+        F[rho] = V[rho]*V[vx1]
+        F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
+        F[mvx2] = V[rho]*V[vx1]*V[vx2]
+        F[mvx3] = V[rho]*V[vx1]*V[vx3]
+        F[eng] = V[vx1]*(U[eng] + V[prs])
+    elif p['Dimensions'] == '3D' and axis == 'j':
+        F[rho] = V[rho]*V[vx2]
+        F[mvx1] = V[rho]*V[vx1]*V[vx2]
+        F[mvx2] = V[rho]*V[vx2]**2 + V[prs]
+        F[mvx3] = V[rho]*V[vx2]*V[vx3]
+        F[eng] = V[vx2]*(U[eng] + V[prs])
+    elif p['Dimensions'] == '3D' and axis == 'k':
+        F[rho] = V[rho]*V[vx3]
+        F[mvx1] = V[rho]*V[vx1]*V[vx3]
+        F[mvx2] = V[rho]*V[vx2]*V[vx3]
+        F[mvx3] = V[rho]*V[vx3]**2 + V[prs]
+        F[eng] = V[vx3]*(U[eng] + V[prs])
 
     return F
 
@@ -117,6 +136,8 @@ def reconstruction(y, g, p, axis):
         dxi = g.dx1
     if axis == 'j':
         dxi = g.dx2
+    if axis == 'k':
+        dxi = g.dx3
 
     if p['reconstruction'] == 'flat':
         L, R = flat(y, g)
@@ -266,6 +287,44 @@ def RHSOperator(U, s, g, p):
             dflux_x2[:, g.jbeg:g.jend, i] = -(Fpos - Fneg)/g.dx2
 
         dflux = dflux_x1 + dflux_x2
+
+    if p['Dimensions'] == '3D':
+
+        dflux_x1 = np.zeros(shape=U.shape)
+        dflux_x2 = np.zeros(shape=U.shape)
+        dflux_x3 = np.zeros(shape=U.shape)
+
+        for k in range(g.kbeg, g.kend):
+            for j in range(g.jbeg, g.jend):
+
+                face_flux_x1 = face_flux(U[:, k, j, :], s, g, p, 'i')
+
+                Fneg = face_flux_x1[:, :-1]
+                Fpos = face_flux_x1[:, 1:]
+
+                dflux_x1[:, k, j, g.ibeg:g.iend] = -(Fpos - Fneg)/g.dx1
+
+        for k in range(g.kbeg, g.kend):
+            for i in range(g.ibeg, g.iend):
+
+                face_flux_x2 = face_flux(U[:, k, :, i], s, g, p, 'j')
+
+                Fneg = face_flux_x2[:, :-1]
+                Fpos = face_flux_x2[:, 1:]
+
+                dflux_x2[:, k, g.jbeg:g.jend, i] = -(Fpos - Fneg)/g.dx2
+
+        for j in range(g.jbeg, g.jend): 
+            for i in range(g.ibeg, g.iend):
+
+                face_flux_x3 = face_flux(U[:, :, j, i], s, g, p, 'k')
+
+                Fneg = face_flux_x3[:, :-1]
+                Fpos = face_flux_x3[:, 1:]
+
+                dflux_x3[:, g.kbeg:g.kend, j, i] = -(Fpos - Fneg)/g.dx3
+
+        dflux = dflux_x1 + dflux_x2 + dflux_x3
 
     if np.isnan(np.sum(dflux)):
         print("Error, nan in array, function: flux")

@@ -1,3 +1,4 @@
+
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -55,10 +56,10 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
     cdef int nvar = flux.shape[1]
     cdef int fmax = flux.shape[0]
 
-    cdef int rho=0, prs=1, vx1=2, vx2=3
-    cdef int eng=1, mv1=2, mv2=3 
-    cdef int mxn, mxt
-    cdef int vxn, vxt
+    cdef int rho=0, prs=1, vx1=2, vx2=3, vx3=4
+    cdef int eng=1, mv1=2, mv2=3, mv3=4 
+    cdef int mxn, mxt, mxb
+    cdef int vxn, vxt, vxb
 
     cdef double QL, QR
     cdef double WL, WR
@@ -70,11 +71,24 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
     if p['Dimensions'] == '1D':
         mxn = mv1
         vxn = vx1
-    elif p['Dimensions'] == '2D':
-        mxn = mv1 if axis == 'i' else mv2
-        mxt = mv2 if axis == 'i' else mv1
-        vxn = vx1 if axis == 'i' else vx2
-        vxt = vx2 if axis == 'i' else vx1
+    elif p['Dimensions'] == '2D' and axis == 'i':
+        mxn = vxn = vx1
+        mxt = vxt = vx2
+    elif p['Dimensions'] == '2D' and axis == 'j':
+        mxn = vxn = vx2
+        mxt = vxt = vx1
+    elif p['Dimensions'] == '3D' and axis == 'i':
+        mxn = vxn = vx1
+        mxt = vxt = vx2
+        mxb = vxb = vx3
+    elif p['Dimensions'] == '3D' and axis == 'j': 
+        mxn = vxn = vx2
+        mxt = vxt = vx1
+        mxb = vxb = vx3
+    elif p['Dimensions'] == '3D' and axis == 'k':
+        mxn = vxn = vx3
+        mxt = vxt = vx1
+        mxb = vxb = vx2
 
     for i in range(fmax):
 
@@ -103,11 +117,16 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
             if p['Dimensions'] == '2D':
                 USL[mxt] = USL[rho]*VL[i, vxt]
                 USR[mxt] = USR[rho]*VR[i, vxt]
+            if p['Dimensions'] == '3D':
+                USL[mxb] = USL[rho]*VL[i, vxb]
+                USR[mxb] = USR[rho]*VR[i, vxb]
 
             USL[eng] = UL[i, eng]/VL[i, rho] \
-                       + (VS - VL[i, vxn])*(VS + VL[i, prs]/(VL[i, rho]*(SL[i] - VL[i, vxn])))
+                        + (VS - VL[i, vxn])*(VS \
+                            + VL[i, prs]/(VL[i, rho]*(SL[i] - VL[i, vxn])))
             USR[eng] = UR[i, eng]/VR[i, rho] \
-                       + (VS - VR[i, vxn])*(VS + VR[i, prs]/(VR[i, rho]*(SR[i] - VR[i, vxn])))
+                        + (VS - VR[i, vxn])*(VS \
+                            + VR[i, prs]/(VR[i, rho]*(SR[i] - VR[i, vxn])))
 
             USL[eng] *= USL[rho];
             USR[eng] *= USR[rho];

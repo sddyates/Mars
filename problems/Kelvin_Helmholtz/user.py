@@ -3,6 +3,7 @@ from globe import *
 
 class User:
 
+
     def __init__(self):
         self.p = {
             'Dimensions':'2D',
@@ -40,6 +41,7 @@ class User:
             'internal boundary':False
             }
 
+
     def initialise(self, V, g):
         
         if self.p['Dimensions'] == '2D':
@@ -56,6 +58,7 @@ class User:
                         V[prs, j, i] = 2.5
                         V[vx1, j, i] = -0.5 + (np.random.rand()*2.0 - 1)*0.001
                         V[vx2, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
+ 
  
     def internal_bc():
         return None

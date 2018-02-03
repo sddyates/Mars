@@ -101,6 +101,9 @@ def time(V, g, p):
     elif p['Dimensions'] == '2D':
         dt, max_velocity, mach_number = time_step(
             V[:, g.jbeg:g.jend, g.ibeg:g.iend], g, p)
+    elif p['Dimensions'] == '3D':
+        dt, max_velocity, mach_number = time_step(
+            V[:, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend], g, p)
 
     return dt, max_velocity, mach_number
 

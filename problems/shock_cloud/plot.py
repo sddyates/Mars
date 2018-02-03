@@ -2,6 +2,8 @@ import sys
 sys.path.insert(0, '../../src')
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib import cm
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from globe import *
 
@@ -31,7 +33,7 @@ def mesh_plot():
     for num in range(0, 300):
 
         V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy')
-
+        print(f'data.{num:04}.npy')
 
         variables = [rho, prs, vx1, vx2]
         var = ['density', 'pressure', 'velocity_x1', 'velocity_x2']
@@ -64,5 +66,73 @@ def mesh_plot():
             plt.close()
 
 
-mesh_plot()
+def mesh_plot_3D():
+
+    matplotlib.rcParams.update({'font.size': 10})
+
+    for num in range(0, 300):
+
+        V, x1, x2, x3 = np.load(f'output/3D/data.{num:04}.npy')
+
+        print(f'data.{num:04}.npy')
+
+        variables = [rho, prs, vx1, vx2, vx3]
+        var = ['density', 'pressure', 'velocity_x1', 'velocity_x2', 'velocity_x3']
+
+        for i, variable in enumerate(variables):
+
+            fig = plt.figure(figsize=(6,15))
+
+            # Slice in the xy plane.
+            ax1 = plt.subplot2grid((3, 1), (0, 0))
+            divider = make_axes_locatable(ax1)
+            cax = divider.append_axes("right", size="5%", pad=0.0)
+            imap1 = ax1.imshow(V[variable, int(len(x3)/2.0), :, :], 
+                               extent=(x1.min(), x1.max(), 
+                                       x2.min(), x2.max()),
+                               aspect=1,
+                               origin="lower",
+                               cmap=cm.viridis)
+            ax1.set_xlabel('$x$')
+            ax1.set_ylabel('$y$')
+            cbar1 = plt.colorbar(imap1, cax=cax)
+            cbar1.set_label(f'{var[i]}')
+
+            # Slice in the xz plane.
+            ax2 = plt.subplot2grid((3, 1), (1, 0))
+            divider = make_axes_locatable(ax2)
+            cax = divider.append_axes("right", size="5%", pad=0.0)            
+            imap2 = ax2.imshow(V[variable, :, int(len(x2)/2.0), :], 
+                               extent=(x1.min(), x1.max(), 
+                                       x3.min(), x3.max()),
+                               aspect=1,
+                               origin="lower",
+                               cmap=cm.viridis)
+            ax2.set_xlabel('$x$')
+            ax2.set_ylabel('$z$')
+            cbar2 = plt.colorbar(imap2, cax=cax)
+            cbar2.set_label(f'{var[i]}')
+
+            # Slice in the zy plane.
+            ax3 = plt.subplot2grid((3, 1), (2, 0))
+            divider = make_axes_locatable(ax3)
+            cax = divider.append_axes("right", size="5%", pad=0.0)            
+            imap3 = ax3.imshow(V[variable, :, :, int(len(x1)/2.0)], 
+                               extent=(x2.min(), x2.max(), 
+                                       x3.min(), x3.max()),
+                               aspect=1,
+                               origin="lower",
+                               cmap=cm.viridis)
+            ax3.set_xlabel('$y$')
+            ax3.set_ylabel('$z$')
+            cbar3 = plt.colorbar(imap3, cax=cax)
+            cbar3.set_label(f'{var[i]}')
+
+            plt.tight_layout()
+            plt.savefig(f'output/plots/3D/{var[i]}/grid_{var[i]}_{num:04}.png')
+            plt.close()
+
+
+mesh_plot_3D()
+#mesh_plot()
 #line_plot()
