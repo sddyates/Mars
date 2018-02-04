@@ -39,7 +39,7 @@ def Main(u):
 
     # Check g.
     print("    Plotting initial conditions...")
-    numpy_dump(V, g, 0)
+    numpy_dump(V, g, u.p, 0)
 
     # Integrate in time.
     print("    Creating simulation...")
@@ -72,7 +72,7 @@ def Main(u):
 
         if t + dt > num*u.p['plot frequency']:
             print(f"    Writing output file: {num:04}")
-            numpy_dump(V, g, num)
+            numpy_dump(V, g, u.p, num)
             num += 1
 
         t += dt
@@ -86,7 +86,7 @@ def Main(u):
         V = incriment(V, dt, s, g, u.p)
 
         print(f"    Writing output file: {num:04}")
-        numpy_dump(V, g, num)
+        numpy_dump(V, g, u.p, num)
 
     print("")
     print('    Simulation complete...')

@@ -2,21 +2,44 @@ import numpy as np
 from globe import *
 
 class User:
+    """
+    Synopsis
+    --------
+    User class for the Kelvin-Helmholtz instability
 
+    Args
+    ----
+    None
+
+    Methods
+    -------
+    initialise
+        Set all variables in each cell to  initialise the simulation.
+
+    internal_bc
+        Specify the internal boundary for the simulation.
+
+    TODO
+    ----
+    None
+    """
 
     def __init__(self):
         self.p = {
-            'Dimensions':'2D',
+            'Dimensions':'3D',
             'x1 min':-0.5,
-            'x2 min':-0.5,
             'x1 max':0.5,
+            'x2 min':-0.5,
             'x2 max':0.5,
+            'x3 min':-0.5,
+            'x3 max':0.5,
 
-            'resolution x1':512,
-            'resolution x2':512,
+            'resolution x1':32,
+            'resolution x2':32,
+            'resolution x3':32,
 
             'cfl':0.3,
-            'initial dt':0.00001,
+            'initial dt':1.0e-5,
             'max dt increase':1.5,
             'max time':5.0,
 
@@ -35,9 +58,14 @@ class User:
             'method':'hydro',
 
             'lower x1 boundary':'reciprocal',
-            'lower x2 boundary':'reciprocal',
             'upper x1 boundary':'reciprocal',
+
+            'lower x2 boundary':'reciprocal',
             'upper x2 boundary':'reciprocal',
+
+            'lower x3 boundary':'reciprocal',
+            'upper x3 boundary':'reciprocal',
+
             'internal boundary':False
             }
 
@@ -45,9 +73,8 @@ class User:
     def initialise(self, V, g):
         
         if self.p['Dimensions'] == '2D':
-            for i in range(g.ibeg, g.iend):
-                for j in range(g.jbeg, g.jend):
-                    
+            for j in range(g.jbeg, g.jend):
+                for i in range(g.ibeg, g.iend):                    
                     if abs(g.x2[j]) < 0.25:
                         V[rho, j, i] = 2.0
                         V[prs, j, i] = 2.5
@@ -59,6 +86,27 @@ class User:
                         V[vx1, j, i] = -0.5 + (np.random.rand()*2.0 - 1)*0.001
                         V[vx2, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
  
+        if self.p['Dimensions'] == '3D':
+            for k in range(g.kbeg, g.kend):
+                for j in range(g.jbeg, g.jend):
+                    for i in range(g.ibeg, g.iend):                    
+                        if abs(g.x2[j]) < 0.25:
+                            V[rho, k, j, i] = 2.0
+                            V[prs, k, j, i] = 2.5
+                            V[vx1, k, j, i] = 0.5 + (np.random.rand()*2.0 - 1)*0.001
+                            V[vx2, k, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
+                            V[vx3, k, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
+                        else:
+                            V[rho, k, j, i] = 1.0
+                            V[prs, k, j, i] = 2.5
+                            V[vx1, k, j, i] = -0.5 + (np.random.rand()*2.0 - 1)*0.001
+                            V[vx2, k, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
+                            V[vx3, k, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
  
     def internal_bc():
         return None
+
+
+
+
+

@@ -1,0 +1,17 @@
+To Do list for project:
+
+- Get hllc solver running in 3D.
+
+- Check the flow features in the shock cloud.
+
+- choose type of output via user parameters.
+
+- Make terminal output more comprehensive e.g. print solver, reconstruction methods etc...
+
+- Restart files.
+
+- MHD
+
+- MPI
+
+- AMR

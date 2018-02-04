@@ -118,6 +118,8 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
                 USL[mxt] = USL[rho]*VL[i, vxt]
                 USR[mxt] = USR[rho]*VR[i, vxt]
             if p['Dimensions'] == '3D':
+                USL[mxt] = USL[rho]*VL[i, vxt]
+                USR[mxt] = USR[rho]*VR[i, vxt]
                 USL[mxb] = USL[rho]*VL[i, vxb]
                 USR[mxb] = USR[rho]*VR[i, vxb]
 
