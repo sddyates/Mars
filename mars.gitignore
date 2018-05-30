@@ -3,7 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
+# cython_lib
+src/cython_lib/
+*.c
 *.so
 
 # Distribution / packaging
