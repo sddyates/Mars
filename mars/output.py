@@ -1,5 +1,4 @@
 import numpy as np
-from globe import *
 from evtk.hl import gridToVTK 
 
 def numpy_dump(V, g, p, num):

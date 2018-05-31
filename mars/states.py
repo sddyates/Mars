@@ -1,7 +1,5 @@
 
 import numpy as np
-from globe import *
-
 
 class States:
 

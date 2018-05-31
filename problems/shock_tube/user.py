@@ -1,10 +1,12 @@
-import numpy as np
-from globe import *
 
-class User:
+from mars import main
+import numpy as np
+class Problem:
 
     def __init__(self):
-        self.p = {
+        self.parameter = {
+            'Name':'Shock Tube',
+
             'Dimensions':'1D',
             'x1 min':0.0,
             'x2 min':0.0,
@@ -40,11 +42,11 @@ class User:
             'internal boundary':False
             }
 
-    def initialise(self, V, g):
+    def initialise(self, V, grid):
         
-        if self.p['Dimensions'] == '1D':
-            for i in range(g.ibeg, g.iend):
-                if g.x1[i] < 0.5:
+        if self.parameter['Dimensions'] == '1D':
+            for i in range(grid.ibeg, grid.iend):
+                if grid.x1[i] < 0.5:
                     V[rho, i] = 1.0
                     V[prs, i] = 1.0
                     V[vx1, i] = 0.0
@@ -55,3 +57,7 @@ class User:
  
     def internal_bc():
         return None
+
+
+if __name__ == "__main__":
+    main(Problem())

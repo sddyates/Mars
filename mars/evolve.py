@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-from globe import *
 from cython_lib.solvers import hll, hllc
 from cython_lib.piecewise import flat, minmod
 from tools import *
