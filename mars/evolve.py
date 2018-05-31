@@ -2,8 +2,7 @@ import sys
 import numpy as np
 from cython_lib.solvers import hll, hllc
 from cython_lib.piecewise import flat, minmod
-from tools import *
-
+from tools import cons_to_prims, prims_to_cons, eigenvalues, time_step
 
 def flux_tensor(U, p, axis):
     """
@@ -77,7 +76,7 @@ def flux_tensor(U, p, axis):
     return F
 
 
-def riennman(s, g, p, axis):
+def riennman(g, p, axis):
     """
     Synopsis
     --------
@@ -86,10 +85,6 @@ def riennman(s, g, p, axis):
 
     Args
     ----
-    s: object-like
-    object containing all the fluxes needed to 
-    evolve the solution.
-
     g: object-like
     object containing all variables related to 
     the grid, e.g. cell width.
@@ -112,12 +107,12 @@ def riennman(s, g, p, axis):
     """
 
     if p['riemann'] == 'tvdlf':
-        tvdlf(s)
+        tvdlf(g)
     elif p['riemann'] == 'hll':
-        hll(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, s.UR.T)
+        hll(g.flux.T, g.SL, g.SR, g.FL.T, g.FR.T, g.UL.T, g.UR.T)
     elif p['riemann'] == 'hllc':
-        hllc(s.flux.T, s.SL, s.SR, s.FL.T, s.FR.T, s.UL.T, 
-             s.UR.T, s.VL.T, s.VR.T, p, axis)
+        hllc(g.flux.T, g.SL, g.SR, g.FL.T, g.FR.T, g.UL.T, 
+             g.UR.T, g.VL.T, g.VR.T, p, axis)
     else:
         print('Error: invalid riennman solver.')
         sys.exit()
@@ -191,25 +186,25 @@ def face_flux(U, s, g, p, axis):
     None
     """
 
-    s.build(g, axis)
+    g.build(axis)
 
-    s.UL, s.UR = reconstruction(U, g, p, axis)
+    g.UL, g.UR = reconstruction(U, g, p, axis)
 
-    s.VL = cons_to_prims(s.UL, p)
-    s.VR = cons_to_prims(s.UR, p)
+    g.VL = cons_to_prims(g.UL, p)
+    g.VR = cons_to_prims(g.UR, p)
 
-    s.FL = flux_tensor(s.UL, p, axis)
-    s.FR = flux_tensor(s.UR, p, axis)
+    g.FL = flux_tensor(g.UL, p, axis)
+    g.FR = flux_tensor(g.UR, p, axis)
 
-    s.SL, s.SR = eigenvalues(s.UL, s.UR, p, axis)
+    g.SL, g.SR = eigenvalues(g.UL, g.UR, p, axis)
 
-    riennman(s, g, p, axis)
+    riennman(g, p, axis)
 
-    if np.isnan(np.sum(s.flux)):
+    if np.isnan(np.sum(g.flux)):
         print("Error, nan in array, function: riemann")
         sys.exit()
 
-    return s.flux
+    return g.flux
 
 
 def RHSOperator(U, s, g, p):

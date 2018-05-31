@@ -7,9 +7,9 @@ DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
 
-def tvdlf(s):
-    Smax = max(np.amax(abs(s.SL)), np.amax(abs(s.SR)))
-    return 0.5*(s.FL + s.FR - Smax*(s.UR - s.UL))
+def tvdlf(g):
+    Smax = max(np.amax(abs(g.SL)), np.amax(abs(g.SR)))
+    return 0.5*(g.FL + g.FR - Smax*(g.UR - g.UL))
 
 
 def hll(np.ndarray[DTYPE_t, ndim=2] flux, 

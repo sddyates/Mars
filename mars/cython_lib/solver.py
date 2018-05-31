@@ -1,30 +1,27 @@
 import numpy as np
-from globe import *
-from tools import cons_to_prims, eigenvalues
+
+def tvdlf(g):
+    Smax = max(np.amax(abs(g.SL)), np.amax(abs(g.SR)))
+    return 0.5*(g.FL + g.FR - Smax*(g.UR - g.UL))
 
 
-def tvdlf(s):
-    Smax = max(np.amax(abs(s.SL)), np.amax(abs(s.SR)))
-    return 0.5*(s.FL + s.FR - Smax*(s.UR - s.UL))
-
-
-def hll(s, g):
+def hll(g):
     for var in range(g.nvar):
-        for i in range(len(s.flux[0, :])):
-            if s.SL[i] > 0.0:
-                s.flux[var, i] = s.FL[var, i]
-            elif (s.SR[i] < 0.0):
-                s.flux[var, i] = s.FR[var, i]
+        for i in range(len(g.flux[0, :])):
+            if g.SL[i] > 0.0:
+                g.flux[var, i] = g.FL[var, i]
+            elif (g.SR[i] < 0.0):
+                g.flux[var, i] = g.FR[var, i]
             else:
-                s.flux[var, i] = (s.SR[i]*s.FL[var, i] \
-                               - s.SL[i]*s.FR[var, i] \
-                               + s.SL[i]*s.SR[i]*(s.UR[var, i] \
-                               - s.UL[var, i]))/(s.SR[i] - s.SL[i])
-                scrh = 1.0/(s.SR[i] - s.SL[i])
+                g.flux[var, i] = (g.SR[i]*g.FL[var, i] \
+                               - g.SL[i]*g.FR[var, i] \
+                               + g.SL[i]*g.SR[i]*(g.UR[var, i] \
+                               - g.UL[var, i]))/(g.SR[i] - g.SL[i])
+                scrh = 1.0/(g.SR[i] - g.SL[i])
     return
 
 
-def hllc(s, g, p, axis):
+def hllc(g, p, axis):
 
     if p['Dimensions'] == '1D':
         mxn = mvx1
@@ -35,47 +32,47 @@ def hllc(s, g, p, axis):
         vxn = vx1 if axis == 'i' else vx2
         vxt = vx2 if axis == 'i' else vx1
 
-    for i in range(len(s.flux[0, :])):
+    for i in range(len(g.flux[0, :])):
 
-        if s.SL[i] > 0.0:
-            s.flux = s.FL
+        if g.SL[i] > 0.0:
+            g.flux = g.FL
 
-        elif s.SR[i] < 0.0:
-            s.flux = s.FR
+        elif g.SR[i] < 0.0:
+            g.flux = g.FR
 
         else:
-            USL = np.zeros(shape=s.UL.shape[0])
-            USR = np.zeros(shape=s.UR.shape[0])
+            USL = np.zeros(shape=g.UL.shape[0])
+            USR = np.zeros(shape=g.UR.shape[0])
 
-            QL = s.VL[prs, i] + s.UL[mxn, i]*(s.VL[vxn, i] - s.SL[i])
-            QR = s.VR[prs, i] + s.UR[mxn, i]*(s.VR[vxn, i] - s.SR[i])
+            QL = g.VL[prs, i] + g.UL[mxn, i]*(g.VL[vxn, i] - g.SL[i])
+            QR = g.VR[prs, i] + g.UR[mxn, i]*(g.VR[vxn, i] - g.SR[i])
 
-            WL = s.VL[rho, i]*(s.VL[vxn, i] - s.SL[i])
-            WR = s.VR[rho, i]*(s.VR[vxn, i] - s.SR[i])
+            WL = g.VL[rho, i]*(g.VL[vxn, i] - g.SL[i])
+            WR = g.VR[rho, i]*(g.VR[vxn, i] - g.SR[i])
 
             VS = (QR - QL)/(WR - WL)
 
-            USL[rho] = s.UL[rho, i]*(s.SL[i] - s.VL[vxn, i])/(s.SL[i] - VS)
-            USR[rho] = s.UR[rho, i]*(s.SR[i] - s.VR[vxn, i])/(s.SR[i] - VS)
+            USL[rho] = g.UL[rho, i]*(g.SL[i] - g.VL[vxn, i])/(g.SL[i] - VS)
+            USR[rho] = g.UR[rho, i]*(g.SR[i] - g.VR[vxn, i])/(g.SR[i] - VS)
 
             USL[mxn] = USL[rho]*VS
             USR[mxn] = USR[rho]*VS
             if p['Dimensions'] == '2D':
-                USL[mxt] = USL[rho]*s.VL[vxt, i]
-                USR[mxt] = USR[rho]*s.VR[vxt, i]
+                USL[mxt] = USL[rho]*g.VL[vxt, i]
+                USR[mxt] = USR[rho]*g.VR[vxt, i]
 
-            USL[eng] = s.UL[eng, i]/s.VL[rho, i] \
-                       + (VS - s.VL[vxn, i])*(VS + s.VL[prs, i]/(s.VL[rho, i]*(s.SL[i] - s.VL[vxn, i])));
-            USR[eng] = s.UR[eng, i]/s.VR[rho, i] \
-                       + (VS - s.VR[vxn, i])*(VS + s.VR[prs, i]/(s.VR[rho, i]*(s.SR[i] - s.VR[vxn, i])));
+            USL[eng] = g.UL[eng, i]/g.VL[rho, i] \
+                       + (VS - g.VL[vxn, i])*(VS + g.VL[prs, i]/(g.VL[rho, i]*(g.SL[i] - g.VL[vxn, i])))
+            USR[eng] = g.UR[eng, i]/g.VR[rho, i] \
+                       + (VS - g.VR[vxn, i])*(VS + g.VR[prs, i]/(g.VR[rho, i]*(g.SR[i] - g.VR[vxn, i])))
 
-            USL[eng] *= USL[rho];
-            USR[eng] *= USR[rho];
+            USL[eng] *= USL[rho]
+            USR[eng] *= USR[rho]
 
             if VS >= 0.0:
-                s.flux[:, i] = s.FL[:, i] + s.SL[i]*(USL - s.UL[:, i]);
+                g.flux[:, i] = g.FL[:, i] + g.SL[i]*(USL - g.UL[:, i])
             else:
-                s.flux[:, i] = s.FR[:, i] + s.SR[i]*(USR - s.UR[:, i]);
+                g.flux[:, i] = g.FR[:, i] + g.SR[i]*(USR - g.UR[:, i])
 
     return
  
