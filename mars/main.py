@@ -12,7 +12,7 @@ from states import States
 from output import numpy_dump
 import sys
 
-def Main(problem):
+def main_loop(problem):
 
     # Set global parameters.    
     set_globals()

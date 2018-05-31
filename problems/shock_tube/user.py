@@ -1,6 +1,7 @@
 
-from mars import main
+from mars import main_loop
 import numpy as np
+
 class Problem:
 
     def __init__(self):
@@ -55,9 +56,9 @@ class Problem:
                     V[prs, i] = 0.1
                     V[vx1, i] = 0.0                    
  
-    def internal_bc():
-        return None
+    #def internal_bc():
+    #    return None
 
 
 if __name__ == "__main__":
-    main(Problem())
+    main_loop(Problem())

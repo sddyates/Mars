@@ -1,1 +1,1 @@
-import main
+from main import main_loop

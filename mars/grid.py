@@ -237,23 +237,23 @@ class Grid:
             sys.exit()
 
 
-        def build(self, axis):
-            if axis == 'i':
-                array_shape = self.shape_flux_x1
-            if axis == 'j':
-                array_shape = self.shape_flux_x2
-            if axis == 'k':
-                array_shape = self.shape_flux_x3
+    def build(self, axis):
+        if axis == 'i':
+            array_shape = self.shape_flux_x1
+        if axis == 'j':
+            array_shape = self.shape_flux_x2
+        if axis == 'k':
+            array_shape = self.shape_flux_x3
 
-            self.flux = np.zeros(shape=array_shape)
-            self.FL = np.zeros(shape=array_shape)
-            self.FR = np.zeros(shape=array_shape) 
-            self.UL = np.zeros(shape=array_shape)
-            self.UR = np.zeros(shape=array_shape)
-            self.VL = np.zeros(shape=array_shape)
-            self.VR = np.zeros(shape=array_shape)
-            self.SL = np.zeros(shape=array_shape)
-            self.SR = np.zeros(shape=array_shape)
+        self.flux = np.zeros(shape=array_shape)
+        self.FL = np.zeros(shape=array_shape)
+        self.FR = np.zeros(shape=array_shape) 
+        self.UL = np.zeros(shape=array_shape)
+        self.UR = np.zeros(shape=array_shape)
+        self.VL = np.zeros(shape=array_shape)
+        self.VR = np.zeros(shape=array_shape)
+        self.SL = np.zeros(shape=array_shape)
+        self.SR = np.zeros(shape=array_shape)
 
 
     def boundary(self, V, p):

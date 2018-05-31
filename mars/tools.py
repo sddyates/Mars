@@ -1,5 +1,4 @@
 import numpy as np
-from globe import *
 import sys
 
 
@@ -25,7 +24,7 @@ def eigenvalues(UL, UR, p, axis):
         Sp = np.maximum(abs(VL[vx1]) + csL, abs(VR[vx1]) + csR)
     elif axis == 'j':
         Sp = np.maximum(abs(VL[vx2]) + csL, abs(VR[vx2]) + csR)
-    elif axis == 'k':”
+    elif axis == 'k':
         Sp = np.maximum(abs(VL[vx3]) + csL, abs(VR[vx3]) + csR)
 
     SL = -Sp
