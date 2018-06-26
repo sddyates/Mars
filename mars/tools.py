@@ -1,11 +1,14 @@
 import numpy as np
 import sys
+from settings import *
 
 
 def eigenvalues(UL, UR, p, axis):
 
     VL = cons_to_prims(UL, p)
     VR = cons_to_prims(UR, p)
+
+    VLR = 0.5*(VL + VR)
 
     csL = np.sqrt(p['gamma']*VL[prs]/VL[rho])
     csR = np.sqrt(p['gamma']*VR[prs]/VR[rho])
@@ -21,14 +24,14 @@ def eigenvalues(UL, UR, p, axis):
         sys.exit()
 
     if axis == 'i':
-        Sp = np.maximum(abs(VL[vx1]) + csL, abs(VR[vx1]) + csR)
+        SL = np.minimum(VL[vx1] - csL, VR[vx1] - csR)
+        SR = np.maximum(VL[vx1] + csL, VR[vx1] + csR)
     elif axis == 'j':
-        Sp = np.maximum(abs(VL[vx2]) + csL, abs(VR[vx2]) + csR)
+        SL = np.minimum(VL[vx2] - csL, VR[vx2] - csR)
+        SR = np.maximum(VL[vx2] + csL, VR[vx2] + csR)
     elif axis == 'k':
-        Sp = np.maximum(abs(VL[vx3]) + csL, abs(VR[vx3]) + csR)
-
-    SL = -Sp
-    SR = Sp
+        SL = np.minimum(VL[vx3] - csL, VR[vx3] - csR)
+        SR = np.maximum(VL[vx3] + csL, VR[vx3] + csR)
 
     return SL, SR
 
@@ -47,7 +50,7 @@ def cons_to_prims(U, p):
     kinE = 0.5*m2/U[rho]
 
     if (U[eng, U[eng, :] < 0.0] < 0.0).any():
-        U[eng, U[eng, :] < 0.0] = SmallPressure/(p['gamma'] - 1.0) \
+        U[eng, U[eng, :] < 0.0] = small_pressure/(p['gamma'] - 1.0) \
             + kinE[U[eng, :] < 0.0]
 
     V[rho] = U[rho]
@@ -60,7 +63,7 @@ def cons_to_prims(U, p):
     V[prs] = (p['gamma'] - 1.0)*(U[eng] - kinE)
 
     if (V[prs, V[prs, :] < 0.0] < 0.0).any():
-        V[prs, V[prs, :] < 0.0] = SmallPressure
+        V[prs, V[prs, :] < 0.0] = small_pressure
 
     if np.isnan(V).any():
         print("Error, nan in cons_to_prims")
@@ -98,26 +101,44 @@ def prims_to_cons(V, p):
 
 def time_step(V, g, p):
 
-    cs = np.sqrt(p['gamma']*V[prs]/V[rho])
-
     if p['Dimensions'] == '1D':
-        max_velocity = np.amax(abs(V[vx1]))
-        max_speed = np.amax(abs(V[vx1]) + cs)
+
+        cs = np.sqrt(p['gamma']\
+            *V[prs, g.ibeg:g.iend]\
+            /V[rho, g.ibeg:g.iend])
+
+        max_velocity = np.amax(abs(V[vx1, g.ibeg:g.iend]))
+        max_speed = np.amax(abs(V[vx1, g.ibeg:g.iend]) + cs)
         dt = p['cfl']*g.dx1/max_speed 
-        mach_number = np.amax(abs(V[vx1])/cs)
+        mach_number = np.amax(abs(V[vx1, g.ibeg:g.iend])/cs)
+
     elif p['Dimensions'] == '2D':
-        max_velocity = np.amax(abs(V[vx1:vx2]))
-        max_speed = np.amax(abs(V[vx1:vx2]) + cs)
+
+        cs = np.sqrt(p['gamma']\
+            *V[prs, g.jbeg:g.jend, g.ibeg:g.iend]\
+            /V[rho, g.jbeg:g.jend, g.ibeg:g.iend])
+
+        max_velocity = np.amax(abs(V[vx1:vx2, g.jbeg:g.jend, g.ibeg:g.iend]))
+        max_speed = np.amax(abs(V[vx1:vx2, g.jbeg:g.jend, g.ibeg:g.iend]) + cs)
         dt = p['cfl']*min(g.dx1, g.dx2)/max_speed 
-        mach_number = np.amax(abs(V[vx1:vx2])/cs)
+        mach_number = np.amax(abs(V[vx1:vx2, g.jbeg:g.jend, g.ibeg:g.iend])/cs)
+
     elif p['Dimensions'] == '3D':
-        max_velocity = np.amax(abs(V[vx1:vx3]))
-        max_speed = np.amax(abs(V[vx1:vx3]) + cs)
+
+        cs = np.sqrt(p['gamma']\
+            *V[prs, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend]\
+            /V[rho, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend])
+
+        max_velocity = np.amax(
+            abs(V[vx1:vx3, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend]))
+        max_speed = np.amax(
+            abs(V[vx1:vx3, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend]) + cs)
         dt = p['cfl']*min(g.dx1, g.dx2, g.dx3)/max_speed 
-        mach_number = np.amax(abs(V[vx1:vx3])/cs)
+        mach_number = np.amax(
+            abs(V[vx1:vx3, g.kbeg:g.kend, g.jbeg:g.jend, g.ibeg:g.iend])/cs)
 
     if np.isnan(dt):
-        print("Error, nan in time_step", cs)
+        print("Error, nan in time_step, cs =", cs)
         sys.exit()
 
     return dt, max_velocity, mach_number

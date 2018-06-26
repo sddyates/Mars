@@ -5,7 +5,7 @@ import matplotlib
 from matplotlib import cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
-from globe import *
+from settings import *
 
 def line_plot():
 
@@ -43,7 +43,7 @@ def mesh_plot():
             a = plt.imshow(V[variable, :, :], extent=(x1.min(), x1.max(), 
                            x2.min(), x2.max()))
 
-            ax = plt.gca();
+            ax = plt.gca()
 
             # Major ticks
             #ax.set_xticks(np.arange(g.lower_bc_ibeg, g.imax + 1, 10));
@@ -133,6 +133,6 @@ def mesh_plot_3D():
             plt.close()
 
 
-mesh_plot_3D()
-#mesh_plot()
+#mesh_plot_3D()
+mesh_plot()
 #line_plot()

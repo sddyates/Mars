@@ -1,1 +1,2 @@
-from main import main_loop
+from main import \
+    main_loop

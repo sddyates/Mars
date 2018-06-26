@@ -237,7 +237,7 @@ class Grid:
             sys.exit()
 
 
-    def build(self, axis):
+    def build_fluxes(self, axis):
         if axis == 'i':
             array_shape = self.shape_flux_x1
         if axis == 'j':
@@ -252,8 +252,9 @@ class Grid:
         self.UR = np.zeros(shape=array_shape)
         self.VL = np.zeros(shape=array_shape)
         self.VR = np.zeros(shape=array_shape)
-        self.SL = np.zeros(shape=array_shape)
-        self.SR = np.zeros(shape=array_shape)
+        self.SL = np.zeros(shape=array_shape[1])
+        self.SR = np.zeros(shape=array_shape[1])
+        self.pres = np.zeros(shape=array_shape[1])
 
 
     def boundary(self, V, p):
@@ -322,7 +323,7 @@ class Grid:
             V[:, self.upper_bc_ibeg:] = \
                 V[:, self.gz:self.gz + 1]
 
-        if bc_type == 'outflow' and dim == '1D':
+        elif bc_type == 'outflow' and dim == '1D':
             V[:, self.upper_bc_ibeg:] = \
                 V[:, self.upper_bc_ibeg - 1].reshape(
                     (self.nvar, 

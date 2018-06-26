@@ -1,5 +1,6 @@
 import numpy as np
-from evtk.hl import gridToVTK 
+from evtk.hl import gridToVTK, imageToVTK
+from settings import *
 
 def numpy_dump(V, g, p, num):
 
@@ -8,6 +9,28 @@ def numpy_dump(V, g, p, num):
 
     if p['Dimensions'] == '2D':    
         np.save(f'output/2D/data.{num:04}.npy', (V, g.x1, g.x2))
+
+        V_vtk = np.expand_dims(V, axis=4)
+        V_vtk_rho = np.copy(
+            np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :], 
+            order='F')
+        V_vtk_prs = np.copy(
+            np.swapaxes(V_vtk, 1, 2)[prs, g.jbeg:g.jend, g.ibeg:g.iend, :], 
+            order='F')
+        V_vtk_vx1 = np.copy(
+            np.swapaxes(V_vtk, 1, 2)[vx1, g.jbeg:g.jend, g.ibeg:g.iend, :], 
+            order='F')
+        V_vtk_vx2 = np.copy(
+            np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :], 
+            order='F')
+
+        imageToVTK(f"output/2D/data.{num:04}", 
+                  origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
+                  spacing = (g.dx1, g.dx2, 0.0),
+                  cellData = {"rho":V_vtk_rho, 
+                              "prs":V_vtk_prs,
+                              "vx1":V_vtk_vx1,
+                              "vx2":V_vtk_vx2})
 
     if p['Dimensions'] == '3D':
         np.save(f'output/3D/data.{num:04}.npy', (V, g.x1, g.x2, g.x3))
