@@ -2,7 +2,8 @@ import numpy as np
 from evtk.hl import gridToVTK, imageToVTK
 from settings import *
 
-def numpy_dump(V, g, p, num):
+def dump(V, g, p, num):
+    print(f"    Writing output file: {num:04}")
 
     if p['Dimensions'] == '1D':
         np.save(f'output/1D/data.{num:04}.npy', (V, g.x1))

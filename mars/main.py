@@ -9,7 +9,8 @@ from settings import *
 from grid import Grid
 from tools import time_step
 from evolve import incriment
-from output import numpy_dump
+from output import dump
+from settings import *
 import sys
 
 def main_loop(problem):
@@ -21,7 +22,7 @@ def main_loop(problem):
     Args
     ----
     problem: object-like.
-        User defined simulation problem.
+    User defined simulation problem.
 
     Attributes
     ----------
@@ -36,72 +37,70 @@ def main_loop(problem):
     print("")
 
     # Initialise g.
-    print("    Creating grid...")
+    print("    Setting up problem:", problem.parameter['Name'])
+    print("")
     g = Grid(problem.parameter)
 
-    # Generate s vector to hold variables.
+    # Generate state vector to hold conservative 
+    # and primative variables.
     print("    Creating arrays...")
     V = g.state_vector(problem.parameter)
 
-    # Initialise the state vector.
-    print("    Initialising data...")
+    # Initialise the state vector accourding to 
+    # user defined problem.
+    print("    Initialising grid...")
     problem.initialise(V, g)
-
-    if np.isnan(np.sum(V)):
-        print("Error, nan in array, function: main")
-        sys.exit()
 
     # Apply boundary conditions.
     print("    Applying boundary conditions...")
     g.boundary(V, problem.parameter)
 
-    # Check g.
-    print("    Plotting initial conditions...")
-    numpy_dump(V, g, problem.parameter, 0)
+    # Check initial grid for nans.
+    if np.isnan(np.sum(V)):
+        print("Error, nan in array, function: main")
+        sys.exit()
 
     # Integrate in time.
-    print("    Starting main loop...")
+    print("    Starting time integration loop...")
     print("")
+    
+    # First output.
+    dump(V, g, problem.parameter, 0)
 
     # Perform main integration loop.
     t = 0.0
+    dt = problem.parameter['initial dt']
     i = 0
     num = 1
+    percent = 100.0/problem.parameter['max time']
 
     while t < problem.parameter['max time']:
 
-        percent = 100.0*(t/problem.parameter['max time'])
-
-        if t == 0.0:
-            dt = problem.parameter['initial dt']
-
-        dt_new, max_velocity, mach_number = time_step(V, g, problem.parameter)
-        dt = min(dt_new, problem.parameter['max dt increase']*dt)
-
-        print(f'    n = {i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]')
-
         V = incriment(V, dt, g, problem.parameter)
 
-        if t + dt > problem.parameter['max time']:
+        dt_new, max_velocity, mach_number = time_step(V, g, problem.parameter)
+
+        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
+        + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
+
+        dt = min(dt_new, problem.parameter['max dt increase']*dt)
+
+        if (t + dt) > problem.parameter['max time']:
             dt = problem.parameter['max time'] - t
 
-        if t + dt > num*problem.parameter['plot frequency']:
-            print(f"    Writing output file: {num:04}")
-            numpy_dump(V, g, problem.parameter, num)
+        if (t + dt) > num*problem.parameter['plot frequency']:
+            dump(V, g, problem.parameter, num)
             num += 1
 
         t += dt
         i += 1
 
     else:
-
-        percent = 100.0*(t/problem.parameter['max time'])
-        print(f'    n = {i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]')
+        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
+        + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
 
         V = incriment(V, dt, g, problem.parameter)
-
-        print(f"    Writing output file: {num:04}")
-        numpy_dump(V, g, problem.parameter, num)
+        dump(V, g, problem.parameter, num)
 
     print("")
     print('    Simulation complete...')

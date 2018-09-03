@@ -243,7 +243,7 @@ class Grid:
         if axis == 'j':
             array_shape = self.shape_flux_x2
         if axis == 'k':
-            array_shape = self.shape_flux_x3
+            array_shape = self.shape_flux_x3    
 
         self.flux = np.zeros(shape=array_shape)
         self.FL = np.zeros(shape=array_shape)
@@ -294,11 +294,15 @@ class Grid:
                 V[:, :, self.nx1:self.nx1 + self.gz]
 
         elif bc_type == 'outflow' and dim == '2D':
-            V[:, :, :self.gz] = \
-                V[:, :, self.gz].reshape(
-                    (self.nvar, 
-                     2*self.gz+self.nx2, 
-                     self.gz-1))
+            
+            for o in range(self.gz):
+                V[:, :, o] = V[:, :, self.gz]
+
+            #V[:, :, :self.gz] = \
+            #    V[:, :, self.gz]#.reshape(
+                    #(self.nvar, 
+                    # 2*self.gz+self.nx2, 
+                    # self.gz-1))
 
         elif bc_type == 'reciprocal' and dim == '3D':
             V[:, :, :, :self.gz] = \
@@ -334,11 +338,14 @@ class Grid:
                 V[:, :, self.gz:self.gz + 1]
 
         elif bc_type == 'outflow' and dim == '2D':
-            V[:, :, self.upper_bc_ibeg:] = \
-                V[:, :, self.upper_bc_ibeg - 1].reshape(
-                    (self.nvar, 
-                     2*self.gz+self.nx2, 
-                     self.gz - 1))
+            for o in range(self.upper_bc_ibeg, self.upper_bc_iend+1):
+                V[:, :, o] = V[:, :, self.upper_bc_ibeg - 1]
+
+            #V[:, :, self.upper_bc_ibeg:] = \
+            #    V[:, :, self.upper_bc_ibeg - 1].reshape(
+            #        (self.nvar, 
+            #         2*self.gz+self.nx2, 
+            #         self.gz - 1))
 
         elif bc_type == 'reciprocal' and dim == '3D':
             V[:, :, :, self.upper_bc_ibeg:] = \
@@ -364,11 +371,15 @@ class Grid:
                 V[:, self.nx2:self.nx2 + self.gz, :]
 
         elif bc_type == 'outflow' and dim == '2D':
-            V[:, :self.gz, :] = \
-                V[:, self.gz, :].reshape(
-                    (self.nvar, 
-                     self.gz - 1, 
-                     self.nx1 + 2*self.gz))
+
+            for o in range(self.gz):
+                V[:, o, :] = V[:, self.gz, :]
+
+            #V[:, :self.gz, :] = \
+            #    V[:, self.gz, :].reshape(
+            #        (self.nvar, 
+            #         self.gz - 1, 
+            #         self.nx1 + 2*self.gz))
 
         elif bc_type == 'reciprocal' and dim == '3D':
             V[:, :, :self.gz, :] = \
@@ -394,11 +405,15 @@ class Grid:
                 V[:, self.gz:self.gz + 1, :]
 
         elif bc_type == 'outflow' and dim == '2D':
-            V[:, self.upper_bc_jbeg:, :] = \
-                V[:, self.upper_bc_jbeg - 1, :].reshape(
-                    (self.nvar, 
-                     self.gz - 1, 
-                     self.nx1 + 2*self.gz))
+
+            for o in range(self.upper_bc_ibeg, self.upper_bc_iend+1):
+                V[:, o, :] = V[:, self.upper_bc_ibeg - 1, :]
+
+            #V[:, self.upper_bc_jbeg:, :] = \
+            #    V[:, self.upper_bc_jbeg - 1, :].reshape(
+            #        (self.nvar, 
+            #         self.gz - 1, 
+            #         self.nx1 + 2*self.gz))
 
         elif bc_type == 'reciprocal' and dim == '3D':
             V[:, :, self.upper_bc_jbeg:, :] = \

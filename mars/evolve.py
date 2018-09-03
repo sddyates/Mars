@@ -1,10 +1,11 @@
+
 import sys
 import numpy as np
 from settings import *
-from cython_lib.solver import hllc2
 from cython_lib.solvers import hll, hllc, tvdlf
 from cython_lib.piecewise import flat, minmod
 from tools import cons_to_prims, prims_to_cons, eigenvalues, time_step
+
 
 def flux_tensor(U, p, axis):
     """
@@ -41,69 +42,32 @@ def flux_tensor(U, p, axis):
     V = cons_to_prims(U, p)
 
     if p['Dimensions'] == '1D':
-        #F[rho] = V[rho]*V[vx1]
-        #F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
-        #F[eng] = V[vx1]*(U[eng] + V[prs])
-
         F[rho] = U[mvx1]
         F[mvx1] = U[mvx1]*V[vx1]
         F[eng] = V[vx1]*(U[eng] + V[prs])
-
-    if p['Dimensions'] == '2D' and axis == 'i':
-        #F[rho] = V[rho]*V[vx1]
-        #F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
-        #F[mvx2] = V[rho]*V[vx1]*V[vx2]
-        #F[eng] = V[vx1]*(U[eng] + V[prs])
-
+    elif p['Dimensions'] == '2D' and axis == 'i':
         F[rho] = U[mvx1]
         F[mvx1] = U[mvx1]*V[vx1]
         F[mvx2] = U[mvx2]*V[vx1]
         F[eng] = V[vx1]*(U[eng] + V[prs])
-
     elif p['Dimensions'] == '2D' and axis == 'j':
-        #F[rho] = V[rho]*V[vx2]
-        #F[mvx1] = V[rho]*V[vx1]*V[vx2]
-        #F[mvx2] = V[rho]*V[vx2]**2 + V[prs]
-        #F[eng] = V[vx2]*(U[eng] + V[prs])
-
         F[rho] = U[mvx2]
         F[mvx1] = U[mvx1]*V[vx2]
         F[mvx2] = U[mvx2]*V[vx2]
         F[eng] = V[vx2]*(U[eng] + V[prs])
-
-    if p['Dimensions'] == '3D' and axis == 'i':
-        #F[rho] = V[rho]*V[vx1]
-        #F[mvx1] = V[rho]*V[vx1]**2 + V[prs]
-        #F[mvx2] = V[rho]*V[vx1]*V[vx2]
-        #F[mvx3] = V[rho]*V[vx1]*V[vx3]
-        #F[eng] = V[vx1]*(U[eng] + V[prs])
-
+    elif p['Dimensions'] == '3D' and axis == 'i':
         F[rho] = U[mvx1]
         F[mvx1] = U[mvx1]*V[vx1]
         F[mvx2] = U[mvx2]*V[vx1]
         F[mvx3] = U[mvx3]*V[vx1]
         F[eng] = V[vx1]*(U[eng] + V[prs])
-
     elif p['Dimensions'] == '3D' and axis == 'j':
-        #F[rho] = V[rho]*V[vx2]
-        #F[mvx1] = V[rho]*V[vx1]*V[vx2]
-        #F[mvx2] = V[rho]*V[vx2]**2 + V[prs]
-        #F[mvx3] = V[rho]*V[vx2]*V[vx3]
-        #F[eng] = V[vx2]*(U[eng] + V[prs])
-
         F[rho] = U[mvx2]
         F[mvx1] = U[mvx1]*V[vx2]
         F[mvx2] = U[mvx2]*V[vx2]
         F[mvx3] = U[mvx3]*V[vx2]
         F[eng] = V[vx2]*(U[eng] + V[prs])
-
     elif p['Dimensions'] == '3D' and axis == 'k':
-        #F[rho] = V[rho]*V[vx3]
-        #F[mvx1] = V[rho]*V[vx1]*V[vx3]
-        #F[mvx2] = V[rho]*V[vx2]*V[vx3]
-        #F[mvx3] = V[rho]*V[vx3]**2 + V[prs]
-        #F[eng] = V[vx3]*(U[eng] + V[prs])
-
         F[rho] = U[mvx3]
         F[mvx1] = U[mvx1]*V[vx3]
         F[mvx2] = U[mvx2]*V[vx3]
@@ -144,10 +108,12 @@ def riennman(g, p, axis):
     """
 
     if p['riemann'] == 'tvdlf':
-        tvdlf(g)
+        tvdlf(g, p, axis)
     elif p['riemann'] == 'hll':
+        #Geometry.riemann[p['riemann']](g.flux.T, g.pres.T, g.SL, g.SR, g.FL.T, g.FR.T, g.UL.T, g.UR.T, 
+        #    g.VL.T, g.VR.T)
         hll(g.flux.T, g.pres.T, g.SL, g.SR, g.FL.T, g.FR.T, g.UL.T, g.UR.T, 
-            g.VL.T, g.VR.T)
+            g.VL.T, g.VR.T, p, axis)
     elif p['riemann'] == 'hllc':
         hllc(g.flux.T, g.pres.T, g.SL, g.SR, g.FL.T, g.FR.T, g.UL.T, g.UR.T, 
             g.VL.T, g.VR.T, p, axis)
@@ -162,7 +128,7 @@ def riennman(g, p, axis):
     return
 
 
-def reconstruction(y, g, p, axis):
+def reconstruction(V, g, p, axis):
 
     if axis == 'i':
         dxi = g.dx1
@@ -172,9 +138,9 @@ def reconstruction(y, g, p, axis):
         dxi = g.dx3
 
     if p['reconstruction'] == 'flat':
-        L, R = flat(y, g)
+        L, R = flat(V, g)
     elif p['reconstruction'] == 'linear':
-        L, R = minmod(y, g.gz, dxi)  
+        L, R = minmod(V, g.gz, dxi)  
     else:
         print('Error: Invalid reconstructor.')
         sys.exit()
@@ -226,10 +192,12 @@ def face_flux(U, g, p, axis):
 
     g.build_fluxes(axis)
 
-    g.UL, g.UR = reconstruction(U, g, p, axis)
+    V = cons_to_prims(U, p)
 
-    g.VL = cons_to_prims(g.UL, p)
-    g.VR = cons_to_prims(g.UR, p)
+    g.VL, g.VR = reconstruction(V, g, p, axis)
+
+    g.UL = prims_to_cons(g.VL, p)
+    g.UR = prims_to_cons(g.VR, p)
 
     g.FL = flux_tensor(g.UL, p, axis)
     g.FR = flux_tensor(g.UR, p, axis)
@@ -288,10 +256,7 @@ def RHSOperator(U, g, p):
 
         face_fluxes = face_flux(U, g, p, 'i')
 
-        Fneg = face_fluxes[:, :-1]
-        Fpos = face_fluxes[:, 1:]
-
-        dflux_x1[:, g.ibeg:g.iend] = -(Fpos - Fneg)
+        dflux_x1[:, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
         dflux_x1[mvx1, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
         dflux = dflux_x1/g.dx1
@@ -417,6 +382,7 @@ def incriment(V, dt, g, p):
     elif p['time stepping'] == 'RK2':
         K1 = dt*RHSOperator(U, g, p)
         g.boundary(K1, p)
+        # My need to recalculate the time step here.
         K2 = dt*RHSOperator(U+K1, g, p)
         U_new = U + 0.5*(K1 + K2) 
         g.boundary(U_new, p)

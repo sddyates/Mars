@@ -34,3 +34,4 @@ v = mvx2 = vx2
 w = mvx3 = vx3
 
 small_pressure = 1.0e-12
+small_dt = 1.0e-16

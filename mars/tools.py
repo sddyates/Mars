@@ -1,3 +1,4 @@
+
 import numpy as np
 import sys
 from settings import *
@@ -5,10 +6,30 @@ from settings import *
 
 def eigenvalues(UL, UR, p, axis):
 
+    if p['Dimensions'] == '1D':
+        mxn = mvx1
+        vxn = vx1
+    elif p['Dimensions'] == '2D' and axis == 'i':
+        mxn = vxn = vx1
+        mxt = vxt = vx2
+    elif p['Dimensions'] == '2D' and axis == 'j':
+        mxn = vxn = vx2
+        mxt = vxt = vx1
+    elif p['Dimensions'] == '3D' and axis == 'i':
+        mxn = vxn = vx1
+        mxt = vxt = vx2
+        mxb = vxb = vx3
+    elif p['Dimensions'] == '3D' and axis == 'j': 
+        mxn = vxn = vx2
+        mxt = vxt = vx1
+        mxb = vxb = vx3
+    elif p['Dimensions'] == '3D' and axis == 'k':
+        mxn = vxn = vx3
+        mxt = vxt = vx1
+        mxb = vxb = vx2
+
     VL = cons_to_prims(UL, p)
     VR = cons_to_prims(UR, p)
-
-    VLR = 0.5*(VL + VR)
 
     csL = np.sqrt(p['gamma']*VL[prs]/VL[rho])
     csR = np.sqrt(p['gamma']*VR[prs]/VR[rho])
@@ -16,22 +37,27 @@ def eigenvalues(UL, UR, p, axis):
     if(np.isnan(csL).any() or np.isnan(csR).any()):
         print("Erroar, nan found in eigenvalues:")
         print('csL=', csL)
-        print('csR=', csR)
         print('VL[rho]=', VL[rho])
         print('VL[prs]=', VL[prs])
+        print('csR=', csR)
         print('VR[rho]=', VR[rho])
         print('VR[prs]=', VR[prs])
         sys.exit()
 
-    if axis == 'i':
-        SL = np.minimum(VL[vx1] - csL, VR[vx1] - csR)
-        SR = np.maximum(VL[vx1] + csL, VR[vx1] + csR)
-    elif axis == 'j':
-        SL = np.minimum(VL[vx2] - csL, VR[vx2] - csR)
-        SR = np.maximum(VL[vx2] + csL, VR[vx2] + csR)
-    elif axis == 'k':
-        SL = np.minimum(VL[vx3] - csL, VR[vx3] - csR)
-        SR = np.maximum(VL[vx3] + csL, VR[vx3] + csR)
+    # Estimate the leftmost and rightmost wave signal 
+    # speeds bounding the Riemann fan based on the 
+    # input states VL and VR accourding to the Davis 
+    # Method.
+    csL = np.sqrt(p['gamma']*VL[prs]/VL[rho])
+    sL_min = VL[vxn] - csL
+    sL_max = VL[vxn] + csL
+
+    csR = np.sqrt(p['gamma']*VR[prs]/VR[rho])
+    sR_min = VR[vxn] - csR
+    sR_max = VR[vxn] + csR
+
+    SL = np.minimum(sL_min, sR_min)
+    SR = np.maximum(sL_max, sR_max)
 
     return SL, SR
 
@@ -139,6 +165,10 @@ def time_step(V, g, p):
 
     if np.isnan(dt):
         print("Error, nan in time_step, cs =", cs)
+        sys.exit()
+    
+    if dt < small_dt:
+        print("dt to small, exiting.")
         sys.exit()
 
     return dt, max_velocity, mach_number
