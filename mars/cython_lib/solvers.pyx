@@ -1,5 +1,4 @@
 
-import sys
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -76,9 +75,8 @@ def hll(np.ndarray[DTYPE_t, ndim=2] flux,
     cdef np.ndarray[DTYPE_t, ndim=1] scrh = np.zeros([imax], dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1] cmax = np.zeros([imax], dtype=DTYPE)
 
-    #cdef double scrh
-    #cdef double sL_min, sL_max, csL
-    #cdef double sR_min, sR_max, csR
+    cdef double sL_min, sL_max, csL
+    cdef double sR_min, sR_max, csR
     
     if p['Dimensions'] == '1D':
         mxn = mvx1
@@ -108,21 +106,21 @@ def hll(np.ndarray[DTYPE_t, ndim=2] flux,
     # Method.
     for i in range(imax):
         csL = np.sqrt(p['gamma']*VL[i, prs]/VL[i, rho])
-        sL_min = VL[:, vxn] - csL
-        sL_max = VL[:, vxn] + csL
+        sL_min = VL[i, vxn] - csL
+        sL_max = VL[i, vxn] + csL
 
         csR = np.sqrt(p['gamma']*VR[i, prs]/VR[i, rho])
-        sR_min = VR[:, vxn] - csR
-        sR_max = VR[:, vxn] + csR
+        sR_min = VR[i, vxn] - csR
+        sR_max = VR[i, vxn] + csR
 
         SL[i] = np.minimum(sL_min, sR_min)
         SR[i] = np.maximum(sL_max, sR_max)
 
         scrh[i] = np.maximum(np.absolute(SL[i]), 
                              np.absolute(SR[i]))
-        cmax[i] = scrh
+        cmax[i] = scrh[i]
 
-    for i in range(fmax):
+    for i in range(imax):
         if SL[i] > 0.0:
 
             for var in range(nvar):
@@ -137,11 +135,11 @@ def hll(np.ndarray[DTYPE_t, ndim=2] flux,
 
         else:
 
-            scrh = 1.0 / (SR[i] - SL[i])
+            scrh[i] = 1.0 / (SR[i] - SL[i])
             for var in range(nvar):
                 flux[i, var] = SL[i]*SR[i]*(UR[i, var] - UL[i, var]) \
                     + SR[i]*FL[i, var] - SL[i]*FR[i, var]
-                flux[i, var] *= scrh
+                flux[i, var] *= scrh[i]
             pres[i] = (SR[i]*VL[i, prs] - SL[i]*VR[i, prs])*scrh[i]
 
     return
@@ -181,7 +179,8 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
     cdef np.ndarray[DTYPE_t, ndim=1] usR = np.zeros([nvar], dtype=DTYPE)
 
     cdef double csL, csR
-    cdef double sL_min, sL_max, sR_min, sR_max
+    cdef double sL_min, sL_max
+    cdef double sR_min, sR_max
 
     cdef double vxr
     cdef double vxl
