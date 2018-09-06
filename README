@@ -11,8 +11,8 @@
 
     --------------------------------------------
   This Code is in tended to be used by as a learning 
-  code and a test bed for python optimisation via the 
-  numpy and scipy modules.
+  code and test bed for python optimisation via the 
+  numpy, numba and scipy modules.
 
-  The code is heavily inspired by the code PLUTO and 
-  all creddit goes to its developers.
+  Mars is inspired by the code PLUTO and makes use
+  of the algoritums and code from that project.
