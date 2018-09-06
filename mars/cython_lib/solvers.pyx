@@ -253,11 +253,12 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
 
         else:
 
-            vR = VR[i, :]
-            uR = UR[i, :]
+            for var in range(nvar):
+                vR[var] = VR[i, var]
+                uR[var] = UR[i, var]
 
-            vL = VL[i, :]
-            uL = UL[i, :]
+                vL[var] = VL[i, var]
+                uL[var] = UL[i, var]
 
             vxr = vR[vxn]
             vxl = vL[vxn]

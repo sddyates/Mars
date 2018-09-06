@@ -38,8 +38,8 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':64,
-            'resolution x2':64,
+            'resolution x1':200,
+            'resolution x2':200,
             'resolution x3':32,
 
             'cfl':0.3,
