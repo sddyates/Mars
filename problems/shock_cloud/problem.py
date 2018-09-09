@@ -1,3 +1,4 @@
+
 from mars import main_loop
 from mars.settings import *
 import numpy as np
@@ -116,9 +117,9 @@ class Problem:
                         if r < 0.15:
                             V[rho, k, j, i] = 10.0
 
-
     def internal_bc():
         return None
+
 
 if __name__ == "__main__":
     main_loop(Problem())

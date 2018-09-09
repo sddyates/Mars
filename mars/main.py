@@ -7,6 +7,7 @@ __license__ = "MIT"
 import numpy as np
 from settings import *
 from grid import Grid
+from algorithms import Algorithm
 from tools import time_step
 from evolve import incriment
 from output import dump
@@ -37,9 +38,14 @@ def main_loop(problem):
     print("")
 
     # Initialise g.
-    print("    Setting up problem:", problem.parameter['Name'])
+    print(f"    Setting up problem: {problem.parameter['Name']}")
     print("")
     g = Grid(problem.parameter)
+
+    # Initialise g.
+    print("    Assigning algorithms...")
+    print("")
+    a = Algorithm(problem.parameter)
 
     # Generate state vector to hold conservative 
     # and primative variables.
@@ -76,7 +82,7 @@ def main_loop(problem):
 
     while t < problem.parameter['max time']:
 
-        V = incriment(V, dt, g, problem.parameter)
+        V = incriment(V, dt, g, a, problem.parameter)
 
         dt_new, max_velocity, mach_number = time_step(V, g, problem.parameter)
 
@@ -99,9 +105,9 @@ def main_loop(problem):
         print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
         + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
 
-        V = incriment(V, dt, g, problem.parameter)
+        V = incriment(V, dt, g, a, problem.parameter)
         dump(V, g, problem.parameter, num)
 
     print("")
-    print('    Simulation complete...')
+    print(f"    Simulation {parameter['Name']} complete...")
     print("")

@@ -162,18 +162,18 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
 
     cdef int i, var
     cdef int nvar = flux.shape[1]
-    cdef int fmax = flux.shape[0]
+    cdef int imax = flux.shape[0]
 
     cdef int rho=0, prs=1, vx1=2, vx2=3, vx3=4
     cdef int eng=1, mvx1=2, mvx2=3, mvx3=4 
     cdef int mxn, mxt, mxb
     cdef int vxn, vxt, vxb
 
-    cdef np.ndarray[DTYPE_t, ndim=1] vR = np.zeros([fmax], dtype=DTYPE)
-    cdef np.ndarray[DTYPE_t, ndim=1] uR = np.zeros([fmax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] vR = np.zeros([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] uR = np.zeros([imax], dtype=DTYPE)
 
-    cdef np.ndarray[DTYPE_t, ndim=1] vL = np.zeros([fmax], dtype=DTYPE)
-    cdef np.ndarray[DTYPE_t, ndim=1] uL = np.zeros([fmax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] vL = np.zeros([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] uL = np.zeros([imax], dtype=DTYPE)
 
     cdef np.ndarray[DTYPE_t, ndim=1] usL = np.zeros([nvar], dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1] usR = np.zeros([nvar], dtype=DTYPE)
@@ -215,7 +215,7 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
         mxt = vxt = vx1
         mxb = vxb = vx2
 
-    for i in range(fmax):
+    for i in range(imax):
 
         # Estimate the leftmost and rightmost wave signal 
         # speeds bounding the Riemann fan based on the 
@@ -233,7 +233,7 @@ def hllc(np.ndarray[DTYPE_t, ndim=2] flux,
         SL[i] = np.minimum(sL_min, sR_min)
         SR[i] = np.maximum(sL_max, sR_max)
 
-    for i in range(fmax):
+    for i in range(imax):
 
         scrh = np.maximum(np.absolute(SL[i]), 
                           np.absolute(SR[i]))
