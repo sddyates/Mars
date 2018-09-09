@@ -2,8 +2,6 @@
 import sys
 import numpy as np
 from settings import *
-#from cython_lib.solvers import hll, hllc, tvdlf
-#from cython_lib.piecewise import flat, minmod
 from solvers import tvdlf, hll, hllc
 from piecewise import flat, minmod
 from tools import cons_to_prims, prims_to_cons, eigenvalues, time_step
@@ -47,7 +45,7 @@ def flux_tensor(U, p, axis):
         F[rho] = U[mvx1]
         F[mvx1] = U[mvx1]*V[vx1]
         F[eng] = V[vx1]*(U[eng] + V[prs])
-        
+
     elif p['Dimensions'] == '2D' and axis == 'i':
         F[rho] = U[mvx1]
         F[mvx1] = U[mvx1]*V[vx1]
