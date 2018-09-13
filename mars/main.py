@@ -11,7 +11,6 @@ from algorithms import Algorithm
 from tools import time_step
 from evolve import incriment
 from output import dump
-from settings import *
 import sys
 
 def main_loop(problem):
@@ -44,7 +43,6 @@ def main_loop(problem):
 
     # Initialise g.
     print("    Assigning algorithms...")
-    print("")
     a = Algorithm(problem.parameter)
 
     # Generate state vector to hold conservative 
@@ -82,9 +80,10 @@ def main_loop(problem):
 
     while t < problem.parameter['max time']:
 
-        V = incriment(V, dt, g, a, problem.parameter)
+        V = a.time_incriment(V, dt, g, a, problem.parameter)
+        #V = incriment(V, dt, g, a, problem.parameter)
 
-        dt_new, max_velocity, mach_number = time_step(V, g, problem.parameter)
+        dt_new, max_velocity, mach_number = time_step(V, g, a)
 
         print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
         + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
@@ -105,9 +104,10 @@ def main_loop(problem):
         print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
         + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
 
-        V = incriment(V, dt, g, a, problem.parameter)
+        V = a.time_incriment(V, dt, g, a, problem.parameter)
+        #V = incriment(V, dt, g, a, problem.parameter)
         dump(V, g, problem.parameter, num)
 
     print("")
-    print(f"    Simulation {parameter['Name']} complete...")
+    print(f"    Simulation {problem.parameter['Name']} complete...")
     print("")

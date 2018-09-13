@@ -1,41 +1,15 @@
 
+from numba import jit
 import numpy as np
+from settings import *
 
-def tvdlf(g, p, axis):
-    rho = 0
-    prs = 1
-    vx1 = 2
-    vx2 = 3
-    vx3 = 4
-    mvx1 = 2
-    mvx2 = 3
-    mvx3 = 4
-
-    if p['Dimensions'] == '1D':
-        mxn = vxn = vx1
-    elif p['Dimensions'] == '2D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-    elif p['Dimensions'] == '2D' and axis == 'j':
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-    elif p['Dimensions'] == '3D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'j': 
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'k':
-        mxn = vxn = vx3
-        mxt = vxt = vx1
-        mxb = vxb = vx2
+@jit
+def tvdlf(g, a, vxn, vxt, vxb):
 
     VLR = 0.5*(g.VL + g.VR)
     VLR[vxn] = 0.5*(abs(g.VL[vxn]) + abs(g.VR[vxn]))
 
-    csLR = np.sqrt(p['gamma']*VLR[prs]/VLR[rho])
+    csLR = np.sqrt(a.gamma*VLR[prs]/VLR[rho])
 
     Smax = np.maximum(np.absolute(VLR[vxn] + csLR), 
                       np.absolute(VLR[vxn] - csLR))
@@ -45,52 +19,18 @@ def tvdlf(g, p, axis):
     return
 
 
-def hll(g, p, axis):
-
-    imax = g.flux.shape[1]
-    nvar = g.flux.shape[0]
-    rho = 0
-    prs = 1
-    vx1 = 2
-    vx2 = 3
-    vx3 = 4
-    mvx1 = 2
-    mvx2 = 3
-    mvx3 = 4
-
-    scrh = np.zeros([imax], dtype=np.float64)
-    cmax = np.zeros([imax], dtype=np.float64)
-    
-    if p['Dimensions'] == '1D':
-        mxn = vxn = vx1
-    elif p['Dimensions'] == '2D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-    elif p['Dimensions'] == '2D' and axis == 'j':
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-    elif p['Dimensions'] == '3D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'j': 
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'k':
-        mxn = vxn = vx3
-        mxt = vxt = vx1
-        mxb = vxb = vx2
+@jit
+def hll(g, a, vxn, vxt, vxb):
 
     # Estimate the leftmost and rightmost wave signal 
     # speeds bounding the Riemann fan based on the 
     # input states VL and VR accourding to the Davis 
     # Method.
-    csL = np.sqrt(p['gamma']*g.VL[prs, :]/g.VL[rho, :])
+    csL = np.sqrt(a.gamma*g.VL[prs, :]/g.VL[rho, :])
     sL_min = g.VL[vxn, :] - csL
     sL_max = g.VL[vxn, :] + csL
 
-    csR = np.sqrt(p['gamma']*g.VR[prs, :]/g.VR[rho, :])
+    csR = np.sqrt(a.gamma*g.VR[prs, :]/g.VR[rho, :])
     sR_min = g.VR[vxn, :] - csR
     sR_max = g.VR[vxn, :] + csR
 
@@ -99,9 +39,9 @@ def hll(g, p, axis):
 
     scrh = np.maximum(np.absolute(g.SL), 
                       np.absolute(g.SR))
-    cmax = scrh
+    g.cmax = scrh
 
-    for i in range(imax):
+    for i in range(g.flux.shape[1]):
 
         if g.SL[i] > 0.0:
             g.flux[:, i] = g.FL[:, i]
@@ -120,61 +60,26 @@ def hll(g, p, axis):
 
     return
 
+#@profile
+#@jit
+def hllc(g, a, vxn, vxt, vxb):
 
-def hllc(g, p, axis):
+    mxn = vxn
+    mxt = vxt
+    mxb = vxb
 
-    nvar = g.flux.shape[0]
-    imax = g.flux.shape[1]
-
-    rho=0
-    prs=1
-    vx1=2
-    vx2=3
-    vx3=4
-    eng=1
-    mvx1=2
-    mvx2=3
-    mvx3=4 
-
-    vR = np.zeros([imax], dtype=np.float64)
-    uR = np.zeros([imax], dtype=np.float64)
-
-    vL = np.zeros([imax], dtype=np.float64)
-    uL = np.zeros([imax], dtype=np.float64)
-
-    usL = np.zeros([nvar], dtype=np.float64)
-    usR = np.zeros([nvar], dtype=np.float64)
-
-    if p['Dimensions'] == '1D':
-        mxn = vxn = vx1
-    elif p['Dimensions'] == '2D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-    elif p['Dimensions'] == '2D' and axis == 'j':
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-    elif p['Dimensions'] == '3D' and axis == 'i':
-        mxn = vxn = vx1
-        mxt = vxt = vx2
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'j': 
-        mxn = vxn = vx2
-        mxt = vxt = vx1
-        mxb = vxb = vx3
-    elif p['Dimensions'] == '3D' and axis == 'k':
-        mxn = vxn = vx3
-        mxt = vxt = vx1
-        mxb = vxb = vx2
+    usL = np.zeros([g.flux.shape[0]], dtype=np.float64)
+    usR = np.zeros([g.flux.shape[0]], dtype=np.float64)
 
     # Estimate the leftmost and rightmost wave signal 
     # speeds bounding the Riemann fan based on the 
     # input states VL and VR accourding to the Davis 
     # Method.
-    csL = np.sqrt(p['gamma']*g.VL[prs, :]/g.VL[rho, :])
+    csL = np.sqrt(a.gamma*g.VL[prs, :]/g.VL[rho, :])
     sL_min = g.VL[vxn, :] - csL
     sL_max = g.VL[vxn, :] + csL
 
-    csR = np.sqrt(p['gamma']*g.VR[prs, :]/g.VR[rho, :])
+    csR = np.sqrt(a.gamma*g.VR[prs, :]/g.VR[rho, :])
     sR_min = g.VR[vxn, :] - csR
     sR_max = g.VR[vxn, :] + csR
 
@@ -183,9 +88,9 @@ def hllc(g, p, axis):
 
     scrh = np.maximum(np.absolute(g.SL), 
                       np.absolute(g.SR))
-    cmax  = scrh
+    g.cmax  = scrh
 
-    for i in range(imax):
+    for i in range(g.flux.shape[1]):
 
         if g.SL[i] > 0.0:
             g.flux[:, i] = g.FL[:, i]
@@ -219,10 +124,10 @@ def hllc(g, p, axis):
 
             usL[mxn] = usL[rho]*vs
             usR[mxn] = usR[rho]*vs
-            if p['Dimensions'] == '2D' or '3D':
+            if a.is_2D or a.is_3D:
                 usL[mxt] = usL[rho]*vL[vxt]
                 usR[mxt] = usR[rho]*vR[vxt]
-            if p['Dimensions'] == '3D':
+            if a.is_3D:
                 usL[mxb] = usL[rho]*vL[vxb]
                 usR[mxb] = usR[rho]*vR[vxb]
                 

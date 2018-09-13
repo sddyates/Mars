@@ -29,9 +29,9 @@ vx2 = 3
 vx3 = 4
 
 eng = prs
-u = mvx1 = vx1 
-v = mvx2 = vx2
-w = mvx3 = vx3
+mvx1 = vx1 
+mvx2 = vx2
+mvx3 = vx3
 
 small_pressure = 1.0e-12
 small_dt = 1.0e-16

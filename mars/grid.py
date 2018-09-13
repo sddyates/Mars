@@ -45,6 +45,8 @@ class Grid:
             self.nx1 = p['resolution x1']
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
+            self.dxi = [self.dx1]
+            self.min_dxi = np.amin(self.dxi)
 
             self.ibeg = self.gz
             self.iend = self.nx1 + self.gz
@@ -65,6 +67,8 @@ class Grid:
             self.shape_internal = [self.nvar, self.nx1]
             self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
 
+            self.shape_flux = [self.nvar, self.nx1 + 1]
+
             self.x1 = self._x1()
 
             self.x1_verts = self._x1_verts()
@@ -81,6 +85,8 @@ class Grid:
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
+            self.dxi = [self.dx1, self.dx2]
+            self.min_dxi = np.amin(self.dxi)
 
             self.da = self.dx1*self.dx2
 
@@ -110,6 +116,9 @@ class Grid:
             self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
             self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
 
+            self.shape_flux = [[self.nvar, self.nx1 + 1],
+                               [self.nvar, self.nx2 + 1]]
+
             self.x1 = self._x1()
             self.x2 = self._x2()
  
@@ -132,6 +141,8 @@ class Grid:
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
             self.dx3 = (abs(self.x3min) + abs(self.x3max))/self.nx3
+            self.dxi = [self.dx1, self.dx2, self.dx3]
+            self.min_dxi = np.amin(self.dxi)
 
             self.dv = self.dx1*self.dx2*self.dx3
 
@@ -170,9 +181,19 @@ class Grid:
             self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
             self.shape_flux_x3 = [self.nvar, self.nx3 + 1]
 
+            self.shape_flux = [[self.nvar, self.nx1 + 1],
+                               [self.nvar, self.nx2 + 1],
+                               [self.nvar, self.nx3 + 1]]
+
             self.x1 = self._x1()
             self.x2 = self._x2()
             self.x3 = self._x3()
+
+            #self.x1, self.x2, self.x3 = np.meshgrid(self._x1(), 
+            #                                        self._x2(), 
+            #                                        self._X3(), 
+            #                                        sparse=False, 
+            #                                        indexing='ij')
 
             self.x1_verts = self._x1_verts()
             self.x2_verts = self._x2_verts()
@@ -219,7 +240,6 @@ class Grid:
 
 
     def state_vector(self, p):
-
         if p['Dimensions'] == '1D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx1))
@@ -237,13 +257,13 @@ class Grid:
             sys.exit()
 
 
-    def build_fluxes(self, axis):
-        if axis == 'i':
-            array_shape = self.shape_flux_x1
-        if axis == 'j':
-            array_shape = self.shape_flux_x2
-        if axis == 'k':
-            array_shape = self.shape_flux_x3    
+    def build_fluxes(self, vxn):
+        if vxn == 2:
+            array_shape = self.shape_flux[0]
+        if vxn == 3:
+            array_shape = self.shape_flux[1]
+        if vxn == 4:
+            array_shape = self.shape_flux[2]    
 
         self.flux = np.zeros(shape=array_shape)
         self.FL = np.zeros(shape=array_shape)
@@ -255,6 +275,7 @@ class Grid:
         self.SL = np.zeros(shape=array_shape[1])
         self.SR = np.zeros(shape=array_shape[1])
         self.pres = np.zeros(shape=array_shape[1])
+        self.cmax = np.zeros(shape=array_shape[1])
 
 
     def boundary(self, V, p):

@@ -16,7 +16,7 @@ class Problem:
     Methods
     -------
     initialise
-        Set all variables in each cell to  initialise the simulation.
+        Set all variables in each cell to initialise the simulation.
 
     internal_bc
         Specify the internal boundary for the simulation.
@@ -38,8 +38,8 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':200,
-            'resolution x2':200,
+            'resolution x1':256,
+            'resolution x2':256,
             'resolution x3':32,
 
             'cfl':0.3,

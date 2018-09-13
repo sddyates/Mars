@@ -29,7 +29,7 @@ class Problem:
         self.parameter = {
             'Name':'Spherical blast wave.',
 
-            'Dimensions':'3D',
+            'Dimensions':'2D',
             'x1 min':-0.5,
             'x1 max':0.5,
             'x2 min':-0.5,
@@ -37,9 +37,9 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':64,
-            'resolution x2':64,
-            'resolution x3':64,
+            'resolution x1':200,
+            'resolution x2':200,
+            'resolution x3':200,
 
             'cfl':0.3,
             'initial dt':1.0e-4,
