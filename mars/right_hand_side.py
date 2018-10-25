@@ -9,25 +9,25 @@ def face_flux(U, g, a, vxn, vxt, vxb):
     """
     Synopsis
     --------
-    Construct the fluxes through the cell 
-    faces normal to the direction of "axis".  
+    Construct the fluxes through the cell
+    faces normal to the direction of "axis".
 
     Args
     ----
     U: numpy array-like
-    state vector containing all 
+    state vector containing all
     conservative variables.
 
     g: object-like
-    object containing all variables related to 
+    object containing all variables related to
     the grid, e.g. cell width.
 
     a: object-like
-    object containing specified algorithms for use 
-    in the seprate stages of a time step.       
+    object containing specified algorithms for use
+    in the seprate stages of a time step.
 
     vx(n,t,b): int-like
-    indexes for for the normal, tangential and 
+    indexes for for the normal, tangential and
     bi-tangential velocity components.
 
     Attributes
@@ -69,16 +69,16 @@ def RHSOperator(U, g, a):
     Args
     ----
     U: numpy array-like
-    state vector containing all 
+    state vector containing all
     conservative variables.
 
     g: object-like
-    object containing all variables related to 
+    object containing all variables related to
     the grid, e.g. cell width.
 
     a: object-like
-    object containing specified algorithms for use 
-    in the seprate stages of a time step.       
+    object containing specified algorithms for use
+    in the seprate stages of a time step.
 
     Attributes
     ----------
@@ -143,7 +143,7 @@ def RHSOperator(U, g, a):
                 dflux_x2[:, k, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
                 dflux_x1[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
-        for j in range(g.jbeg, g.jend): 
+        for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
                 face_flux(U[:, :, j, i], g, a, vxn=4, vxt=2, vxb=3)
                 dflux_x3[:, g.kbeg:g.kend, j, i] = -(g.flux[:, 1:] - g.flux[:, :-1])

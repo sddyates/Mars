@@ -8,21 +8,21 @@ def flux_tensor(U, a, vxn, vxt, vxb):
     """
     Synopsis
     --------
-    construct the flux tensor from the 
+    construct the flux tensor from the
     conservative and primative vaiables.
 
     Args
     ----
     U: numpy array-like
-    State vector containing all 
+    State vector containing all
     conservative variables.
 
     a: object-like
-    object containing specified algorithms for use 
-    in the seprate stages of a time step.    
+    object containing specified algorithms for use
+    in the seprate stages of a time step.
 
     vx(n,t,b): int-like
-    Indexes for for the normal, tangential and 
+    Indexes for for the normal, tangential and
     bi-tangential velocity components.
 
     Returns
@@ -100,7 +100,7 @@ def prims_to_cons(V, a):
         print("Error, nan in prims_to_cons")
         sys.exit()
 
-    return U 
+    return U
 
 
 def time_step(V, g, a):
@@ -109,17 +109,15 @@ def time_step(V, g, a):
 
     max_velocity = np.amax(abs(V[vx1:]))
     max_speed = np.amax(abs(V[vx1:]) + cs)
-    dt = a.cfl*g.min_dxi/max_speed 
+    dt = a.cfl*g.min_dxi/max_speed
     mach_number = np.amax(abs(V[vx1:])/cs)
 
     if np.isnan(dt):
         print("Error, nan in time_step, cs =", cs)
         sys.exit()
-    
+
     if dt < small_dt:
         print("dt to small, exiting.")
         sys.exit()
 
     return dt, max_velocity, mach_number
-
-

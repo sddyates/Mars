@@ -3,6 +3,7 @@ from numba import jit
 import numpy as np
 from settings import *
 
+
 @jit
 def tvdlf(g, a, vxn, vxt, vxb):
 
@@ -11,7 +12,7 @@ def tvdlf(g, a, vxn, vxt, vxb):
 
     csLR = np.sqrt(a.gamma*VLR[prs]/VLR[rho])
 
-    Smax = np.maximum(np.absolute(VLR[vxn] + csLR), 
+    Smax = np.maximum(np.absolute(VLR[vxn] + csLR),
                       np.absolute(VLR[vxn] - csLR))
     g.flux = 0.5*(g.FL + g.FR - Smax*(g.UR - g.UL))
     g.pres = 0.5*(g.VL[prs] + g.VR[prs])
@@ -22,9 +23,9 @@ def tvdlf(g, a, vxn, vxt, vxb):
 @jit
 def hll(g, a, vxn, vxt, vxb):
 
-    # Estimate the leftmost and rightmost wave signal 
-    # speeds bounding the Riemann fan based on the 
-    # input states VL and VR accourding to the Davis 
+    # Estimate the leftmost and rightmost wave signal
+    # speeds bounding the Riemann fan based on the
+    # input states VL and VR accourding to the Davis
     # Method.
     csL = np.sqrt(a.gamma*g.VL[prs, :]/g.VL[rho, :])
     sL_min = g.VL[vxn, :] - csL
@@ -37,7 +38,7 @@ def hll(g, a, vxn, vxt, vxb):
     g.SL = np.minimum(sL_min, sR_min)
     g.SR = np.maximum(sL_max, sR_max)
 
-    scrh = np.maximum(np.absolute(g.SL), 
+    scrh = np.maximum(np.absolute(g.SL),
                       np.absolute(g.SR))
     g.cmax = scrh
 
@@ -60,8 +61,9 @@ def hll(g, a, vxn, vxt, vxb):
 
     return
 
-#@profile
-#@jit
+
+# @profile
+# @jit
 def hllc(g, a, vxn, vxt, vxb):
 
     mxn = vxn
@@ -71,9 +73,9 @@ def hllc(g, a, vxn, vxt, vxb):
     usL = np.zeros([g.flux.shape[0]], dtype=np.float64)
     usR = np.zeros([g.flux.shape[0]], dtype=np.float64)
 
-    # Estimate the leftmost and rightmost wave signal 
-    # speeds bounding the Riemann fan based on the 
-    # input states VL and VR accourding to the Davis 
+    # Estimate the leftmost and rightmost wave signal
+    # speeds bounding the Riemann fan based on the
+    # input states VL and VR accourding to the Davis
     # Method.
     csL = np.sqrt(a.gamma*g.VL[prs, :]/g.VL[rho, :])
     sL_min = g.VL[vxn, :] - csL
@@ -86,7 +88,7 @@ def hllc(g, a, vxn, vxt, vxb):
     g.SL = np.minimum(sL_min, sR_min)
     g.SR = np.maximum(sL_max, sR_max)
 
-    scrh = np.maximum(np.absolute(g.SL), 
+    scrh = np.maximum(np.absolute(g.SL),
                       np.absolute(g.SR))
     g.cmax  = scrh
 
@@ -124,13 +126,15 @@ def hllc(g, a, vxn, vxt, vxb):
 
             usL[mxn] = usL[rho]*vs
             usR[mxn] = usR[rho]*vs
-            if a.is_2D or a.is_3D:
+            if a.is_2D:
                 usL[mxt] = usL[rho]*vL[vxt]
                 usR[mxt] = usR[rho]*vR[vxt]
             if a.is_3D:
+                usL[mxt] = usL[rho]*vL[vxt]
+                usR[mxt] = usR[rho]*vR[vxt]
                 usL[mxb] = usL[rho]*vL[vxb]
                 usR[mxb] = usR[rho]*vR[vxb]
-                
+
             usL[eng] = uL[eng]/vL[rho] \
                        + (vs - vxl)*(vs + vL[prs]/(vL[rho]*(g.SL[i] - vxl)))
             usR[eng] = uR[eng]/vR[rho] \

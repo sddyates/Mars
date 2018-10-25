@@ -2,6 +2,7 @@ from mars import main_loop
 from mars.settings import *
 import numpy as np
 
+
 class Problem:
     """
     Synopsis
@@ -27,41 +28,41 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name':'Shock Tube',
+            'Name': 'Shock Tube',
 
-            'Dimensions':'1D',
-            'x1 min':0.0,
-            'x1 max':1.0,
+            'Dimensions': '1D',
+            'x1 min': 0.0,
+            'x1 max': 1.0,
 
-            'resolution x1':128,
+            'resolution x1': 128,
 
-            'cfl':0.3,
-            'initial dt':1.0e-5,
-            'max dt increase':1.5,
-            'max time':1.0,
+            'cfl': 0.3,
+            'initial dt': 1.0e-5,
+            'max dt increase': 1.5,
+            'max time': 1.0,
 
-            'plot frequency':1.0e-1,
-            'print to file':False,
+            'plot frequency': 1.0e-1,
+            'print to file': False,
 
-            'gamma':1.666666,
-            'density unit':1.0,
-            'length unit':1.0,
-            'velocity unit':1.0,
+            'gamma': 1.666666,
+            'density unit': 1.0,
+            'length unit': 1.0,
+            'velocity unit': 1.0,
 
-            'riemann':'tvdlf',
-            'reconstruction':'linear',
-            'limiter':'minmod',
-            'time stepping':'RK2',
-            'method':'hydro',
+            'riemann': 'tvdlf',
+            'reconstruction': 'linear',
+            'limiter': 'minmod',
+            'time stepping': 'RK2',
+            'method': 'hydro',
 
-            'lower x1 boundary':'outflow',
-            'lower x2 boundary':'outflow',
-            'upper x1 boundary':'outflow',
-            'upper x2 boundary':'outflow',
-            'internal boundary':False
+            'lower x1 boundary': 'outflow',
+            'lower x2 boundary': 'outflow',
+            'upper x1 boundary': 'outflow',
+            'upper x2 boundary': 'outflow',
+            'internal boundary': False
             }
 
-    def initialise(self, V, grid):        
+    def initialise(self, V, grid):
 
         if self.parameter['Dimensions'] == '1D':
             for i in range(grid.ibeg, grid.iend):
@@ -72,8 +73,8 @@ class Problem:
                 else:
                     V[rho, i] = 0.125
                     V[prs, i] = 0.1
-                    V[vx1, i] = 0.0                    
- 
+                    V[vx1, i] = 0.0
+
     #def internal_bc():
     #    return None
 

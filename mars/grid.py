@@ -2,7 +2,9 @@
 import numpy as np
 import sys
 
+
 class Grid:
+
     """
     Synopsis
     --------
@@ -121,7 +123,7 @@ class Grid:
 
             self.x1 = self._x1()
             self.x2 = self._x2()
- 
+
             self.x1_verts = self._x1_verts()
             self.x2_verts = self._x2_verts()
 
@@ -189,16 +191,15 @@ class Grid:
             self.x2 = self._x2()
             self.x3 = self._x3()
 
-            #self.x1, self.x2, self.x3 = np.meshgrid(self._x1(), 
-            #                                        self._x2(), 
-            #                                        self._X3(), 
-            #                                        sparse=False, 
+            #self.x1, self.x2, self.x3 = np.meshgrid(self._x1(),
+            #                                        self._x2(),
+            #                                        self._X3(),
+            #                                        sparse=False,
             #                                        indexing='ij')
 
             self.x1_verts = self._x1_verts()
             self.x2_verts = self._x2_verts()
             self.x3_verts = self._x3_verts()
-
 
     def _x1(self):
         a = self.x1min - self.dx1*self.gz
@@ -206,12 +207,10 @@ class Grid:
         c = self.nx1 + 2*self.gz
         return np.linspace(a, b, c)
 
-    
     def _x1_verts(self):
         a = self.x1 - self.dx1/2.0
         b = self.x1[-1] + self.dx1/2.0
         return np.append(a, b)
-
 
     def _x2(self):
         a = self.x2min - self.dx2*self.gz
@@ -219,12 +218,10 @@ class Grid:
         c = self.nx2 + 2*self.gz
         return np.linspace(a, b, c)
 
-
     def _x2_verts(self):
         a = self.x2 - self.dx2/2.0
         b = self.x2[-1] + self.dx2/2.0
         return np.append(a, b)
-
 
     def _x3(self):
         a = self.x3min - self.dx3*self.gz
@@ -232,12 +229,10 @@ class Grid:
         c = self.nx3 + 2*self.gz
         return np.linspace(a, b, c)
 
-
     def _x3_verts(self):
         a = self.x3 - self.dx3/2.0
         b = self.x3[-1] + self.dx3/2.0
         return np.append(a, b)
-
 
     def state_vector(self, p):
         if p['Dimensions'] == '1D':
@@ -256,18 +251,17 @@ class Grid:
             print('Error, invalid number of dimensions.')
             sys.exit()
 
-
     def build_fluxes(self, vxn):
         if vxn == 2:
             array_shape = self.shape_flux[0]
         if vxn == 3:
             array_shape = self.shape_flux[1]
         if vxn == 4:
-            array_shape = self.shape_flux[2]    
+            array_shape = self.shape_flux[2]
 
         self.flux = np.zeros(shape=array_shape)
         self.FL = np.zeros(shape=array_shape)
-        self.FR = np.zeros(shape=array_shape) 
+        self.FR = np.zeros(shape=array_shape)
         self.UL = np.zeros(shape=array_shape)
         self.UR = np.zeros(shape=array_shape)
         self.VL = np.zeros(shape=array_shape)
@@ -276,7 +270,6 @@ class Grid:
         self.SR = np.zeros(shape=array_shape[1])
         self.pres = np.zeros(shape=array_shape[1])
         self.cmax = np.zeros(shape=array_shape[1])
-
 
     def boundary(self, V, p):
 
@@ -299,7 +292,6 @@ class Grid:
             print('Error, invalid number of dimensions.')
             sys.exit()
 
-
     def _lowerX1BC(self, V, bc_type, dim):
 
         if bc_type == 'reciprocal' and dim == '1D':
@@ -315,15 +307,15 @@ class Grid:
                 V[:, :, self.nx1:self.nx1 + self.gz]
 
         elif bc_type == 'outflow' and dim == '2D':
-            
+
             for o in range(self.gz):
                 V[:, :, o] = V[:, :, self.gz]
 
             #V[:, :, :self.gz] = \
             #    V[:, :, self.gz]#.reshape(
-                    #(self.nvar, 
-                    # 2*self.gz+self.nx2, 
-                    # self.gz-1))
+                #(self.nvar,
+                # 2*self.gz+self.nx2,
+                # self.gz-1))
 
         elif bc_type == 'reciprocal' and dim == '3D':
             V[:, :, :, :self.gz] = \
@@ -341,7 +333,6 @@ class Grid:
             print('Error, invalid lower x1 boundary.')
             sys.exit()
 
-
     def _upperX1BC(self, V, bc_type, dim):
 
         if bc_type == 'reciprocal' and dim == '1D':
@@ -351,7 +342,7 @@ class Grid:
         elif bc_type == 'outflow' and dim == '1D':
             V[:, self.upper_bc_ibeg:] = \
                 V[:, self.upper_bc_ibeg - 1].reshape(
-                    (self.nvar, 
+                    (self.nvar,
                      self.gz-1))
 
         elif bc_type == 'reciprocal' and dim == '2D':
@@ -364,8 +355,8 @@ class Grid:
 
             #V[:, :, self.upper_bc_ibeg:] = \
             #    V[:, :, self.upper_bc_ibeg - 1].reshape(
-            #        (self.nvar, 
-            #         2*self.gz+self.nx2, 
+            #        (self.nvar,
+            #         2*self.gz+self.nx2,
             #         self.gz - 1))
 
         elif bc_type == 'reciprocal' and dim == '3D':
@@ -375,15 +366,14 @@ class Grid:
         elif bc_type == 'outflow' and dim == '3D':
             V[:, :, :, self.upper_bc_ibeg:] = \
                 V[:, :, :, self.upper_bc_ibeg - 1].reshape(
-                    (self.nvar, 
-                     2*self.gz+self.nx3, 
-                     2*self.gz+self.nx2, 
+                    (self.nvar,
+                     2*self.gz+self.nx3,
+                     2*self.gz+self.nx2,
                      self.gz - 1))
 
         else:
             print('Error, invalid upper x1 boundary.')
             sys.exit()
-
 
     def _lowerX2BC(self, V, bc_type, dim):
 
@@ -398,8 +388,8 @@ class Grid:
 
             #V[:, :self.gz, :] = \
             #    V[:, self.gz, :].reshape(
-            #        (self.nvar, 
-            #         self.gz - 1, 
+            #        (self.nvar,
+            #         self.gz - 1,
             #         self.nx1 + 2*self.gz))
 
         elif bc_type == 'reciprocal' and dim == '3D':
@@ -409,7 +399,7 @@ class Grid:
         elif bc_type == 'outflow' and dim == '3D':
             V[:, :, :self.gz, :] = \
                 V[:, :, self.gz, :].reshape(
-                    (self.nvar, 
+                    (self.nvar,
                      2*self.gz+self.nx3,
                      self.gz - 1,
                      2*self.gz+self.nx1))
@@ -417,7 +407,6 @@ class Grid:
         else:
             print('Error, invalid lower x2 boundary.')
             sys.exit()
-
 
     def _upperX2BC(self, V, bc_type, dim):
 
@@ -432,8 +421,8 @@ class Grid:
 
             #V[:, self.upper_bc_jbeg:, :] = \
             #    V[:, self.upper_bc_jbeg - 1, :].reshape(
-            #        (self.nvar, 
-            #         self.gz - 1, 
+            #        (self.nvar,
+            #         self.gz - 1,
             #         self.nx1 + 2*self.gz))
 
         elif bc_type == 'reciprocal' and dim == '3D':
@@ -443,7 +432,7 @@ class Grid:
         elif bc_type == 'outflow' and dim == '3D':
             V[:, :, self.upper_bc_jbeg:, :] = \
                 V[:, :, self.upper_bc_jbeg - 1, :].reshape(
-                    (self.nvar, 
+                    (self.nvar,
                      2*self.gz+self.nx3,
                      self.gz - 1,
                      2*self.gz+self.nx1))
@@ -451,7 +440,6 @@ class Grid:
         else:
             print('Error, invalid upper x2 boundary.')
             sys.exit()
-
 
     def _lowerX3BC(self, V, bc_type, dim):
 
@@ -464,13 +452,12 @@ class Grid:
                 V[:, self.gz, :, :].reshape(
                     (self.nvar,
                      self.gz - 1,
-                     2*self.gz+self.nx2, 
+                     2*self.gz+self.nx2,
                      2*self.gz+self.nx1,))
 
         else:
             print('Error, invalid upper x3 boundary.')
             sys.exit()
-
 
     def _upperX3BC(self, V, bc_type, dim):
 
@@ -483,10 +470,9 @@ class Grid:
                 V[:, self.upper_bc_kbeg - 1, :, :].reshape(
                     (self.nvar,
                      self.gz - 1,
-                     2*self.gz+self.nx2, 
+                     2*self.gz+self.nx2,
                      2*self.gz+self.nx1,))
 
         else:
             print('Error, invalid upper x3 boundary.')
             sys.exit()
-

@@ -4,12 +4,13 @@ from riemann_solvers import tvdlf, hll, hllc
 from reconstruction import flat, minmod
 from time_stepping import Euler, RungaKutta2
 
+
 class Algorithm:
     """
     Synopsis
     --------
-    This class allows for different algorithm components 
-    to be used and assigned at runtime without the need 
+    This class allows for different algorithm components
+    to be used and assigned at runtime without the need
     for if statments in the integration loop.
 
     Args
@@ -33,7 +34,7 @@ class Algorithm:
         """
         Synopsis
         --------
-        This method assigns the function call for 
+        This method assigns the function call for
         the Riemann solver.
 
         Args
@@ -55,7 +56,7 @@ class Algorithm:
         """
         Synopsis
         --------
-        This method assigns the function call for 
+        This method assigns the function call for
         the reconstruction stage.
 
         Args
@@ -71,12 +72,11 @@ class Algorithm:
             print('Error: Invalid reconstructor.')
             sys.exit()
 
-
     def assign_time_stepping(self, p):
         """
         Synopsis
         --------
-        This method assigns the function call for 
+        This method assigns the function call for
         the method used for time stepping.
 
         Args
@@ -91,7 +91,6 @@ class Algorithm:
         else:
             print('Error: Invalid integrator.')
             sys.exit()
-
 
     def assign_boundary_conditions(self, p):
         if p['Dimensions'] == '1D' and p['']:
