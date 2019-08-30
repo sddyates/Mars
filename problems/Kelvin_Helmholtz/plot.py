@@ -3,7 +3,7 @@ sys.path.insert(0, '../../src')
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
-from globe import *
+#from globe import *
 
 def line_plot():
 
@@ -30,15 +30,20 @@ def mesh_plot():
 
     for num in range(0, 300):
 
-        V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy')
+        V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy', allow_pickle=True)
 
-
-        variables = [rho, prs, vx1, vx2]
+        print(V.shape)
+        variables = [
+            V[0, :, :],
+            V[1, :, :],
+            V[2, :, :],
+            V[3, :, :]
+        ]
         var = ['density', 'pressure', 'velocity_x1', 'velocity_x2']
 
         for i, variable in enumerate(variables):
             plt.figure(figsize=(10,10))
-            a = plt.imshow(V[variable, :, :], extent=(x1.min(), x1.max(), 
+            a = plt.imshow(variable, extent=(x1.min(), x1.max(),
                            x2.min(), x2.max()))
 
             ax = plt.gca();

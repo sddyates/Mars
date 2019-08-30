@@ -1,8 +1,8 @@
 
-from numba import jit
 import numpy as np
 import sys
 from settings import *
+
 
 def flux_tensor(U, a, vxn, vxt, vxb):
     """
@@ -63,7 +63,40 @@ def flux_tensor(U, a, vxn, vxt, vxb):
 
     return F
 
-#@profile
+
+def JAx1(V, a):
+    cs2 = a.gamma*V[prs]/V[rho]
+    return np.array([
+        [V[vx1], V[rho],     0.0,    0.0,    0.0       ],
+        [0.0,    V[vx1],     0.0,    0.0,    1.0/V[rho]],
+        [0.0,    0.0,        V[vx1], 0.0,    0.0       ],
+        [0.0,    0.0,        0.0,    V[vx1], 0.0       ],
+        [0.0,    V[rho]*cs2, 0.0,    0.0,    V[vx1]    ]
+    ])
+
+
+def JAx2(V, a):
+    cs2 = a.gamma*V[prs]/V[rho]
+    return np.array([
+        [V[vx2], V[rho], 0.0,        0.0,    0.0       ],
+        [0.0,    V[vx2], 0.0,        0.0,    0.0       ],
+        [0.0,    0.0,    V[vx2],     0.0,    1.0/V[rho]],
+        [0.0,    0.0,    0.0,        V[vx2], 0.0       ],
+        [0.0,    0.0,    V[rho]*cs2, 0.0,    V[vx2]    ]
+    ])
+
+
+def JAx3(V, a):
+    cs2 = a.gamma*V[prs]/V[rho]
+    return np.array([
+        [V[vx3], V[rho], 0.0,    0.0,        0.0       ],
+        [0.0,    V[vx3], 0.0,    0.0,        0.0       ],
+        [0.0,    0.0,    V[vx3], 0.0,        0.0       ],
+        [0.0,    0.0,    0.0,    V[vx3],     1.0/V[rho]],
+        [0.0,    0.0,    0.0,    V[rho]*cs2, V[vx3]    ]
+    ])
+
+
 def cons_to_prims(U, a):
 
     V = np.zeros(shape=U.shape)

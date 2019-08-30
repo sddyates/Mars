@@ -1,9 +1,7 @@
-import sys
-sys.path.insert(0, '../../src')
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 from settings import *
+
 
 def line_plot():
 
@@ -11,7 +9,8 @@ def line_plot():
 
         f, ax1 = plt.subplots()
 
-        x1p, x2p, Prho, Pvx1, Pprs = np.loadtxt(f'output/pluto/data.{num:04}.tab', unpack=True)
+        x1p, x2p, Prho, Pvx1, Pprs = np.loadtxt(
+            f'output/pluto/data.{num:04}.tab', unpack=True)
         V, x1 = np.load(f'output/1D/data.{num:04}.npy')
 
         ax1.plot(x1, V[rho], 'b', label=r'$\rho$')
@@ -27,6 +26,7 @@ def line_plot():
         plt.legend()
         plt.savefig(f'output/plots/line_{num:04}.png')
         plt.close()
+
 
 if __name__ == "__main__":
     line_plot()

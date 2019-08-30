@@ -2,7 +2,7 @@
 import sys
 from riemann_solvers import tvdlf, hll, hllc
 from reconstruction import flat, minmod
-from time_stepping import Euler, RungaKutta2
+from time_stepping import Euler, RungaKutta2, muscl_hanock
 
 
 class Algorithm:
@@ -20,9 +20,9 @@ class Algorithm:
     """
 
     def __init__(self, p):
-        self.assign_riemann_solver(p)
-        self.assign_reconstruction(p)
-        self.assign_time_stepping(p)
+        self.assign_riemann_solver_(p)
+        self.assign_reconstruction_(p)
+        self.assign_time_stepping_(p)
         self.is_1D = p['Dimensions'] == '1D'
         self.is_2D = p['Dimensions'] == '2D'
         self.is_3D = p['Dimensions'] == '3D'
@@ -30,7 +30,7 @@ class Algorithm:
         self.gamma_1 = self.gamma - 1.0
         self.cfl = p['cfl']
 
-    def assign_riemann_solver(self, p):
+    def assign_riemann_solver_(self, p):
         """
         Synopsis
         --------
@@ -52,7 +52,7 @@ class Algorithm:
             print('Error: invalid riennman solver.')
             sys.exit()
 
-    def assign_reconstruction(self, p):
+    def assign_reconstruction_(self, p):
         """
         Synopsis
         --------
@@ -68,11 +68,13 @@ class Algorithm:
             self.reconstruction = flat
         elif p['reconstruction'] == 'linear':
             self.reconstruction = minmod
+        elif p['reconstruction'] == 'muscl_hanock':
+            self.reconstruction = muscl_hanock
         else:
             print('Error: Invalid reconstructor.')
             sys.exit()
 
-    def assign_time_stepping(self, p):
+    def assign_time_stepping_(self, p):
         """
         Synopsis
         --------

@@ -38,14 +38,14 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':256,
-            'resolution x2':256,
-            'resolution x3':32,
+            'resolution x1':64,
+            'resolution x2':64,
+            'resolution x3':0,
 
             'cfl':0.3,
             'initial dt':1.0e-5,
             'max dt increase':1.5,
-            'max time':15.0,
+            'max time':0.1,
 
             'plot frequency':0.1,
             'print to file':False,
@@ -73,10 +73,10 @@ class Problem:
 
 
     def initialise(self, V, g):
-        
+
         if self.parameter['Dimensions'] == '2D':
             for j in range(g.jbeg, g.jend):
-                for i in range(g.ibeg, g.iend):                    
+                for i in range(g.ibeg, g.iend):
                     if abs(g.x2[j]) < 0.25:
                         V[rho, j, i] = 2.0
                         V[prs, j, i] = 2.5
@@ -87,11 +87,11 @@ class Problem:
                         V[prs, j, i] = 2.5
                         V[vx1, j, i] = -0.5 + (np.random.rand()*2.0 - 1)*0.001
                         V[vx2, j, i] = 0.0 + (np.random.rand()*2.0 - 1)*0.001
- 
+
         if self.parameter['Dimensions'] == '3D':
             for k in range(g.kbeg, g.kend):
                 for j in range(g.jbeg, g.jend):
-                    for i in range(g.ibeg, g.iend):                    
+                    for i in range(g.ibeg, g.iend):
                         if abs(g.x2[j]) < 0.25:
                             V[rho, k, j, i] = 2.0
                             V[prs, k, j, i] = 2.5
@@ -112,6 +112,3 @@ class Problem:
 
 if __name__ == "__main__":
     main_loop(Problem())
-
-
-

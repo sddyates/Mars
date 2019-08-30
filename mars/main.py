@@ -62,7 +62,7 @@ def main_loop(problem):
     # Initialise grid.
     grid = Grid(problem.parameter)
 
-    # Initialise g.
+    # Initialise Algorithms.
     a = Algorithm(problem.parameter)
 
     # Generate state vector to hold conservative

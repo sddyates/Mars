@@ -5,7 +5,7 @@ from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons, time_step
 
 
-def face_flux(U, g, a, vxn, vxt, vxb):
+def face_flux_RK2(U, g, a, vxn, vxt, vxb):
     """
     Synopsis
     --------
@@ -102,7 +102,7 @@ def RHSOperator(U, g, a):
 
         dflux_x1 = np.zeros(shape=U.shape)
 
-        face_flux(U, g, a, vxn=2, vxt=3, vxb=4)
+        face_flux_RK2(U, g, a, vxn=2, vxt=3, vxb=4)
         dflux_x1[:, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
         dflux_x1[mvx1, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
@@ -114,12 +114,12 @@ def RHSOperator(U, g, a):
         dflux_x2 = np.zeros(shape=U.shape)
 
         for j in range(g.jbeg, g.jend):
-            face_flux(U[:, j, :], g, a, vxn=2, vxt=3, vxb=4)
+            face_flux_RK2(U[:, j, :], g, a, vxn=2, vxt=3, vxb=4)
             dflux_x1[:, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
             dflux_x1[mvx1, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
         for i in range(g.ibeg, g.iend):
-            face_flux(U[:, :, i], g, a, vxn=3, vxt=2, vxb=4)
+            face_flux_RK2(U[:, :, i], g, a, vxn=3, vxt=2, vxb=4)
             dflux_x2[:, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
             dflux_x2[mvx2, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
@@ -133,19 +133,19 @@ def RHSOperator(U, g, a):
 
         for k in range(g.kbeg, g.kend):
             for j in range(g.jbeg, g.jend):
-                face_flux(U[:, k, j, :], g, a, vxn=2, vxt=3, vxb=4)
+                face_flux_RK2(U[:, k, j, :], g, a, vxn=2, vxt=3, vxb=4)
                 dflux_x1[:, k, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
                 dflux_x1[mvx1, k, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
         for k in range(g.kbeg, g.kend):
             for i in range(g.ibeg, g.iend):
-                face_flux(U[:, k, :, i], g, a, vxn=3, vxt=2, vxb=4)
+                face_flux_RK2(U[:, k, :, i], g, a, vxn=3, vxt=2, vxb=4)
                 dflux_x2[:, k, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
                 dflux_x1[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
         for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
-                face_flux(U[:, :, j, i], g, a, vxn=4, vxt=2, vxb=3)
+                face_flux_RK2(U[:, :, j, i], g, a, vxn=4, vxt=2, vxb=3)
                 dflux_x3[:, g.kbeg:g.kend, j, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
                 dflux_x1[mvx3, g.kbeg:g.kend, j, i] -= g.pres[1:] - g.pres[:-1]
 

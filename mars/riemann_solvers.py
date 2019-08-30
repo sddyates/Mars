@@ -63,7 +63,7 @@ def hll(g, a, vxn, vxt, vxb):
 
 
 # @profile
-# @jit
+@jit
 def hllc(g, a, vxn, vxt, vxb):
 
     mxn = vxn
