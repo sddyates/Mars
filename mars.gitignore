@@ -1,6 +1,0 @@
-# cython_lib
-src/cython_lib/
-*.c
-*.so
-
-src/__pycache__/
