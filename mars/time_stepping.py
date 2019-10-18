@@ -137,6 +137,8 @@ def muscl_hanock(V, dt, g, a, p):
     """
 
     dflux = RHSOperator(V, g, a, dt)
+
+    U = prims_to_cons(V, a)
     U_new = U + dt*dflux
     V = cons_to_prims(U_new, a)
 
