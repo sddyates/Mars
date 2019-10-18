@@ -86,12 +86,12 @@ def RungaKutta2(V, dt, g, a, p):
     """
 
     U = prims_to_cons(V, a)
-    K1 = dt*RHSOperator(U, g, a)
+    K1 = RHSOperator(U, g, a, dt)
     g.boundary(K1, p)
 
     # My need to recalculate the time step here.
 
-    K2 = dt*RHSOperator(U+K1, g, a)
+    K2 = RHSOperator(U+K1, g, a, dt)
     U_new = U + 0.5*(K1 + K2)
     g.boundary(U_new, p)
     V = cons_to_prims(U_new, a)
@@ -136,27 +136,8 @@ def muscl_hanock(V, dt, g, a, p):
     None
     """
 
-    V_xp =
-
-    V_Hatx = V_x
-        - 0.5*dt/g.dx1*JAx1(V, a)*(V_xp - Vxm)
-        - 0.5*dt/g.dx2*JAx2(V, a)*(V_yp - Vym)
-        - 0.5*dt/g.dx3*JAx3(V, a)*(V_zp - Vzm)
-
-    U = prims_to_cons(V, a)
-
-    F_xp = Flux_MH(U_xp[:, i, j, k], U_xm[:, i+1, j, k])
-    F_xm = Flux_MH(U_xm[:, i-1, j, k], U_xp[:, i, j, k])
-
-    F_yp = Flux_MH(U_yp[:, i, j, k], U_ym[:, i, j+1, k])
-    F_ym = Flux_MH(U_ym[:, i, j-1, k], U_yp[:, i, j, k])
-
-    F_zp = Flux_MH(U_zp[:, i, j, k], U_zm[:, i, j, k+1])
-    F_zm = Flux_MH(U_zm[:, i, j, k-1], U_zp[:, i, j, k])
-
-    U_new = U
-        - dt/g.dx*(F_xp - F_xm)
-        - dt/g.dy*(F_yp - F_ym)
-        - dt/g.dz*(F_zp - F_zm)
+    dflux = RHSOperator(V, g, a, dt)
+    U_new = U + dt*dflux
+    V = cons_to_prims(U_new, a)
 
     return V

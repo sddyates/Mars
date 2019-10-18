@@ -46,9 +46,12 @@ def minmod(V, gz, dxi):
     m = np.zeros([nvar, imax-1], dtype=np.float64)
     for var in range(nvar):
         for i in range(1, imax-1):
-            gradient = a[var, i-1] if abs(a[var, i-1]) < abs(b[var, i-1]) \
+            gradient = a[var, i-1]\
+                if abs(a[var, i-1]) < abs(b[var, i-1])\
                 else b[var, i-1]
-            m[var, i-1] = gradient if a[var, i-1]*b[var, i-1] > 0.0 else 0.0
+            m[var, i-1] = gradient\
+                if a[var, i-1]*b[var, i-1] > 0.0\
+                else 0.0
 
     L = V[:, 1:imax-1] + m[:, :imax-2]*0.5
     R = V[:, 2:imax] - m[:, 1:imax-1]*0.5
