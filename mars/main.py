@@ -8,8 +8,8 @@ import numpy as np
 from settings import *
 from grid import Grid
 from algorithms import Algorithm
-from tools import time_step
-# from evolve import incriment
+from tools import time_step, prims_to_cons
+from datetime import datetime
 from output import dump
 import sys
 
@@ -82,7 +82,12 @@ def main_loop(problem):
         sys.exit()
 
     # First output.
-    dump(V, grid, problem.parameter, 0)
+    if problem.parameter['plot frequency'] > 0.0:
+        dump(V, grid, a, problem.parameter, 0)
+
+    U = np.zeros(shape=V.shape, dtype=np.float64)
+    prims_to_cons(V, U, a.gamma_1)
+    del V
 
     # Perform main integration loop.
     t = 0.0
@@ -94,20 +99,26 @@ def main_loop(problem):
     # Integrate in time.
     while t < problem.parameter['max time']:
 
-        V = a.time_incriment(V, dt, grid, a, problem.parameter)
+        start_time = datetime.now().second + datetime.now().microsecond*1.0e-6
 
-        dt_new, max_velocity, mach_number = time_step(V, grid, a)
+        U = a.time_incriment(U, dt, grid, a, problem.parameter)
+
+        end_time = datetime.now().second + datetime.now().microsecond*1.0e-6
+        time_tot = (end_time - start_time)
+        Mcell = grid.rez/1.0e+6/time_tot
+
+        dt_new, max_velocity, mach_number = time_step(grid, a)
 
         print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-              + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
+              + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}], {Mcell:.3f} Mcell/s")
 
         dt = min(dt_new, problem.parameter['max dt increase']*dt)
 
         if (t + dt) > problem.parameter['max time']:
             dt = problem.parameter['max time'] - t
 
-        if (t + dt) > num*problem.parameter['plot frequency']:
-            dump(V, grid, problem.parameter, num)
+        if (problem.parameter['plot frequency'] > 0.0) & ((t + dt) > num*problem.parameter['plot frequency']):
+            dump(U, grid, a, problem.parameter, num)
             num += 1
 
         t += dt
@@ -115,10 +126,12 @@ def main_loop(problem):
 
     else:
         print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-              + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
+              + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}], {Mcell:.3f} Mcell/s")
 
-        V = a.time_incriment(V, dt, grid, a, problem.parameter)
-        dump(V, grid, problem.parameter, num)
+        U = a.time_incriment(U, dt, grid, a, problem.parameter)
+
+        if problem.parameter['plot frequency'] > 0.0:
+            dump(U, grid, a, problem.parameter, num)
 
     print("")
     print(f"    Simulation {problem.parameter['Name']} complete...")

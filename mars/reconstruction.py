@@ -1,9 +1,9 @@
-
+import numba as nb
 from numba import jit
 import numpy as np
 
 
-@jit
+@nb.jit(cache=True)
 def minmod(V, gz, dxi):
     """
     Synopsis
@@ -30,28 +30,23 @@ def minmod(V, gz, dxi):
     nvar = V.shape[0]
     imax = V.shape[1] - 1
 
-    #for i in range(1, imax-1):
-    #    wp[d][i] = dx[i]/(xgc[i+1] - xgc[i])
-    #    wm[d][i] = dx[i]/(xgc[i] - xgc[i-1])
+    m = np.zeros((nvar, imax-1), dtype=np.float64)
 
-    #    cp[d][i] = (xgc[i+1] - xgc[i])/(xr[i] - xgc[i])
-    #    cm[d][i] = (xgc[i] - xgc[i-1])/(xgc[i] - xr[i-1])
-
-    #    dp[d][i] = (xr[i] - xgc[i])/dx[i]
-    #    dm[d][i] = (xgc[i] - xr[i-1])/dx[i]
-
-    a = V[:, 1:imax-1] - V[:, :imax-2]
-    b = V[:, 2:imax] - V[:, 1:imax-1]
-
-    m = np.zeros([nvar, imax-1], dtype=np.float64)
     for var in range(nvar):
-        for i in range(1, imax-1):
-            gradient = a[var, i-1]\
-                if abs(a[var, i-1]) < abs(b[var, i-1])\
-                else b[var, i-1]
-            m[var, i-1] = gradient\
-                if a[var, i-1]*b[var, i-1] > 0.0\
-                else 0.0
+        for i in range(1, imax):
+
+            a = V[var, i] - V[var, i-1]
+            b = V[var, i+1] - V[var, i]
+
+            if np.absolute(a) < np.absolute(b):
+                gradient = a
+            else:
+                gradient = b
+
+            if a*b > 0.0:
+                m[var, i-1] = gradient
+            else:
+                m[var, i-1] = 0.0
 
     L = V[:, 1:imax-1] + m[:, :imax-2]*0.5
     R = V[:, 2:imax] - m[:, 1:imax-1]*0.5
@@ -59,8 +54,8 @@ def minmod(V, gz, dxi):
     return L, R
 
 
-@jit
-def flat(y, g, dxi):
+@nb.jit(cache=True)
+def flat(V, gz, dxi):
     """
     Synopsis
     --------
@@ -82,4 +77,4 @@ def flat(y, g, dxi):
     Fine the way to calculate the coefficients for such that
     a non-regular grid can be used.
     """
-    return y[:, :-g.gz], y[:, g.gz:]
+    return V[:, :-gz], V[:, gz:]

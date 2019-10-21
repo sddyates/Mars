@@ -1,10 +1,11 @@
 
 import numpy as np
+import numba as nb
 import sys
 from settings import *
 
-
-def flux_tensor(U, a, vxn, vxt, vxb):
+@nb.jit(cache=True)
+def flux_tensor(U, V, F, vxn, vxt, vxb):
     """
     Synopsis
     --------
@@ -39,29 +40,19 @@ def flux_tensor(U, a, vxn, vxt, vxb):
     None
     """
 
-    F = np.zeros(shape=U.shape)
 
-    V = cons_to_prims(U, a)
+    F[rho] = U[rho]*V[vxn]
+    F[vxn] = U[rho]*V[vxn]*V[vxn]
+    F[eng] = V[vxn]*(U[eng] + V[prs])
 
-    if a.is_1D:
-        F[rho] = U[rho]*V[vxn]
-        F[vxn] = U[rho]*V[vxn]*V[vxn]
-        F[eng] = V[vxn]*(U[eng] + V[prs])
-
-    elif a.is_2D:
-        F[rho] = U[rho]*V[vxn]
-        F[vxn] = U[rho]*V[vxn]*V[vxn]
+    if U.shape[0] > 3:
         F[vxt] = U[rho]*V[vxn]*V[vxt]
-        F[eng] = V[vxn]*(U[eng] + V[prs])
 
-    elif a.is_3D:
-        F[rho] = U[rho]*V[vxn]
-        F[vxn] = U[rho]*V[vxn]*V[vxn]
+    if U.shape[0] > 4:
         F[vxt] = U[rho]*V[vxn]*V[vxt]
         F[vxb] = U[rho]*V[vxn]*V[vxb]
-        F[eng] = V[vxn]*(U[eng] + V[prs])
 
-    return F
+    return
 
 
 def JAx1(V, a):
@@ -96,58 +87,38 @@ def JAx3(V, a):
         [0.0,    0.0,    0.0,    V[rho]*cs2, V[vx3]    ]
     ])
 
-
-def cons_to_prims(U, a):
-
-    V = np.zeros(shape=U.shape)
+@nb.jit(cache=True)
+def cons_to_prims(U, V, gamma_1):
 
     m2 = np.sum(U[mvx1:]**2, axis=0)
     kinE = 0.5*m2/U[rho]
 
-    U[eng, U[eng, :] < 0.0] = small_pressure/a.gamma_1 \
-        + kinE[U[eng, :] < 0.0]
-
     V[rho] = U[rho]
     V[vx1:] = U[mvx1:]/U[rho]
-    V[prs] = a.gamma_1*(U[eng] - kinE)
+    V[prs] = gamma_1*(U[eng] - kinE)
 
-    V[prs, V[prs, :] < 0.0] = small_pressure
+    return
 
-    if np.isnan(V).any():
-        print("Error, nan in cons_to_prims")
-        sys.exit()
-
-    return V
-
-
-def prims_to_cons(V, a):
-
-    U = np.zeros(shape=V.shape)
+@nb.jit(cache=True)
+def prims_to_cons(V, U, gamma_1):
 
     U[rho] = V[rho]
     U[mvx1:] = V[rho]*V[vx1:]
     v2 = np.sum(V[vx1:]**2, axis=0)
-    U[eng] = 0.5*V[rho]*v2 + V[prs]/a.gamma_1
+    U[eng] = 0.5*V[rho]*v2 + V[prs]/gamma_1
 
-    if np.isnan(U).any():
-        print("Error, nan in prims_to_cons")
-        sys.exit()
-
-    return U
+    return
 
 
-def time_step(V, g, a):
+def time_step(g, a):
 
-    cs = np.sqrt(a.gamma*V[prs]/V[rho])
+    #cs = np.sqrt(a.gamma*V[prs]/V[rho])
 
-    max_velocity = np.amax(abs(V[vx1:]))
-    max_speed = np.amax(abs(V[vx1:]) + cs)
-    dt = a.cfl*g.min_dxi/max_speed
-    mach_number = np.amax(abs(V[vx1:])/cs)
+    max_velocity = g.speed_max#np.amax(abs(V[vx1:]))
+    #max_speed = np.amax(abs(V[vx1:]) + cs)
 
-    if np.isnan(dt):
-        print("Error, nan in time_step, cs =", cs)
-        sys.exit()
+    dt = a.cfl*g.min_dxi/g.speed_max
+    mach_number = 0.0#np.amax(abs(V[vx1:])/cs)
 
     if dt < small_dt:
         print("dt to small, exiting.")

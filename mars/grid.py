@@ -32,6 +32,9 @@ class Grid:
 
     def __init__(self, p):
 
+        self.speed_max = 0.0
+        self.cs_max = 0.0
+
         if p['reconstruction'] == 'flat':
             self.gz = 1
         elif p['reconstruction'] == 'linear':
@@ -45,6 +48,7 @@ class Grid:
             self.x1max = p['x1 max']
 
             self.nx1 = p['resolution x1']
+            self.rez = self.nx1
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dxi = [self.dx1]
@@ -84,6 +88,7 @@ class Grid:
 
             self.nx1 = p['resolution x1']
             self.nx2 = p['resolution x2']
+            self.rez = self.nx1*self.nx2
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
@@ -139,6 +144,7 @@ class Grid:
             self.nx1 = p['resolution x1']
             self.nx2 = p['resolution x2']
             self.nx3 = p['resolution x3']
+            self.rez = self.nx1*self.nx2*self.nx3
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
@@ -269,7 +275,6 @@ class Grid:
         self.SL = np.zeros(shape=array_shape[1])
         self.SR = np.zeros(shape=array_shape[1])
         self.pres = np.zeros(shape=array_shape[1])
-        self.cmax = np.zeros(shape=array_shape[1])
 
     def boundary(self, V, p):
 

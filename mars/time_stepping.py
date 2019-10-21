@@ -4,7 +4,7 @@ from tools import prims_to_cons, \
     cons_to_prims, JAx1, JAx2, JAx3
 
 
-def Euler(V, dt, g, a, p):
+def Euler(U, dt, g, a, p):
     """
     Synopsis
     --------
@@ -40,15 +40,15 @@ def Euler(V, dt, g, a, p):
     ----
     None
     """
-    U = prims_to_cons(V, a)
+
     U_new = U + dt*RHSOperator(U, g, a)
     g.boundary(U_new, p)
-    V = cons_to_prims(U_new, a)
+    del U
 
-    return V
+    return U_new
 
 
-def RungaKutta2(V, dt, g, a, p):
+def RungaKutta2(U, dt, g, a, p):
     """
     Synopsis
     --------
@@ -85,18 +85,16 @@ def RungaKutta2(V, dt, g, a, p):
     None
     """
 
-    U = prims_to_cons(V, a)
     K1 = RHSOperator(U, g, a, dt)
     g.boundary(K1, p)
 
     # My need to recalculate the time step here.
 
-    K2 = RHSOperator(U+K1, g, a, dt)
-    U_new = U + 0.5*(K1 + K2)
+    U_new = U + 0.5*(K1 + RHSOperator(U+K1, g, a, dt))
     g.boundary(U_new, p)
-    V = cons_to_prims(U_new, a)
+    del K1, U
 
-    return V
+    return U_new
 
 
 def muscl_hanock(V, dt, g, a, p):
@@ -137,7 +135,6 @@ def muscl_hanock(V, dt, g, a, p):
     """
 
     dflux = RHSOperator(V, g, a, dt)
-
     U = prims_to_cons(V, a)
     U_new = U + dt*dflux
     V = cons_to_prims(U_new, a)

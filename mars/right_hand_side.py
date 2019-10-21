@@ -41,21 +41,23 @@ def face_flux_RK2(U, g, a, vxn, vxt, vxb):
 
     g.build_fluxes(vxn)
 
-    V = cons_to_prims(U, a)
+    V = np.zeros(shape=U.shape, dtype=np.float64)
+    cons_to_prims(U, V, a.gamma_1)
+    del U
 
     g.VL, g.VR = a.reconstruction(V, g.gz, g.dxi[vxn-2])
 
-    g.UL = prims_to_cons(g.VL, a)
-    g.UR = prims_to_cons(g.VR, a)
+    prims_to_cons(g.VL, g.UL, a.gamma_1)
+    prims_to_cons(g.VR, g.UR, a.gamma_1)
 
-    g.FL = flux_tensor(g.UL, a, vxn, vxt, vxb)
-    g.FR = flux_tensor(g.UR, a, vxn, vxt, vxb)
+    flux_tensor(g.UL, g.VL, g.FL, vxn, vxt, vxb)
+    flux_tensor(g.UR, g.VR, g.FR, vxn, vxt, vxb)
 
-    a.riemann_solver(g, a, vxn, vxt, vxb)
+    g.flux, g.pres, g.cs_max, g.speed_max = a.riemann_solver(g.flux, g.FL, g.FR, g.UL, g.UR, g.VL, g.VR, g.SL, g.SR, g.pres, g.cs_max, g.speed_max, a.gamma, vxn, vxt, vxb)
 
-    if np.isnan(np.sum(g.flux)):
-        print("Error, nan in array, function: riemann")
-        sys.exit()
+    #if np.isnan(np.sum(g.flux)):
+    #    print("Error, nan in array, function: riemann")
+    #    sys.exit()
 
     return
 
@@ -94,33 +96,76 @@ def face_flux_MH(U, g, a, vxn, vxt, vxb):
     None
     """
 
+    ic = g.gz + 1
+    jc = g.gz + 1
+    kc = g.gz + 1
+    stencil = 2*g.gz + 1
+
     g.build_fluxes(vxn)
 
-    V_xp = V
+    array_shape = U.shape
 
-    V_Hatx = V_x
-        - 0.5*dt/g.dx1*JAx1(V, a)*(V_xp - Vxm)
-        - 0.5*dt/g.dx2*JAx2(V, a)*(V_yp - Vym)
-        - 0.5*dt/g.dx3*JAx3(V, a)*(V_zp - Vzm)
+    g.flux = np.zeros(shape=(array_shape[0], 2))
+    g.FL = np.zeros(shape=(array_shape[0], 2))
+    g.FR = np.zeros(shape=(array_shape[0], 2))
+    g.UL = np.zeros(shape=(array_shape[0], 2))
+    g.UR = np.zeros(shape=(array_shape[0], 2))
+    g.VL = np.zeros(shape=(array_shape[0], 2))
+    g.VR = np.zeros(shape=(array_shape[0], 2))
+    g.SL = np.zeros(shape=stencil)
+    g.SR = np.zeros(shape=stencil)
+    g.pres = np.zeros(shape=stencil)
+    g.cmax = np.zeros(shape=stencil)
 
     V = cons_to_prims(U, a)
 
-    g.VL, g.VR = a.reconstruction(V, g.gz, g.dxi[vxn-2])
+    V_x1m = np.zeros(shape=(array_shape[0], 2))
+    V_x1p = np.zeros(shape=(array_shape[0], 2))
 
-    g.UL = prims_to_cons(g.VL, a)
-    g.UR = prims_to_cons(g.VR, a)
+    V_x2m = np.zeros(shape=(array_shape[0], 2))
+    V_x2p = np.zeros(shape=(array_shape[0], 2))
+
+    V_x3m = np.zeros(shape=(array_shape[0], 2))
+    V_x3p = np.zeros(shape=(array_shape[0], 2))
+
+    V_x1p, V_x1m = a.reconstruction(V[:, kc, jc, :], g.gz, g.dxi[0])
+    V_x2p, V_x2m = a.reconstruction(V[:, kc, :, ic], g.gz, g.dxi[1])
+    V_x3p, V_x3m = a.reconstruction(V[:, :, jc, ic], g.gz, g.dxi[2])
+
+    V_Hatx = V_x \
+        - 0.5*dt/g.dx1*JAx1(V[:, kc, jc, ic], a)*(V_x1p[:, 1] - Vx1m[:, 0]) \
+        - 0.5*dt/g.dx2*JAx2(V[:, kc, jc, ic], a)*(V_x2p[:, 1] - Vx2m[:, 0]) \
+        - 0.5*dt/g.dx3*JAx3(V[:, kc, jc, ic], a)*(V_x3p[:, 1] - Vx3m[:, 0])
+
+    U_x1m = prims_to_cons(V_x1m, a)
+    U_x1p = prims_to_cons(V_x1p, a)
+    U_x2m = prims_to_cons(V_x2m, a)
+    U_x2p = prims_to_cons(V_x2p, a)
+    U_x3m = prims_to_cons(V_x3m, a)
+    U_x3p = prims_to_cons(V_x3p, a)
 
     g.FL = flux_tensor(g.UL, a, vxn, vxt, vxb)
     g.FR = flux_tensor(g.UR, a, vxn, vxt, vxb)
+    a.riemann_solver(g, a, vxn, vxt, vxb)
+    dflux_x1 = g.flux[:, 0] - g.flux[:, 1]
+    dflux_x1[mvx1] -= g.pres[1] - g.pres[0]
 
-    F_ip = Flux_MH(U_xp[:, i, j, k], U_xm[:, i+1, j, k])
-    F_im = Flux_MH(U_xm[:, i-1, j, k], U_xp[:, i, j, k])
+    a.riemann_solver(g, a, vxn, vxt, vxb)
+    dflux_x1 = g.flux[:, 0] - g.flux[:, 1]
+    dflux_x1[mvx1] -= g.pres[1] - g.pres[0]
 
-    F_jp = Flux_MH(U_yp[:, i, j, k], U_ym[:, i, j+1, k])
-    F_jm = Flux_MH(U_ym[:, i, j-1, k], U_yp[:, i, j, k])
+    a.riemann_solver(g, a, vxn, vxt, vxb)
+    dflux_x1 = g.flux[:, 0] - g.flux[:, 1]
+    dflux_x1[mvx1] -= g.pres[1] - g.pres[0]
 
-    F_kp = Flux_MH(U_zp[:, i, j, k], U_zm[:, i, j, k+1])
-    F_km = Flux_MH(U_zm[:, i, j, k-1], U_zp[:, i, j, k])
+    F_ip = Flux_MH(U_x1p[:, 1], U_x1m[:, 1])
+    F_im = Flux_MH(U_x1p[:, 0], U_x1p[:, 0])
+
+    F_jp = Flux_MH(U_x2p[:, 1], U_y2m[:, 1])
+    F_jm = Flux_MH(U_x2m[:, 0], U_x2p[:, 0])
+
+    F_kp = Flux_MH(U_x3p[:, 1], U_x3m[:, 1])
+    F_km = Flux_MH(U_x3m[:, 0], U_x3p[:, 0])
 
     a.riemann_solver(g, a, vxn, vxt, vxb)
 
@@ -178,6 +223,7 @@ def RHSOperator(U, g, a, dt):
         dflux_x1[mvx1, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
         dflux = dflux_x1/g.dx1
+        del dflux_x1
 
     if a.is_2D:
 
@@ -195,6 +241,7 @@ def RHSOperator(U, g, a, dt):
             dflux_x2[mvx2, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
         dflux = dflux_x1/g.dx1 + dflux_x2/g.dx2
+        del dflux_x1, dflux_x2
 
     if a.is_3D:
 
@@ -212,19 +259,20 @@ def RHSOperator(U, g, a, dt):
             for i in range(g.ibeg, g.iend):
                 face_flux_RK2(U[:, k, :, i], g, a, vxn=3, vxt=2, vxb=4)
                 dflux_x2[:, k, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
-                dflux_x1[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
+                dflux_x2[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
         for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
                 face_flux_RK2(U[:, :, j, i], g, a, vxn=4, vxt=2, vxb=3)
                 dflux_x3[:, g.kbeg:g.kend, j, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
-                dflux_x1[mvx3, g.kbeg:g.kend, j, i] -= g.pres[1:] - g.pres[:-1]
+                dflux_x3[mvx3, g.kbeg:g.kend, j, i] -= g.pres[1:] - g.pres[:-1]
 
         dflux = dflux_x1/g.dx1 + dflux_x2/g.dx2 + dflux_x3/g.dx3
+        del dflux_x1, dflux_x2, dflux_x3
 
-    if np.isnan(np.sum(dflux)):
-        print("Error, nan in array, function: flux")
-        sys.exit()
+    #if np.isnan(np.sum(dflux)):
+    #    print("Error, nan in array, function: flux")
+    #    sys.exit()
 
     return dt*dflux
 
@@ -272,7 +320,7 @@ def RHSOperator_MH(U, g, a, dt):
         dflux_x1 = np.zeros(shape=U.shape)
 
         for i in range(g.ibeg, g.iend):
-            face_flux_RK2(U, g, a, vxn=2, vxt=3, vxb=4)
+            face_flux_MH(U, g, a, vxn=2, vxt=3, vxb=4)
             dflux_x1[:, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
             dflux_x1[mvx1, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
@@ -284,12 +332,12 @@ def RHSOperator_MH(U, g, a, dt):
         dflux_x2 = np.zeros(shape=U.shape)
 
         for j in range(g.jbeg, g.jend):
-            face_flux_RK2(U[:, j, :], g, a, vxn=2, vxt=3, vxb=4)
+            face_flux_MH(U[:, j, :], g, a, vxn=2, vxt=3, vxb=4)
             dflux_x1[:, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
             dflux_x1[mvx1, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
 
         for i in range(g.ibeg, g.iend):
-            face_flux_RK2(U[:, :, i], g, a, vxn=3, vxt=2, vxb=4)
+            face_flux_MH(U[:, :, i], g, a, vxn=3, vxt=2, vxb=4)
             dflux_x2[:, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
             dflux_x2[mvx2, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
 
@@ -305,17 +353,17 @@ def RHSOperator_MH(U, g, a, dt):
             for j in range(g.jbeg, g.jend):
                 for i in range(g.ibeg, g.iend):
 
-                    face_flux_RK2(U[:, k, j, i], g, a, vxn=2, vxt=3, vxb=4)
-                    dflux_x1[:, k, j, g.ibeg:g.iend] = g.flux[:, :-1] - g.flux[:, 1:]
-                    dflux_x1[mvx1, k, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
+                    face_flux_MH(U[:, k-g.gz:k+g.gz, j-g.gz:j+g.gz, i-g.gz:i+g.gz], g, a, vxn=2, vxt=3, vxb=4)
+                    dflux_x1[:, k, j, i] = g.flux[:, :-1] - g.flux[:, 1:]
+                    dflux_x1[mvx1, k, j, i] -= g.pres[1:] - g.pres[:-1]
 
-                    face_flux_RK2(U[:, k, j, i], g, a, vxn=3, vxt=2, vxb=4)
-                    dflux_x2[:, k, g.jbeg:g.jend, i] = g.flux[:, :-1] - g.flux[:, 1:]
-                    dflux_x1[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
+                    face_flux_MH(U[:, k, j-g.gz:j+g.gz, i], g, a, vxn=3, vxt=2, vxb=4)
+                    dflux_x2[:, k, j, i] = g.flux[:, :-1] - g.flux[:, 1:]
+                    dflux_x2[mvx2, k, j, i] -= g.pres[1:] - g.pres[:-1]
 
-                    face_flux_RK2(U[:, k, j, i], g, a, vxn=4, vxt=2, vxb=3)
-                    dflux_x3[:, g.kbeg:g.kend, j, i] = g.flux[:, :-1] - g.flux[:, 1:]
-                    dflux_x1[mvx3, g.kbeg:g.kend, j, i] -= g.pres[1:] - g.pres[:-1]
+                    face_flux_MH(U[:, k-g.gz:k+g.gz, j, i], g, a, vxn=4, vxt=2, vxb=3)
+                    dflux_x3[:, k, j, i] = g.flux[:, :-1] - g.flux[:, 1:]
+                    dflux_x3[mvx3, k, j, i] -= g.pres[1:] - g.pres[:-1]
 
         dflux = dflux_x1/g.dx1 + dflux_x2/g.dx2 + dflux_x3/g.dx3
 

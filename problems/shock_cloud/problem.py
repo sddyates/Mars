@@ -38,8 +38,8 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':128,
-            'resolution x2':128,
+            'resolution x1':256,
+            'resolution x2':256,
             'resolution x3':64,
 
             'cfl':0.3,
@@ -47,7 +47,7 @@ class Problem:
             'max dt increase':1.5,
             'max time':1.0e-1,
 
-            'plot frequency':1.0e-2,
+            'plot frequency': 1.0e-2,
             'print to file':False,
 
             'gamma':1.666666,

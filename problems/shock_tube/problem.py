@@ -49,7 +49,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'riemann': 'tvdlf',
+            'riemann': 'hllc',
             'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
