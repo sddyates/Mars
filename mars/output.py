@@ -2,9 +2,15 @@
 import numpy as np
 from evtk.hl import gridToVTK, imageToVTK
 from settings import *
+from tools import cons_to_prims
 
 
-def dump(V, g, p, num):
+def dump(U, g, a, p, num):
+
+    V = np.zeros(shape=U.shape, dtype=np.float64)
+    cons_to_prims(U, V, a.gamma_1)
+    del U
+
     print(f"    Writing output file: {num:04}")
 
     if p['Dimensions'] == '1D':

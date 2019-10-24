@@ -38,14 +38,14 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':64,
-            'resolution x2':64,
+            'resolution x1':512,
+            'resolution x2':512,
             'resolution x3':0,
 
-            'cfl':0.3,
+            'cfl':0.6,
             'initial dt':1.0e-5,
             'max dt increase':1.5,
-            'max time':0.1,
+            'max time':10.0,
 
             'plot frequency':0.1,
             'print to file':False,

@@ -32,6 +32,8 @@ class Grid:
 
     def __init__(self, p):
 
+        self.speed_max = 0.0
+
         if p['reconstruction'] == 'flat':
             self.gz = 1
         elif p['reconstruction'] == 'linear':
@@ -45,6 +47,7 @@ class Grid:
             self.x1max = p['x1 max']
 
             self.nx1 = p['resolution x1']
+            self.rez = self.nx1
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dxi = [self.dx1]
@@ -69,7 +72,7 @@ class Grid:
             self.shape_internal = [self.nvar, self.nx1]
             self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
 
-            self.shape_flux = [self.nvar, self.nx1 + 1]
+            self.shape_flux = [[self.nvar, self.nx1 + 1]]
 
             self.x1 = self._x1()
 
@@ -84,6 +87,7 @@ class Grid:
 
             self.nx1 = p['resolution x1']
             self.nx2 = p['resolution x2']
+            self.rez = self.nx1*self.nx2
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
@@ -139,6 +143,7 @@ class Grid:
             self.nx1 = p['resolution x1']
             self.nx2 = p['resolution x2']
             self.nx3 = p['resolution x3']
+            self.rez = self.nx1*self.nx2*self.nx3
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
@@ -237,16 +242,19 @@ class Grid:
     def state_vector(self, p):
         if p['Dimensions'] == '1D':
             return np.zeros((self.nvar,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         elif p['Dimensions'] == '2D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx2,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         elif p['Dimensions'] == '3D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx3,
                              2*self.gz + self.nx2,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         else:
             print('Error, invalid number of dimensions.')
             sys.exit()
@@ -269,7 +277,6 @@ class Grid:
         self.SL = np.zeros(shape=array_shape[1])
         self.SR = np.zeros(shape=array_shape[1])
         self.pres = np.zeros(shape=array_shape[1])
-        self.cmax = np.zeros(shape=array_shape[1])
 
     def boundary(self, V, p):
 

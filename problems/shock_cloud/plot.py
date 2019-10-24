@@ -32,7 +32,7 @@ def mesh_plot():
 
     for num in range(0, 300):
 
-        V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy')
+        V, x1, x2 = np.load(f'output/2D/data.{num:04}.npy', allow_pickle=True)
         print(f'data.{num:04}.npy')
 
         variables = [rho, prs, vx1, vx2]
@@ -40,7 +40,7 @@ def mesh_plot():
 
         for i, variable in enumerate(variables):
             plt.figure(figsize=(10,10))
-            a = plt.imshow(V[variable, :, :], extent=(x1.min(), x1.max(), 
+            a = plt.imshow(V[variable, :, :], extent=(x1.min(), x1.max(),
                            x2.min(), x2.max()))
 
             ax = plt.gca()
@@ -87,8 +87,8 @@ def mesh_plot_3D():
             ax1 = plt.subplot2grid((3, 1), (0, 0))
             divider = make_axes_locatable(ax1)
             cax = divider.append_axes("right", size="5%", pad=0.0)
-            imap1 = ax1.imshow(V[variable, int(len(x3)/2.0), :, :], 
-                               extent=(x1.min(), x1.max(), 
+            imap1 = ax1.imshow(V[variable, int(len(x3)/2.0), :, :],
+                               extent=(x1.min(), x1.max(),
                                        x2.min(), x2.max()),
                                aspect=1,
                                origin="lower",
@@ -101,9 +101,9 @@ def mesh_plot_3D():
             # Slice in the xz plane.
             ax2 = plt.subplot2grid((3, 1), (1, 0))
             divider = make_axes_locatable(ax2)
-            cax = divider.append_axes("right", size="5%", pad=0.0)            
-            imap2 = ax2.imshow(V[variable, :, int(len(x2)/2.0), :], 
-                               extent=(x1.min(), x1.max(), 
+            cax = divider.append_axes("right", size="5%", pad=0.0)
+            imap2 = ax2.imshow(V[variable, :, int(len(x2)/2.0), :],
+                               extent=(x1.min(), x1.max(),
                                        x3.min(), x3.max()),
                                aspect=1,
                                origin="lower",
@@ -116,9 +116,9 @@ def mesh_plot_3D():
             # Slice in the zy plane.
             ax3 = plt.subplot2grid((3, 1), (2, 0))
             divider = make_axes_locatable(ax3)
-            cax = divider.append_axes("right", size="5%", pad=0.0)            
-            imap3 = ax3.imshow(V[variable, :, :, int(len(x1)/2.0)], 
-                               extent=(x2.min(), x2.max(), 
+            cax = divider.append_axes("right", size="5%", pad=0.0)
+            imap3 = ax3.imshow(V[variable, :, :, int(len(x1)/2.0)],
+                               extent=(x2.min(), x2.max(),
                                        x3.min(), x3.max()),
                                aspect=1,
                                origin="lower",

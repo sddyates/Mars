@@ -1,11 +1,13 @@
 
 import sys
 import numpy as np
+import numba as nb
 from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons, time_step
 
 
-def face_flux_RK2(U, g, a, vxn, vxt, vxb):
+#@nb.jit(cache=True)
+def flux_difference(U, g, a, dt, vxn, vxt, vxb):
     """
     Synopsis
     --------
@@ -39,28 +41,31 @@ def face_flux_RK2(U, g, a, vxn, vxt, vxb):
     None
     """
 
-    g.build_fluxes(vxn)
+    V = np.empty(shape=U.shape, dtype=np.float64)
+    cons_to_prims(U, V, a.gamma_1)
 
-    V = cons_to_prims(U, a)
+    VL, VR = a.reconstruction(V, g.gz, g.dxi[vxn-2])
 
-    g.VL, g.VR = a.reconstruction(V, g.gz, g.dxi[vxn-2])
+    UL = np.empty(shape=VL.shape, dtype=np.float64)
+    UR = np.empty(shape=VR.shape, dtype=np.float64)
+    prims_to_cons(VL, UL, a.igamma_1)
+    prims_to_cons(VR, UR, a.igamma_1)
 
-    g.UL = prims_to_cons(g.VL, a)
-    g.UR = prims_to_cons(g.VR, a)
+    FL = np.empty(shape=VL.shape, dtype=np.float64)
+    FR = np.empty(shape=VR.shape, dtype=np.float64)
+    flux_tensor(UL, VL, FL, vxn, vxt, vxb)
+    flux_tensor(UR, VR, FR, vxn, vxt, vxb)
 
-    g.FL = flux_tensor(g.UL, a, vxn, vxt, vxb)
-    g.FR = flux_tensor(g.UR, a, vxn, vxt, vxb)
+    dflux, g.speed_max = a.riemann_solver(
+        FL, FR, UL, UR, VL, VR,
+        g.speed_max, a.gamma, dt/g.dxi[vxn-2],
+        vxn, vxt, vxb
+    )
 
-    a.riemann_solver(g, a, vxn, vxt, vxb)
-
-    if np.isnan(np.sum(g.flux)):
-        print("Error, nan in array, function: riemann")
-        sys.exit()
-
-    return
+    return dflux
 
 
-def RHSOperator(U, g, a):
+def RHSOperator(U, g, a, dt):
     """
     Synopsis
     --------
@@ -89,70 +94,32 @@ def RHSOperator(U, g, a):
     None
     """
 
-    #for axis in g.axis_list:
+    rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    #    for axis in range(beg, end):
-    #        face_flux(U[:, :, :, :], g, a, p, axis)
-    #        dflux_x1[:, k, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
-    #        dflux_x1[mvx1, k, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
+    if U.shape[0] == 3:
 
-    #    geometry.swich_to_j_from_i()
+        rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, dt, vxn=2, vxt=3, vxb=4)
 
-    if a.is_1D:
-
-        dflux_x1 = np.zeros(shape=U.shape)
-
-        face_flux_RK2(U, g, a, vxn=2, vxt=3, vxb=4)
-        dflux_x1[:, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
-        dflux_x1[mvx1, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
-
-        dflux = dflux_x1/g.dx1
-
-    if a.is_2D:
-
-        dflux_x1 = np.zeros(shape=U.shape)
-        dflux_x2 = np.zeros(shape=U.shape)
+    if U.shape[0] == 4:
 
         for j in range(g.jbeg, g.jend):
-            face_flux_RK2(U[:, j, :], g, a, vxn=2, vxt=3, vxb=4)
-            dflux_x1[:, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
-            dflux_x1[mvx1, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
+            rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, dt, vxn=2, vxt=3, vxb=4)
 
         for i in range(g.ibeg, g.iend):
-            face_flux_RK2(U[:, :, i], g, a, vxn=3, vxt=2, vxb=4)
-            dflux_x2[:, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
-            dflux_x2[mvx2, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
+            rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, dt, vxn=3, vxt=2, vxb=4)
 
-        dflux = dflux_x1/g.dx1 + dflux_x2/g.dx2
+    if U.shape[0] == 5:
 
-    if a.is_3D:
-
-        dflux_x1 = np.zeros(shape=U.shape)
-        dflux_x2 = np.zeros(shape=U.shape)
-        dflux_x3 = np.zeros(shape=U.shape)
-
-        for k in range(g.kbeg, g.kend):
+        for k in range(g.jbeg, g.jend):
             for j in range(g.jbeg, g.jend):
-                face_flux_RK2(U[:, k, j, :], g, a, vxn=2, vxt=3, vxb=4)
-                dflux_x1[:, k, j, g.ibeg:g.iend] = -(g.flux[:, 1:] - g.flux[:, :-1])
-                dflux_x1[mvx1, k, j, g.ibeg:g.iend] -= g.pres[1:] - g.pres[:-1]
+                rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, dt, vxn=2, vxt=3, vxb=4)
 
         for k in range(g.kbeg, g.kend):
             for i in range(g.ibeg, g.iend):
-                face_flux_RK2(U[:, k, :, i], g, a, vxn=3, vxt=2, vxb=4)
-                dflux_x2[:, k, g.jbeg:g.jend, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
-                dflux_x1[mvx2, k, g.jbeg:g.jend, i] -= g.pres[1:] - g.pres[:-1]
+                rhs[:, k, g.jbeg:g.jend, i] += flux_difference(U[:, k, :, i], g, a, dt, vxn=3, vxt=2, vxb=4)
 
         for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
-                face_flux_RK2(U[:, :, j, i], g, a, vxn=4, vxt=2, vxb=3)
-                dflux_x3[:, g.kbeg:g.kend, j, i] = -(g.flux[:, 1:] - g.flux[:, :-1])
-                dflux_x1[mvx3, g.kbeg:g.kend, j, i] -= g.pres[1:] - g.pres[:-1]
+                rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, dt, vxn=4, vxt=2, vxb=3)
 
-        dflux = dflux_x1/g.dx1 + dflux_x2/g.dx2 + dflux_x3/g.dx3
-
-    if np.isnan(np.sum(dflux)):
-        print("Error, nan in array, function: flux")
-        sys.exit()
-
-    return dflux
+    return rhs
