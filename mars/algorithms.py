@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from riemann_solvers import tvdlf, hll, hllc
 from reconstruction import flat, minmod
-from time_stepping import Euler, RungaKutta2, muscl_hanock
+from time_stepping import Euler, RungaKutta2
 
 
 class Algorithm:
@@ -29,6 +29,7 @@ class Algorithm:
         self.is_3D = p['Dimensions'] == '3D'
         self.gamma = np.float64(p['gamma'])
         self.gamma_1 = np.float64(self.gamma - 1.0)
+        self.igamma_1 = 1.0/np.float64(self.gamma - 1.0)
         self.cfl = np.float64(p['cfl'])
 
     def assign_riemann_solver_(self, p):

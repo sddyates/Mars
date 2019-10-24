@@ -1,12 +1,18 @@
-# Python cache files
-mars/__pycache__/
 
-# IO files
+#  Python cache files
+mars/__pycache__/
+*.pyc
+
+#  IO files
 *.npy
 *.vti
 *output*
 *.lprof
 *.txt
 
-# Mac file system stuff
+#  Mac file system stuff
 .DS_Store
+
+#  analysis logs
+*log*
+*prof

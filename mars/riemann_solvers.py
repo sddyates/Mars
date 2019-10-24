@@ -1,12 +1,13 @@
 
-from numba import jit
 import numba as nb
 import numpy as np
 from settings import *
 
 
-@jit(cache=True)
-def tvdlf(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, vxn, vxt, vxb):
+@nb.jit(cache=True)
+def tvdlf(FL, FR, UL, UR, VL, VR,
+    speed_max, gamma, dtdx,
+    vxn, vxt, vxb):
 
     VLR = 0.5*(VL + VR)
     VLR[vxn] = 0.5*(np.absolute(VL[vxn]) + np.absolute(VR[vxn]))
@@ -18,18 +19,22 @@ def tvdlf(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, 
     flux = 0.5*(FL + FR - Smax*(UR - UL))
     pres = 0.5*(VL[prs] + VR[prs])
 
-    cs_max = np.absolute(csLR).max()
-    if cs_max > cs_max:
-        cs_max = cs_max
-
     if Smax.max() > speed_max:
         speed_max = Smax.max()
 
-    return flux, pres, cs_max, speed_max
+    dflux = -(flux[:, 1:] - flux[:, :-1])*dtdx
+    dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
+
+    return dflux, speed_max
 
 
 @nb.jit(cache=True)
-def hll(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, vxn, vxt, vxb):
+def hll(FL, FR, UL, UR, VL, VR,
+    speed_max, gamma, dtdx,
+    vxn, vxt, vxb):
+
+    flux = np.empty(shape=FL.shape, dtype=np.float64)
+    pres = np.empty(shape=FL.shape[1], dtype=np.float64)
 
     # Estimate the leftmost and rightmost wave signal
     # speeds bounding the Riemann fan based on the
@@ -48,10 +53,6 @@ def hll(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, vx
 
     scrh = np.maximum(np.absolute(SL),
                       np.absolute(SR))
-
-    cs_max = np.maximum(np.absolute(csL), np.absolute(csR)).max()
-    if cs_max > cs_max:
-        cs_max = cs_max
 
     if np.max(scrh) > speed_max:
         speed_max = np.max(scrh)
@@ -73,19 +74,26 @@ def hll(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, vx
             flux[:, i] *= scrh[i]
             pres[i] = (SR[i]*VL[prs, i] - SL[i]*VR[prs, i])*scrh[i]
 
-    return flux, pres, cs_max, speed_max
+    dflux = -(flux[:, 1:] - flux[:, :-1])*dtdx
+    dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
+
+    return dflux, speed_max
 
 
 #@profile
-@jit(cache=True)
-def hllc(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, vxn, vxt, vxb):
+@nb.jit(cache=True)
+def hllc(FL, FR, UL, UR, VL, VR,
+    speed_max, gamma, dtdx,
+    vxn, vxt, vxb):
+
+    usL = np.zeros(FL.shape[0], dtype=np.float64)
+    usR = np.zeros(FL.shape[0], dtype=np.float64)
+    flux = np.empty(shape=FL.shape, dtype=np.float64)
+    pres = np.empty(shape=FL.shape[1], dtype=np.float64)
 
     mxn = vxn
     mxt = vxt
     mxb = vxb
-
-    usL = np.zeros(flux.shape[0], dtype=np.float64)
-    usR = np.zeros(flux.shape[0], dtype=np.float64)
 
     # Estimate the leftmost and rightmost wave signal
     # speeds bounding the Riemann fan based on the
@@ -104,10 +112,6 @@ def hllc(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, v
 
     scrh = np.maximum(np.absolute(SL),
                       np.absolute(SR))
-
-    cs_max = np.maximum(np.absolute(csL), np.absolute(csR)).max()
-    if cs_max > cs_max:
-        cs_max = cs_max
 
     if scrh.max() > speed_max:
         speed_max = scrh.max()
@@ -171,4 +175,7 @@ def hllc(flux, FL, FR, UL, UR, VL, VR, SL, SR, pres, cs_max, speed_max, gamma, v
                 flux[:, i] = FR[:, i] + SR[i]*(usR[:] - uR[:])
                 pres[i] = VR[prs, i]
 
-    return flux, pres, cs_max, speed_max
+    dflux = -(flux[:, 1:] - flux[:, :-1])*dtdx
+    dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
+
+    return dflux, speed_max

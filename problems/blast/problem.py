@@ -27,7 +27,7 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name':'Spherical blast wave.',
+            'Name':'Spherical blast wave',
 
             'Dimensions':'2D',
             'x1 min':-0.5,
@@ -37,8 +37,8 @@ class Problem:
             'x3 min':-0.5,
             'x3 max':0.5,
 
-            'resolution x1':200,
-            'resolution x2':200,
+            'resolution x1':128,
+            'resolution x2':128,
             'resolution x3':200,
 
             'cfl':0.3,

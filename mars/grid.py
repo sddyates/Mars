@@ -33,7 +33,6 @@ class Grid:
     def __init__(self, p):
 
         self.speed_max = 0.0
-        self.cs_max = 0.0
 
         if p['reconstruction'] == 'flat':
             self.gz = 1
@@ -73,7 +72,7 @@ class Grid:
             self.shape_internal = [self.nvar, self.nx1]
             self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
 
-            self.shape_flux = [self.nvar, self.nx1 + 1]
+            self.shape_flux = [[self.nvar, self.nx1 + 1]]
 
             self.x1 = self._x1()
 
@@ -243,16 +242,19 @@ class Grid:
     def state_vector(self, p):
         if p['Dimensions'] == '1D':
             return np.zeros((self.nvar,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         elif p['Dimensions'] == '2D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx2,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         elif p['Dimensions'] == '3D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx3,
                              2*self.gz + self.nx2,
-                             2*self.gz + self.nx1))
+                             2*self.gz + self.nx1),
+                             dtype=np.float64)
         else:
             print('Error, invalid number of dimensions.')
             sys.exit()

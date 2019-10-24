@@ -27,16 +27,17 @@ def minmod(V, gz, dxi):
     a non-regular grid can be used.
     """
 
-    nvar = V.shape[0]
-    imax = V.shape[1] - 1
+    m = np.empty((V.shape[0], V.shape[1] - 2), dtype=np.float64)
+    L = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    R = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
 
-    m = np.zeros((nvar, imax-1), dtype=np.float64)
+    for var in range(V.shape[0]):
+        for i in range(m.shape[1]):
 
-    for var in range(nvar):
-        for i in range(1, imax):
+            a = (V[var, i+1] - V[var, i])
+            b = (V[var, i+2] - V[var, i+1])
 
-            a = V[var, i] - V[var, i-1]
-            b = V[var, i+1] - V[var, i]
+            # print(var, i, a, b)
 
             if np.absolute(a) < np.absolute(b):
                 gradient = a
@@ -44,12 +45,13 @@ def minmod(V, gz, dxi):
                 gradient = b
 
             if a*b > 0.0:
-                m[var, i-1] = gradient
+                m[var, i] = gradient
             else:
-                m[var, i-1] = 0.0
+                m[var, i] = 0.0
 
-    L = V[:, 1:imax-1] + m[:, :imax-2]*0.5
-    R = V[:, 2:imax] - m[:, 1:imax-1]*0.5
+        for i in range(L.shape[1]):
+            L[var, i] = V[var, i+1] + m[var, i]*0.5
+            R[var, i] = V[var, i+2] - m[var, i+1]*0.5
 
     return L, R
 
