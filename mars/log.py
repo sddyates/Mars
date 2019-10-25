@@ -56,15 +56,20 @@ class Log:
         percent = t*100.0/self.p['max time']
         string = f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}%"
         if timing.active:
-            string += f", {timing.Mcell:.3f} Mcell/s ({timing.total_step:.3f} s)"
+            string += f", {timing.Mcell:.3f} Mcell/s ({timing.step_diff:.3f} s)"
 
         return print(string)
 
-    def end(self, i, sim_time_tot, Mcell_av, step_av):
+    def end(self, i, timing):
         print("")
         print(f"    Simulation {self.p['Name']} complete...")
-        print(f"    Total simulation time: {sim_time_tot:.3f} s")
-        print(f"    Average performance: {Mcell_av/i:.3f} Mcell/s")
-        print(f"    Average time per iteration: {step_av/i:.3f} s")
+        print("")
+        print(f"    Total simulation time: {timing.total_sim:.3f} s")
+        print(f"    Total space integration time: {timing.total_reconstruction:.3f} s")
+        print(f"    Total reconstruction time: {timing.total_reconstruction:.3f} s")
+        print(f"    Total Riemann time: {timing.total_riemann:.3f} s")
+        print("")
+        print(f"    Average performance: {timing.Mcell_av/i:.3f} Mcell/s")
+        print(f"    Average time per iteration: {timing.step_av/i:.3f} s")
         print("")
         return

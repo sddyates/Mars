@@ -44,9 +44,9 @@ def flux_difference(U, g, a, t, dt, vxn, vxt, vxb):
     V = np.empty(shape=U.shape, dtype=np.float64)
     cons_to_prims(U, V, a.gamma_1)
 
-    t.start_reconstruction
+    t.start_reconstruction()
     VL, VR = a.reconstruction(V)
-    t.stop_reconstruction
+    t.stop_reconstruction()
 
     UL = np.empty(shape=VL.shape, dtype=np.float64)
     UR = np.empty(shape=VR.shape, dtype=np.float64)
@@ -58,13 +58,13 @@ def flux_difference(U, g, a, t, dt, vxn, vxt, vxb):
     flux_tensor(UL, VL, FL, vxn, vxt, vxb)
     flux_tensor(UR, VR, FR, vxn, vxt, vxb)
 
-    t.start_riemann
+    t.start_riemann()
     dflux, g.speed_max = a.riemann_solver(
         FL, FR, UL, UR, VL, VR,
         g.speed_max, a.gamma, dt/g.dxi[vxn-2],
         vxn, vxt, vxb
     )
-    t.stop_riemann
+    t.stop_riemann()
 
     return dflux
 
@@ -98,7 +98,7 @@ def RHSOperator(U, g, a, t, dt):
     None
     """
 
-    t.start_space_loop
+    t.start_space_loop()
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
     if U.shape[0] == 3:
@@ -126,6 +126,6 @@ def RHSOperator(U, g, a, t, dt):
         for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
                 rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t, dt, vxn=4, vxt=2, vxb=3)
-    t.stop_space_loop
+    t.stop_space_loop()
 
     return rhs

@@ -34,6 +34,8 @@ def main_loop(problem):
 
     timing = Timer(problem.parameter)
 
+    timing.start_sim()
+
     log = Log(problem.parameter)
 
     log.logo()
@@ -88,9 +90,9 @@ def main_loop(problem):
     log.begin()
     while t < problem.parameter['max time']:
 
-        timing.start_step
+        timing.start_step()
         U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-        timing.stop_step
+        timing.stop_step()
 
         dt = time_step(t, grid, a, problem.parameter)
 
@@ -106,9 +108,9 @@ def main_loop(problem):
 
     else:
 
-        timing.start_step
+        timing.start_step()
         U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-        timing.stop_step
+        timing.stop_step()
 
         log.step(i, t, dt, timing)
 
@@ -117,4 +119,6 @@ def main_loop(problem):
 
         i+1
 
-    log.end(i, sim_time_tot, Mcell_av, step_av)
+    timing.stop_sim()
+
+    log.end(i, timing)

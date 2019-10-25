@@ -49,7 +49,7 @@ class Problem:
 
             'plot frequency': 1.0e-2,
             'print to file': False,
-            'profiling': False,
+            'profiling': True,
 
             'gamma': 1.666666,
             'density unit': 1.0,

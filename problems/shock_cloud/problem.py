@@ -38,8 +38,8 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':128,
-            'resolution x2':128,
+            'resolution x1':256,
+            'resolution x2':256,
             'resolution x3':256,
 
             'cfl':0.4,
@@ -49,13 +49,14 @@ class Problem:
 
             'plot frequency': 1.0e-2,
             'print to file':False,
+            'profiling': True,
 
             'gamma':1.666666,
             'density unit':1.0,
             'length unit':1.0,
             'velocity unit':1.0,
 
-            'riemann':'hllc',
+            'riemann':'tvdlf',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
@@ -71,7 +72,7 @@ class Problem:
             'internal boundary':False
             }
 
-    def initialise(self, V, g):
+    def initialise(self, V, g, l):
 
         if self.parameter['Dimensions'] == '2D':
             Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
