@@ -30,7 +30,7 @@ class Grid:
     Expand the definitions to 3D.
     """
 
-    def __init__(self, p):
+    def __init__(self, p, l):
 
         self.speed_max = 0.0
 

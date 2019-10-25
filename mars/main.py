@@ -11,6 +11,7 @@ from tools import time_step, prims_to_cons
 from datetime import datetime
 from output import dump
 from log import Log
+from timer import Timer
 import sys
 
 
@@ -31,24 +32,20 @@ def main_loop(problem):
     None.
     """
 
-    #sim_start_time = datetime.now().minute*60.0\
-    #    + datetime.now().second\
-    #    + datetime.now().microsecond*1.0e-6
+    timing = Timer(problem.parameter)
 
-    sim_start_time = datetime.now()
+    log = Log(problem.parameter)
 
-    logging = Log(problem.parameter)
+    log.logo()
 
-    logging.logo()
-
-    logging.options()
+    log.options()
 
     #  Initialise grid.
-    grid = Grid(problem.parameter)
+    grid = Grid(problem.parameter, log)
 
     #  Initialise Algorithms.
     print("    Assigning algorithms...")
-    a = Algorithm(problem.parameter)
+    a = Algorithm(problem.parameter, log)
 
     #  Generate state vector to hold conservative
     #  and primative variables.
@@ -58,7 +55,7 @@ def main_loop(problem):
     #  Initialise the state vector accourding to
     #  user defined problem.
     print("    Initialising grid...")
-    problem.initialise(V, grid)
+    problem.initialise(V, grid, log)
 
     #  Apply boundary conditions.
     print("    Applying boundary conditions...")
@@ -86,30 +83,18 @@ def main_loop(problem):
     num = 1
     Mcell_av = 0.0
     step_av = 0.0
-    percent = 100.0/problem.parameter['max time']
 
     #  Integrate in time.
-    logging.begin()
+    log.begin()
     while t < problem.parameter['max time']:
 
-        start_time = datetime.now().minute*60.0\
-            + datetime.now().second\
-            + datetime.now().microsecond*1.0e-6
-
-        U = a.time_incriment(U, dt, grid, a, problem.parameter)
-
-        end_time = datetime.now().minute*60.0\
-            + datetime.now().second\
-            + datetime.now().microsecond*1.0e-6
-
-        time_tot = (end_time - start_time)
-        Mcell = grid.rez/1.0e+6/time_tot
-        Mcell_av += Mcell
-        step_av += time_tot
+        timing.start_step
+        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
+        timing.stop_step
 
         dt = time_step(t, grid, a, problem.parameter)
 
-        logging.step(i, t, dt, Mcell, time_tot)
+        log.step(i, t, dt, timing)
 
         if (problem.parameter['plot frequency'] > 0.0) &\
             ((t + dt) > num*problem.parameter['plot frequency']):
@@ -121,33 +106,15 @@ def main_loop(problem):
 
     else:
 
-        start_time = datetime.now().minute*60.0\
-            + datetime.now().second\
-            + datetime.now().microsecond*1.0e-6
+        timing.start_step
+        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
+        timing.stop_step
 
-        U = a.time_incriment(U, dt, grid, a, problem.parameter)
-
-        end_time = datetime.now().minute*60.0\
-            + datetime.now().second\
-            + datetime.now().microsecond*1.0e-6
-
-        time_tot = (end_time - start_time)
-        Mcell = grid.rez/1.0e+6/time_tot
-        Mcell_av += Mcell
-
-        logging.step(i, t, dt, Mcell, time_tot)
+        log.step(i, t, dt, timing)
 
         if problem.parameter['plot frequency'] > 0.0:
             dump(U, grid, a, problem.parameter, num)
 
         i+1
 
-    #sim_end_time = datetime.now().minute*60.0\
-    #    + datetime.now().second\
-    #    + datetime.now().microsecond*1.0e-6
-
-    sim_end_time = datetime.now()
-
-    sim_time_tot = (sim_end_time - sim_start_time)
-
-    logging.end(sim_time_tot, Mcell_av, step_av)
+    log.end(i, sim_time_tot, Mcell_av, step_av)
