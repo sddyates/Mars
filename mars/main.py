@@ -1,7 +1,6 @@
-# !/usr/bin/env python3
 
 __author__ = "Simon Daley-Yates"
-__version__ = "0.1"
+__version__ = "0.2"
 __license__ = "MIT"
 
 import numpy as np
@@ -11,6 +10,7 @@ from algorithms import Algorithm
 from tools import time_step, prims_to_cons
 from datetime import datetime
 from output import dump
+from log import Log
 import sys
 
 
@@ -31,60 +31,39 @@ def main_loop(problem):
     None.
     """
 
-    sim_start_time = datetime.now().minute*60.0\
-        + datetime.now().second\
-        + datetime.now().microsecond*1.0e-6
+    #sim_start_time = datetime.now().minute*60.0\
+    #    + datetime.now().second\
+    #    + datetime.now().microsecond*1.0e-6
 
-    #  Set global parameters.
-    print("")
+    sim_start_time = datetime.now()
 
-    print(r"    -----------------------------------------------")
-    print(r"                                                   ")
-    print(r"        \\\\\\\\\      /\     |\\\\\ /\\\\\        ")
-    print(r"        ||  ||  \\    //\\    ||  // ||            ")
-    print(r"        ||  ||  ||   //  \\   ||\\\\ \\\\\\        ")
-    print(r"        ||  ||  ||  //\\\\\\  ||  ||     ||        ")
-    print(r"        ||  ||  || //      \\ ||  || \\\\\/ 0.2    ")
-    print(r"                                                   ")
-    print(r"    -----------------------------------------------")
+    logging = Log(problem.parameter)
 
-    print(f"    Problem settings:")
-    print(f"        - Name: {problem.parameter['Name']}")
-    print(f"        - Dimensions: {problem.parameter['Dimensions']}")
-    print(f"        - Max time: {problem.parameter['max time']}")
-    print(f"        - CFL: {problem.parameter['cfl']}")
-    print(f"        - Resolution: {problem.parameter['resolution x2']}x{problem.parameter['resolution x1']}x{problem.parameter['resolution x3']}")
-    print(f"        - Riemann: {problem.parameter['riemann']}")
-    print(f"        - Reconstruction: {problem.parameter['reconstruction']}")
-    print(f"        - Limiter: {problem.parameter['limiter']}")
-    print(f"        - Time stepping: {problem.parameter['time stepping']}")
-    print(f"        - Physics: {problem.parameter['method']}")
-    print(f"        - Gamma: {problem.parameter['gamma']}")
-    print("")
+    logging.logo()
 
-    print("    Assigning algorithms...")
-    print("    Creating arrays...")
-    print("    Initialising grid...")
-    print("    Applying boundary conditions...")
-    print("    Starting time integration loop...")
-    print("")
+    logging.options()
 
     #  Initialise grid.
     grid = Grid(problem.parameter)
 
     #  Initialise Algorithms.
+    print("    Assigning algorithms...")
     a = Algorithm(problem.parameter)
 
     #  Generate state vector to hold conservative
     #  and primative variables.
+    print("    Creating arrays...")
     V = grid.state_vector(problem.parameter)
 
     #  Initialise the state vector accourding to
     #  user defined problem.
+    print("    Initialising grid...")
     problem.initialise(V, grid)
 
     #  Apply boundary conditions.
+    print("    Applying boundary conditions...")
     grid.boundary(V, problem.parameter)
+    print("")
 
     #  Check initial grid for nans.
     if np.isnan(np.sum(V)):
@@ -94,6 +73,7 @@ def main_loop(problem):
     #  First output.
     if problem.parameter['plot frequency'] > 0.0:
         dump(V, grid, a, problem.parameter, 0)
+    print("")
 
     U = np.empty(shape=V.shape, dtype=np.float64)
     prims_to_cons(V, U, a.igamma_1)
@@ -105,9 +85,11 @@ def main_loop(problem):
     i = 0
     num = 1
     Mcell_av = 0.0
+    step_av = 0.0
     percent = 100.0/problem.parameter['max time']
 
     #  Integrate in time.
+    logging.begin()
     while t < problem.parameter['max time']:
 
         start_time = datetime.now().minute*60.0\
@@ -123,16 +105,11 @@ def main_loop(problem):
         time_tot = (end_time - start_time)
         Mcell = grid.rez/1.0e+6/time_tot
         Mcell_av += Mcell
+        step_av += time_tot
 
-        dt_new = time_step(grid, a)
+        dt = time_step(t, grid, a, problem.parameter)
 
-        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-              + f"{percent*t:.1f}%, {Mcell:.3f} Mcell/s ({time_tot:.3f} s)")
-
-        dt = min(dt_new, problem.parameter['max dt increase']*dt)
-
-        if (t + dt) > problem.parameter['max time']:
-            dt = problem.parameter['max time'] - t
+        logging.step(i, t, dt, Mcell, time_tot)
 
         if (problem.parameter['plot frequency'] > 0.0) &\
             ((t + dt) > num*problem.parameter['plot frequency']):
@@ -158,22 +135,19 @@ def main_loop(problem):
         Mcell = grid.rez/1.0e+6/time_tot
         Mcell_av += Mcell
 
-        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-              + f"{percent*t:.1f}%, {Mcell:.3f} Mcell/s ({time_tot:.3f} s)")
+        logging.step(i, t, dt, Mcell, time_tot)
 
         if problem.parameter['plot frequency'] > 0.0:
             dump(U, grid, a, problem.parameter, num)
 
         i+1
 
-    sim_end_time = datetime.now().minute*60.0\
-        + datetime.now().second\
-        + datetime.now().microsecond*1.0e-6
+    #sim_end_time = datetime.now().minute*60.0\
+    #    + datetime.now().second\
+    #    + datetime.now().microsecond*1.0e-6
+
+    sim_end_time = datetime.now()
 
     sim_time_tot = (sim_end_time - sim_start_time)
 
-    print("")
-    print(f"    Simulation {problem.parameter['Name']} complete...")
-    print(f"    Total simulation time: {sim_time_tot:.3f} s")
-    print(f"    Average performance: {Mcell_av/(i):.3f} Mcell/s")
-    print("")
+    logging.end(sim_time_tot, Mcell_av, step_av)

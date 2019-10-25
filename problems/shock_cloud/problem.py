@@ -45,7 +45,7 @@ class Problem:
             'cfl':0.4,
             'initial dt':1.0e-4,
             'max dt increase':1.0,
-            'max time':1.0e-1,
+            'max time':1.0e-2,
 
             'plot frequency': 1.0e-2,
             'print to file':False,
