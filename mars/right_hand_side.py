@@ -2,11 +2,11 @@
 import sys
 import numpy as np
 import numba as nb
+from numba import prange
 from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons, time_step
 
 
-#@nb.jit(cache=True)
 def flux_difference(U, g, a, dt, vxn, vxt, vxb):
     """
     Synopsis
@@ -44,7 +44,7 @@ def flux_difference(U, g, a, dt, vxn, vxt, vxb):
     V = np.empty(shape=U.shape, dtype=np.float64)
     cons_to_prims(U, V, a.gamma_1)
 
-    VL, VR = a.reconstruction(V, g.gz, g.dxi[vxn-2])
+    VL, VR = a.reconstruction(V)
 
     UL = np.empty(shape=VL.shape, dtype=np.float64)
     UR = np.empty(shape=VR.shape, dtype=np.float64)
@@ -98,14 +98,14 @@ def RHSOperator(U, g, a, dt):
 
     if U.shape[0] == 3:
 
-        rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, dt, vxn=2, vxt=3, vxb=4)
+        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, dt, vxn=2, vxt=3, vxb=4)
 
     if U.shape[0] == 4:
 
-        for j in range(g.jbeg, g.jend):
+        for j in prange(g.jbeg, g.jend):
             rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, dt, vxn=2, vxt=3, vxb=4)
 
-        for i in range(g.ibeg, g.iend):
+        for i in prange(g.ibeg, g.iend):
             rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, dt, vxn=3, vxt=2, vxb=4)
 
     if U.shape[0] == 5:

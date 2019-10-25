@@ -4,7 +4,7 @@ import numpy as np
 
 
 @nb.jit(cache=True)
-def minmod(V, gz, dxi):
+def minmod(V):
     """
     Synopsis
     --------
@@ -57,12 +57,13 @@ def minmod(V, gz, dxi):
 
 
 @nb.jit(cache=True)
-def flat(V, gz, dxi):
+def flat(V):
     """
     Synopsis
     --------
-    Obtain the left and right hand states from and
-    apply the minmod limiter.
+    Obtain the left and right hand states of the cell faces.
+    This method assumes the states are equal to the volume
+    average at the center of the cell.
 
     Args
     ----
@@ -76,7 +77,6 @@ def flat(V, gz, dxi):
 
     TODO
     ----
-    Fine the way to calculate the coefficients for such that
-    a non-regular grid can be used.
+    None
     """
-    return V[:, :-gz], V[:, gz:]
+    return V[:, :-1], V[:, 1:]

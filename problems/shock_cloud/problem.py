@@ -16,7 +16,7 @@ class Problem:
     Methods
     -------
     initialise
-        Set all variables in each cell to  initialise the simulation.
+        Set all variables in each cell to initialise the simulation.
 
     internal_bc
         Specify the internal boundary for the simulation.
@@ -40,7 +40,7 @@ class Problem:
 
             'resolution x1':128,
             'resolution x2':128,
-            'resolution x3':64,
+            'resolution x3':256,
 
             'cfl':0.4,
             'initial dt':1.0e-4,
@@ -74,48 +74,26 @@ class Problem:
     def initialise(self, V, g):
 
         if self.parameter['Dimensions'] == '2D':
-            for j in range(g.jbeg, g.jend):
-                for i in range(g.ibeg, g.iend):
-
-                    xp = g.x1[i] - 0.8
-                    yp = g.x2[j] - 0.5
-                    r = np.sqrt(xp*xp + yp*yp)
-                    if (g.x1[i] < 0.6):
-                        V[rho, j, i] = 3.86859
-                        V[prs, j, i] = 167.345
-                        V[vx1, j, i] = 0.0
-                        V[vx2, j, i] = 0.0
-                    if (g.x1[i] > 0.6):
-                        V[rho, j, i] = 1.0
-                        V[prs, j, i] = 1.0
-                        V[vx1, j, i] = -11.2536
-                        V[vx2, j, i] = 0.0
-                    if r < 0.15:
-                        V[rho, j, i] = 10.0
+            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
+            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2)
 
         if self.parameter['Dimensions'] == '3D':
-            for k in range(g.kbeg, g.kend):
-                for j in range(g.jbeg, g.jend):
-                    for i in range(g.ibeg, g.iend):
+            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
+            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
 
-                        xp = g.x1[i] - 0.8
-                        yp = g.x2[j] - 0.5
-                        zp = g.x3[k] - 0.5
-                        r = np.sqrt(xp*xp + yp*yp + zp*zp)
-                        if (g.x1[i] < 0.6):
-                            V[rho, k, j, i] = 3.86859
-                            V[prs, k, j, i] = 167.345
-                            V[vx1, k, j, i] = 0.0
-                            V[vx2, k, j, i] = 0.0
-                            V[vx3, k, j, i] = 0.0
-                        if (g.x1[i] > 0.6):
-                            V[rho, k, j, i] = 1.0
-                            V[prs, k, j, i] = 1.0
-                            V[vx1, k, j, i] = -11.2536
-                            V[vx2, k, j, i] = 0.0
-                            V[vx3, k, j, i] = 0.0
-                        if r < 0.15:
-                            V[rho, k, j, i] = 10.0
+        shock = 0.6
+        V[rho, X < shock] = 3.86859
+        V[prs, X < shock] = 167.345
+        V[vx1, X < shock] = 0.0
+        V[vx2, X < shock] = 0.0
+
+        V[rho, X > shock] = 1.0
+        V[prs, X > shock] = 1.0
+        V[vx1, X > shock] = -11.2536
+        V[vx2, X > shock] = 0.0
+
+        cloud = 0.15
+        V[rho, R < cloud] = 10.0
 
     def internal_bc():
         return None

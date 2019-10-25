@@ -1,13 +1,62 @@
 
 import numba as nb
 import numpy as np
+from numba import prange
 from settings import *
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, parallel=False)
 def tvdlf(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
+    """
+    Synopsis
+    --------
+    Obtain the fluxes through the upper and
+    lower faces of every cell in the column.
+    These fluxes are then differenced to give
+    the net flux into/out off each cell.
+
+    This function impliments the total variational
+    diminishing Lax-Fredrich (tvdlf) Riemann solver.
+
+    Args
+    ----
+    FL, FR: numpy.array-like
+        Array of fluxes on the left and right
+        of each cell.
+
+    UL, UR: numpy.array-like
+        Array of conserved variables on the left
+        and right of each cell face.
+
+    VL, VR: numpy.array-like
+        Array of primative variables on the left
+        and right of each cell face.
+
+    max_speed: float64-like
+        Maximum speed in the domain. Used to calculate
+        the time step.
+
+    gamma: numpy.float64-like
+        Ratio of specific heats
+
+    dtdx: numpy.float64-like
+        Ratio of time and space deltas.
+
+    vxn, vxt, vxb: numpy.int8-like
+        index representing the normal, tangential and
+        bitangential velocity components relative to the
+        sweep direction.
+
+    Attributes
+    ----------
+    None
+
+    TODO
+    ----
+    None
+    """
 
     VLR = 0.5*(VL + VR)
     VLR[vxn] = 0.5*(np.absolute(VL[vxn]) + np.absolute(VR[vxn]))
@@ -28,10 +77,59 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
     return dflux, speed_max
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, parallel=False)
 def hll(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
+
+    """
+    Synopsis
+    --------
+    Obtain the fluxes through the upper and
+    lower faces of every cell in the column.
+    These fluxes are then differenced to give
+    the net flux into/out off each cell.
+
+    This function impliments the Harten, Lax
+    and van Leer (hll) Riemann solver.
+
+    Args
+    ----
+    FL, FR: numpy.array-like
+        Array of fluxes on the left and right
+        of each cell.
+
+    UL, UR: numpy.array-like
+        Array of conserved variables on the left
+        and right of each cell face.
+
+    VL, VR: numpy.array-like
+        Array of primative variables on the left
+        and right of each cell face.
+
+    max_speed: float64-like
+        Maximum speed in the domain. Used to calculate
+        the time step.
+
+    gamma: numpy.float64-like
+        Ratio of specific heats
+
+    dtdx: numpy.float64-like
+        Ratio of time and space deltas.
+
+    vxn, vxt, vxb: numpy.int8-like
+        index representing the normal, tangential and
+        bitangential velocity components relative to the
+        sweep direction.
+
+    Attributes
+    ----------
+    None
+
+    TODO
+    ----
+    None
+    """
 
     flux = np.empty(shape=FL.shape, dtype=np.float64)
     pres = np.empty(shape=FL.shape[1], dtype=np.float64)
@@ -57,7 +155,9 @@ def hll(FL, FR, UL, UR, VL, VR,
     if np.max(scrh) > speed_max:
         speed_max = np.max(scrh)
 
-    for i in range(flux.shape[1]):
+    imax = flux.shape[1]
+
+    for i in range(imax):
 
         if SL[i] > 0.0:
             flux[:, i] = FL[:, i]
@@ -81,13 +181,62 @@ def hll(FL, FR, UL, UR, VL, VR,
 
 
 #@profile
-@nb.jit(cache=True)
+@nb.jit(cache=True, parallel=False)
 def hllc(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
 
-    usL = np.zeros(FL.shape[0], dtype=np.float64)
-    usR = np.zeros(FL.shape[0], dtype=np.float64)
+    """
+    Synopsis
+    --------
+    Obtain the fluxes through the upper and
+    lower faces of every cell in the column.
+    These fluxes are then differenced to give
+    the net flux into/out off each cell.
+
+    This function impliments the Harten, Lax
+    and van Leer Contact (hllc) Riemann solver.
+
+    Args
+    ----
+    FL, FR: numpy.array-like
+        Array of fluxes on the left and right
+        of each cell.
+
+    UL, UR: numpy.array-like
+        Array of conserved variables on the left
+        and right of each cell face.
+
+    VL, VR: numpy.array-like
+        Array of primative variables on the left
+        and right of each cell face.
+
+    max_speed: float64-like
+        Maximum speed in the domain. Used to calculate
+        the time step.
+
+    gamma: numpy.float64-like
+        Ratio of specific heats
+
+    dtdx: numpy.float64-like
+        Ratio of time and space deltas.
+
+    vxn, vxt, vxb: numpy.int8-like
+        index representing the normal, tangential and
+        bitangential velocity components relative to the
+        sweep direction.
+
+    Attributes
+    ----------
+    None
+
+    TODO
+    ----
+    None
+    """
+
+    usL = np.empty(FL.shape[0], dtype=np.float64)
+    usR = np.empty(FL.shape[0], dtype=np.float64)
     flux = np.empty(shape=FL.shape, dtype=np.float64)
     pres = np.empty(shape=FL.shape[1], dtype=np.float64)
 
@@ -116,7 +265,12 @@ def hllc(FL, FR, UL, UR, VL, VR,
     if scrh.max() > speed_max:
         speed_max = scrh.max()
 
-    for i in range(flux.shape[1]):
+    #print(nb.typeof(flux.shape[1]))
+
+    vars = flux.shape[0]
+    imax = flux.shape[1]
+
+    for i in range(imax):
 
         if SL[i] > 0.0:
             flux[:, i] = FL[:, i]
@@ -150,10 +304,10 @@ def hllc(FL, FR, UL, UR, VL, VR,
 
             usL[mxn] = usL[rho]*vs
             usR[mxn] = usR[rho]*vs
-            if flux.shape[0] > 3:
+            if vars > 3:
                 usL[mxt] = usL[rho]*vL[vxt]
                 usR[mxt] = usR[rho]*vR[vxt]
-            if flux.shape[0] > 4:
+            if vars > 4:
                 usL[mxt] = usL[rho]*vL[vxt]
                 usR[mxt] = usR[rho]*vR[vxt]
                 usL[mxb] = usL[rho]*vL[vxb]
