@@ -6,7 +6,7 @@ cimport cython
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
-def minmod(np.ndarray[DTYPE_t, ndim=2] V):
+def minmod_pyx(np.ndarray[DTYPE_t, ndim=2] V):
     """
     Synopsis
     --------
@@ -64,7 +64,7 @@ def minmod(np.ndarray[DTYPE_t, ndim=2] V):
     return L, R
 
 
-def flat(np.ndarray[DTYPE_t, ndim=2] V):
+def flat_pyx(np.ndarray[DTYPE_t, ndim=2] V):
     """
     Synopsis
     --------

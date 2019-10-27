@@ -8,7 +8,7 @@ DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
 
-def tvdlf(np.ndarray[DTYPE_t, ndim=2] FL,
+def tvdlf_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
           np.ndarray[DTYPE_t, ndim=2] FR,
           np.ndarray[DTYPE_t, ndim=2] UL,
           np.ndarray[DTYPE_t, ndim=2] UR,
@@ -89,7 +89,7 @@ def tvdlf(np.ndarray[DTYPE_t, ndim=2] FL,
 
 
 
-def hll(np.ndarray[DTYPE_t, ndim=2] FL,
+def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
         np.ndarray[DTYPE_t, ndim=2] FR,
         np.ndarray[DTYPE_t, ndim=2] UL,
         np.ndarray[DTYPE_t, ndim=2] UR,
@@ -213,7 +213,7 @@ def hll(np.ndarray[DTYPE_t, ndim=2] FL,
     return dflux, speed_max
 
 
-def hllc(FL, FR, UL, UR, VL, VR,
+def hllc_pyx(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
 

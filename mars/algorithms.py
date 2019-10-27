@@ -2,9 +2,9 @@
 import sys
 import numpy as np
 from riemann_solvers import tvdlf, hll, hllc
-#from cython_lib.solvers import hll, hllc, tvdlf
+from cython_lib.solvers import hll_pyx, hllc_pyx, tvdlf_pyx
 from reconstruction import flat, minmod
-#from cython_lib.piecewise import flat, minmod
+from cython_lib.piecewise import flat, minmod
 from time_stepping import Euler, RungaKutta2
 
 
@@ -46,12 +46,18 @@ class Algorithm:
         p: dictionary-like
         dictionary of problem parameters.
         """
-        if p['riemann'] == 'tvdlf':
+        if (p['riemann'] == 'tvdlf') & (p['optimisation'] == 'numba':
             self.riemann_solver = tvdlf
-        elif p['riemann'] == 'hll':
+        elif (p['riemann'] == 'hll') & (p['optimisation'] == 'numba':
             self.riemann_solver = hll
-        elif p['riemann'] == 'hllc':
+        elif (p['riemann'] == 'hllc') & (p['optimisation'] == 'numba':
             self.riemann_solver = hllc
+        elif (p['riemann'] == 'tvdlf') & (p['optimisation'] == 'cython':
+            self.riemann_solver = tvdlf_pyx
+        elif (p['riemann'] == 'hll') & (p['optimisation'] == 'cython':
+            self.riemann_solver = hll_pyx
+        elif (p['riemann'] == 'hllc') & (p['optimisation'] == 'cython':
+            self.riemann_solver = hllc_pyx
         else:
             print('Error: invalid riennman solver.')
             sys.exit()
@@ -68,15 +74,18 @@ class Algorithm:
         p: dictionary-like
         dictionary of problem parameters.
         """
-        if p['reconstruction'] == 'flat':
+        if (p['reconstruction']) == 'flat' & (p['optimisation'] == 'numba'):
             self.reconstruction = flat
-        elif p['reconstruction'] == 'linear':
+        elif (p['reconstruction']) == 'linear' & (p['optimisation'] == 'numba'):
             self.reconstruction = minmod
-        elif p['reconstruction'] == 'muscl_hanock':
-            self.reconstruction = muscl_hanock
+        elif (p['reconstruction']) == 'flat' & (p['optimisation'] == 'cython'):
+            self.reconstruction = flat_pyx
+        elif (p['reconstruction']) == 'linear' & (p['optimisation'] == 'cython'):
+            self.reconstruction = minmod_pyx
         else:
             print('Error: Invalid reconstructor.')
             sys.exit()
+        return
 
     def assign_time_stepping_(self, p):
         """
@@ -97,6 +106,7 @@ class Algorithm:
         else:
             print('Error: Invalid integrator.')
             sys.exit()
+        return
 
     def assign_boundary_conditions(self, p):
         if p['Dimensions'] == '1D' and p['']:
