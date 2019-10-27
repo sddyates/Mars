@@ -1,14 +1,13 @@
-
 from mars import main_loop
 from mars.settings import *
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 class Problem:
     """
     Synopsis
     --------
-    User class for the advection problem.
+    Problem class for the shock tube.
 
     Args
     ----
@@ -29,103 +28,56 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name': 'Advection',
+            'Name': 'Shock Tube',
 
             'Dimensions': '1D',
             'x1 min': 0.0,
             'x1 max': 1.0,
-            'x2 min': 0.0,
-            'x2 max': 1.0,
-            'x3 min': 0.0,
-            'x3 max': 1.0,
 
-            'resolution x1': 64,
-            'resolution x2': 128,
-            'resolution x3': 128,
+            'resolution x1': 128,
 
-            'cfl': 0.6,
-            'initial dt': 1.0e-4,
-            'max dt increase': 1.0,
-            'max time': 1.0e-1,
+            'cfl': 0.3,
+            'initial dt': 1.0e-5,
+            'max dt increase': 1.5,
+            'max time': 1.0,
 
-            'plot frequency': 1.0e-2,
+            'plot frequency': 1.0e-1,
             'print to file': False,
-            'profiling': True,
 
             'gamma': 1.666666,
             'density unit': 1.0,
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'riemann': 'hllc',
-            'reconstruction': 'flat',
+            'riemann': 'tvdlf',
+            'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
             'method': 'hydro',
 
-            'lower x1 boundary': 'reciprocal',
+            'lower x1 boundary': 'outflow',
             'lower x2 boundary': 'outflow',
-            'lower x3 boundary': 'outflow',
-            'upper x1 boundary': 'reciprocal',
+            'upper x1 boundary': 'outflow',
             'upper x2 boundary': 'outflow',
-            'upper x3 boundary': 'outflow',
-
             'internal boundary': False
-        }
+            }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, grid):
 
         if self.parameter['Dimensions'] == '1D':
-            X = g.x1
+            for i in range(grid.ibeg, grid.iend):
+                if grid.x1[i] < 0.5:
+                    V[rho, i] = 1.0
+                    V[prs, i] = 1.0
+                    V[vx1, i] = 0.0
+                else:
+                    V[rho, i] = 0.125
+                    V[prs, i] = 0.1
+                    V[vx1, i] = 0.0
 
-        if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2)
-
-        if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
-
-        V[prs, :] = 2.0
-        V[vx1, :] = 10.0
-
-        V[rho, X < 0.25] = 1.0
-        V[prs, X < 0.25] = 2.0
-        V[vx1, X < 0.25] = 10.0
-
-        V[rho, X > 0.25] = 5.0
-        V[prs, X > 0.25] = 2.0
-        V[vx1, X > 0.25] = 10.0
-
-        V[rho, X > 0.75] = 1.0
-        V[prs, X > 0.25] = 2.0
-        V[vx1, X > 0.25] = 10.0
-
-        return
-
-    def internal_bc():
-        return None
+    #def internal_bc():
+    #    return None
 
 
 if __name__ == "__main__":
-
-    p = Problem()
-    resol = np.linspace(8, 1024, 20, dtype=np.int32, endpoint=True)
-    error1 = []
-    error2 = []
-    for (recon, error) in zip(['linear', 'flat'], [error1, error2]):
-        p.parameter['reconstruction'] = recon
-        for res in resol:
-            p.parameter['resolution x1'] = res
-            error.append(main_loop(p))
-
-    f, ax1 = plt.subplots()
-    ax1.plot(resol, error1, 'C0o-', label='linear')
-    ax1.plot(resol, error2, 'C1o-', label='flat')
-    ax1.set_xlabel(r'Resolution')
-    ax1.set_ylabel(r'Error')
-    ax1.set_yscale('log')
-    ax1.set_ylim(1.0e-2, 1.0e+1)
-    plt.legend()
-    plt.savefig(f'output/error.png')
-    plt.close()
+    main_loop(Problem())
