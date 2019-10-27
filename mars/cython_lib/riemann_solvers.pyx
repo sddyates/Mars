@@ -9,17 +9,17 @@ ctypedef np.float64_t DTYPE_t
 
 
 def tvdlf_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
-          np.ndarray[DTYPE_t, ndim=2] FR,
-          np.ndarray[DTYPE_t, ndim=2] UL,
-          np.ndarray[DTYPE_t, ndim=2] UR,
-          np.ndarray[DTYPE_t, ndim=2] VL,
-          np.ndarray[DTYPE_t, ndim=2] VR,
-          cdef DTYPE_t speed_max,
-          cdef DTYPE_t gamma,
-          cdef DTYPE_t dtdx,
-          cdef int vxn,
-          cdef int vxt,
-          cdef int vxb):
+              np.ndarray[DTYPE_t, ndim=2] FR,
+              np.ndarray[DTYPE_t, ndim=2] UL,
+              np.ndarray[DTYPE_t, ndim=2] UR,
+              np.ndarray[DTYPE_t, ndim=2] VL,
+              np.ndarray[DTYPE_t, ndim=2] VR,
+              speed_max,
+              gamma,
+              dtdx,
+              vxn,
+              vxt,
+              vxb):
     """
     Synopsis
     --------
@@ -90,13 +90,17 @@ def tvdlf_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
 
 
 def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
-        np.ndarray[DTYPE_t, ndim=2] FR,
-        np.ndarray[DTYPE_t, ndim=2] UL,
-        np.ndarray[DTYPE_t, ndim=2] UR,
-        np.ndarray[DTYPE_t, ndim=2] VL,
-        np.ndarray[DTYPE_t, ndim=2] VR,
-        speed_max, gamma, dtdx,
-        vxn, vxt, vxb):
+            np.ndarray[DTYPE_t, ndim=2] FR,
+            np.ndarray[DTYPE_t, ndim=2] UL,
+            np.ndarray[DTYPE_t, ndim=2] UR,
+            np.ndarray[DTYPE_t, ndim=2] VL,
+            np.ndarray[DTYPE_t, ndim=2] VR,
+            speed_max,
+            gamma,
+            dtdx,
+            vxn,
+            vxt,
+            vxb):
 
     """
     Synopsis
@@ -156,9 +160,11 @@ def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
 
     cdef np.ndarray[DTYPE_t, ndim=1] scrh = np.empty([imax], dtype=DTYPE)
 
-    cdef np.ndarray[DTYPE_t, ndim=1] flux = np.empty([nvar, imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=2] flux = np.empty([nvar, imax], dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1] pres = np.empty([imax], dtype=DTYPE)
-    cdef np.ndarray[DTYPE_t, ndim=1] dflux = np.empty([nvar, imax-1], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] SL = np.empty([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] SR = np.empty([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=2] dflux = np.empty([nvar, imax-1], dtype=DTYPE)
 
 
     # Estimate the leftmost and rightmost wave signal
@@ -178,10 +184,10 @@ def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
         SR[i] = np.maximum(sL_max, sR_max)
 
         scrh[i] = np.maximum(np.absolute(SL[i]),
-                             np.absolute(SR[i]))
+                          np.absolute(SR[i]))
 
         if scrh[i] > speed_max:
-            speed_max = np.max(scrh)
+            speed_max = scrh[i]
 
     imax = flux.shape[1]
 
@@ -207,15 +213,24 @@ def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
 
     for i in range(imax-1):
         for var in range(nvar):
-            dflux = -(flux[var, i+1] - flux[var, i])*dtdx
+            dflux[var, i] = -(flux[var, i+1] - flux[var, i])*dtdx
         dflux[vxn, i] -= (pres[i+1] - pres[i])*dtdx
 
     return dflux, speed_max
 
 
-def hllc_pyx(FL, FR, UL, UR, VL, VR,
-    speed_max, gamma, dtdx,
-    vxn, vxt, vxb):
+def hllc_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
+        np.ndarray[DTYPE_t, ndim=2] FR,
+        np.ndarray[DTYPE_t, ndim=2] UL,
+        np.ndarray[DTYPE_t, ndim=2] UR,
+        np.ndarray[DTYPE_t, ndim=2] VL,
+        np.ndarray[DTYPE_t, ndim=2] VR,
+        speed_max,
+        gamma,
+        dtdx,
+        vxn,
+        vxt,
+        vxb):
 
     """
     Synopsis
@@ -267,8 +282,8 @@ def hllc_pyx(FL, FR, UL, UR, VL, VR,
     """
 
     cdef int i, var
-    cdef int nvar = FL.shape[1]
-    cdef int imax = FL.shape[0]
+    cdef int nvar = FL.shape[0]
+    cdef int imax = FL.shape[1]
 
     cdef int rho=0, prs=1, vx1=2, vx2=3, vx3=4
     cdef int eng=1, mvx1=2, mvx2=3, mvx3=4
@@ -296,10 +311,11 @@ def hllc_pyx(FL, FR, UL, UR, VL, VR,
     cdef np.ndarray[DTYPE_t, ndim=1] usL = np.empty([nvar], dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1] usR = np.empty([nvar], dtype=DTYPE)
 
-    usL = np.empty(FL.shape[0], dtype=np.float64)
-    usR = np.empty(FL.shape[0], dtype=np.float64)
-    flux = np.empty(shape=FL.shape, dtype=np.float64)
-    pres = np.empty(shape=FL.shape[1], dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=2] flux = np.empty([nvar, imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] pres = np.empty([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] SL = np.empty([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] SR = np.empty([imax], dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=2] dflux = np.empty([nvar, imax-1], dtype=DTYPE)
 
     mxn = vxn
     mxt = vxt
@@ -321,11 +337,11 @@ def hllc_pyx(FL, FR, UL, UR, VL, VR,
         SL[i] = np.minimum(sL_min, sR_min)
         SR[i] = np.maximum(sL_max, sR_max)
 
-        scrh[i] = np.maximum(np.absolute(SL[i]),
-                             np.absolute(SR[i]))
+        scrh = np.maximum(np.absolute(SL[i]),
+                          np.absolute(SR[i]))
 
-        if scrh[i] > speed_max:
-            speed_max = np.max(scrh)
+        if scrh > speed_max:
+            speed_max = scrh
 
 
     vars = flux.shape[0]
@@ -396,7 +412,7 @@ def hllc_pyx(FL, FR, UL, UR, VL, VR,
 
     for i in range(imax-1):
         for var in range(nvar):
-            dflux = -(flux[var, i+1] - flux[var, i])*dtdx
+            dflux[var, i] = -(flux[var, i+1] - flux[var, i])*dtdx
         dflux[vxn, i] -= (pres[i+1] - pres[i])*dtdx
 
     return dflux, speed_max

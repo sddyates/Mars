@@ -49,13 +49,15 @@ class Problem:
 
             'plot frequency':1.0e-2,
             'print to file':False,
+            'profiling': True,
 
             'gamma':1.666666,
             'density unit':1.0,
             'length unit':1.0,
             'velocity unit':1.0,
 
-            'riemann':'hllc',
+            'optimisation': 'cython',
+            'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
@@ -71,7 +73,7 @@ class Problem:
             'internal boundary':False
             }
 
-    def initialise(self, V, g):
+    def initialise(self, V, g, l):
 
         if self.parameter['Dimensions'] == '2D':
             for j in range(g.jbeg, g.jend):
