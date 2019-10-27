@@ -3,6 +3,11 @@
 mars/__pycache__/
 *.pyc
 
+#  Cython stuff
+*.c
+*.so
+*.html
+
 #  IO files
 *.npy
 *.vti

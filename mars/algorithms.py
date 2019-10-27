@@ -2,7 +2,9 @@
 import sys
 import numpy as np
 from riemann_solvers import tvdlf, hll, hllc
+#from cython_lib.solvers import hll, hllc, tvdlf
 from reconstruction import flat, minmod
+#from cython_lib.piecewise import flat, minmod
 from time_stepping import Euler, RungaKutta2
 
 
