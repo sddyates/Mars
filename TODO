@@ -10,7 +10,9 @@ To Do list for project:
 
 - choose type of output via user parameters.
 
-- Make terminal output more comprehensive e.g. print solver, reconstruction methods etc...
+- make io class.
+
+- do comparison to cython.
 
 - Restart files.
 
