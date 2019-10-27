@@ -11,7 +11,10 @@ def dump(U, g, a, p, num):
     cons_to_prims(U, V, a.gamma_1)
     del U
 
-    print(f"    Writing output file: {num:04}")
+    if num == 0:
+        print(f"    Writing initial conditions: 0000")
+    else:
+        print(f"    Writing output file: {num:04}")
 
     if p['Dimensions'] == '1D':
         np.save(f'output/1D/data.{num:04}.npy', (V, g.x1))

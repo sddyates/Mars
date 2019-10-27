@@ -42,7 +42,7 @@ class Problem:
             'resolution x2': 128,
             'resolution x3': 0,
 
-            'cfl': 0.3,
+            'cfl': 0.6,
             'initial dt': 1.0e-6,
             'max dt increase': 1.5,
             'max time': 0.5,

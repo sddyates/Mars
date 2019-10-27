@@ -20,7 +20,7 @@ class Algorithm:
     dictionary of problem parameters.
     """
 
-    def __init__(self, p):
+    def __init__(self, p, l):
         self.assign_riemann_solver_(p)
         self.assign_reconstruction_(p)
         self.assign_time_stepping_(p)
@@ -29,7 +29,7 @@ class Algorithm:
         self.is_3D = p['Dimensions'] == '3D'
         self.gamma = np.float64(p['gamma'])
         self.gamma_1 = np.float64(self.gamma - 1.0)
-        self.igamma_1 = 1.0/np.float64(self.gamma - 1.0)
+        self.igamma_1 = 1.0/self.gamma_1
         self.cfl = np.float64(p['cfl'])
 
     def assign_riemann_solver_(self, p):

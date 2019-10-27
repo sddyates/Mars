@@ -6,13 +6,15 @@ mars/__pycache__/
 #  IO files
 *.npy
 *.vti
-*output*
 *.lprof
 *.txt
+*.png
+*.tab
+*.vtr
 
 #  Mac file system stuff
 .DS_Store
 
 #  analysis logs
-*log*
+*log
 *prof
