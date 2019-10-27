@@ -18,6 +18,7 @@ class Timer:
                 self._resolution = p['resolution x1']*p['resolution x2']*p['resolution x3']
 
             self.total_sim = 0.0
+            self.total_io = 0.0
             self.Mcell_av = 0.0
             self.step_av = 0.0
             self.total_step = 0.0
@@ -35,6 +36,15 @@ class Timer:
     def stop_sim(self):
         diff = self.stop(self._start_sim)
         self.total_sim += diff
+        return
+
+    def start_io(self):
+        self._start_io = self.start()
+        return
+
+    def stop_io(self):
+        diff = self.stop(self._start_io)
+        self.total_io += diff
         return
 
     def start_step(self):
@@ -97,6 +107,8 @@ class Timer:
             return None
 
     def get_time(self):
-        return datetime.now().minute*60.0\
+        return datetime.now().day*86400.0\
+            + datetime.now().hour*3600.0\
+            + datetime.now().minute*60.0\
             + datetime.now().second\
             + datetime.now().microsecond*1.0e-6

@@ -30,7 +30,7 @@ class Problem:
         self.parameter = {
             'Name':'Shock Cloud',
 
-            'Dimensions':'2D',
+            'Dimensions':'3D',
             'x1 min':0.0,
             'x1 max':1.0,
             'x2 min':0.0,
@@ -38,14 +38,14 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':256,
-            'resolution x2':256,
-            'resolution x3':256,
+            'resolution x1':128,
+            'resolution x2':128,
+            'resolution x3':128,
 
-            'cfl':0.4,
+            'cfl':0.33,
             'initial dt':1.0e-4,
             'max dt increase':1.0,
-            'max time':1.0e-2,
+            'max time':1.0e-1,
 
             'plot frequency': 1.0e-2,
             'print to file':False,
@@ -80,7 +80,7 @@ class Problem:
 
         if self.parameter['Dimensions'] == '3D':
             Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
+            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + (Z - 0.5)**2)
 
         shock = 0.6
         V[rho, X < shock] = 3.86859

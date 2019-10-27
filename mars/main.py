@@ -69,14 +69,14 @@ def main_loop(problem):
         print("Error, nan in array, function: main")
         sys.exit()
 
-    #  First output.
-    if problem.parameter['plot frequency'] > 0.0:
-        dump(V, grid, a, problem.parameter, 0)
-    print("")
-
     U = np.empty(shape=V.shape, dtype=np.float64)
     prims_to_cons(V, U, a.igamma_1)
     del V
+
+    #  First output.
+    if problem.parameter['plot frequency'] > 0.0:
+        dump(U, grid, a, problem.parameter, 0)
+    print("")
 
     #  Perform main integration loop.
     t = 0.0
@@ -91,17 +91,20 @@ def main_loop(problem):
     while t < problem.parameter['max time']:
 
         timing.start_step()
+
         U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-        timing.stop_step()
 
         dt = time_step(t, grid, a, problem.parameter)
 
+        timing.stop_step()
         log.step(i, t, dt, timing)
 
         if (problem.parameter['plot frequency'] > 0.0) &\
             ((t + dt) > num*problem.parameter['plot frequency']):
+            timing.start_io()
             dump(U, grid, a, problem.parameter, num)
             num += 1
+            timing.stop_io()
 
         t += dt
         i += 1
@@ -109,16 +112,25 @@ def main_loop(problem):
     else:
 
         timing.start_step()
-        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-        timing.stop_step()
 
+        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
+
+        timing.stop_step()
         log.step(i, t, dt, timing)
 
         if problem.parameter['plot frequency'] > 0.0:
+            timing.start_io()
             dump(U, grid, a, problem.parameter, num)
+            timing.stop_io()
 
-        i+1
+        i += 1
 
     timing.stop_sim()
 
     log.end(i, timing)
+
+    #V2 = np.zeros_like(U[rho])
+    #V2[grid.x1 < 0.25] = 1.0
+    #V2[grid.x1 > 0.25] = 5.0
+    #V2[grid.x1 > 0.75] = 1.0
+    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)
