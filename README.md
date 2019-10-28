@@ -9,15 +9,21 @@ The code uses either a single or two step predictor corrector method to evolve t
 The code uses a single or two step predictor corrector method with an approximate Riemann solver, based on reconstructed fluid states of first or second order accuracy. This is achieved via a mix of the following algorithms:
 
 
+Time integration
+
 | Name        | order |
 | ----------- | ----- |
 | Euler       | 1st   |
 | Runge-Kutta | 2nd   |
 
+Spacial reconstruction
+
 | Name   | order |
 | -------| ----- |
 | Flat   | 1st   |
 | linear | 2nd   |
+
+Riemann solver
 
 | Name  | order             |
 | ------| ----------------- |
