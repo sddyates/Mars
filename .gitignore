@@ -6,7 +6,7 @@ mars/__pycache__/
 #  Cython stuff
 *.c
 *.so
-*.html
+mars/cython_lib/*.html
 
 #  IO files
 *.npy
