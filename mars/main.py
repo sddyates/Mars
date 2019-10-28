@@ -4,6 +4,8 @@ __version__ = "0.2"
 __license__ = "MIT"
 
 import numpy as np
+import sys
+
 from settings import *
 from grid import Grid
 from algorithms import Algorithm
@@ -12,7 +14,6 @@ from datetime import datetime
 from output import dump
 from log import Log
 from timer import Timer
-import sys
 
 
 def main_loop(problem):

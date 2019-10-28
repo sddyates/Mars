@@ -1,6 +1,7 @@
 
 import sys
 import numpy as np
+
 from riemann_solvers import tvdlf, hll, hllc
 from cython_lib.riemann_solvers import tvdlf_pyx, hll_pyx, hllc_pyx
 from reconstruction import flat, minmod
@@ -61,8 +62,8 @@ class Algorithm:
         else:
             print('Error: invalid riennman solver.')
             sys.exit()
-            
-            
+
+
     def assign_reconstruction_(self, p):
         """
         Synopsis

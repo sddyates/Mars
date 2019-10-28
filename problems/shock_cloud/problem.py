@@ -58,7 +58,7 @@ class Problem:
             'length unit':1.0,
             'velocity unit':1.0,
 
-            'optimisation': 'cython',
+            'optimisation': 'numba',
             'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',

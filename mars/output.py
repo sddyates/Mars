@@ -1,9 +1,10 @@
 
+import os
 import numpy as np
 from evtk.hl import gridToVTK, imageToVTK
+
 from settings import *
 from tools import cons_to_prims
-import os
 
 
 def dump(U, g, a, p, num):

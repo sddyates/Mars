@@ -12,7 +12,7 @@ class Log:
             self.resolution = f"{self.p['resolution x1']}"
         elif self.p['Dimensions'] == '2D':
             self.resolution = f"{self.p['resolution x1']}"\
-                + "x{self.p['resolution x2']}"
+                + f"x{self.p['resolution x2']}"
         else:
             self.resolution = f"{self.p['resolution x1']}"\
                 + f"x{self.p['resolution x2']}"\
