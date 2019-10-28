@@ -21,7 +21,7 @@ Spacial reconstruction
 | Flat   | 1st   |
 | linear | 2nd   |
 
-Riemann solver
+Riemann solver  
 | Name  | order             |
 | ------| ----------------- |
 | tvdlf | most dissipative  |
