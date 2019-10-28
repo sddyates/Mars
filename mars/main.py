@@ -133,6 +133,6 @@ def main_loop(problem):
 
     log.end(i, timing)
 
-    V2 = np.zeros_like(U[rho])
-    V2 = np.sin(grid.x1) + 4.0
-    return np.absolute((V2 - U[rho])).sum()/len(grid.x1)
+    #V2 = np.zeros_like(U[rho])
+    #V2 = np.sin(grid.x1) + 4.0
+    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)

@@ -34,7 +34,7 @@ class Problem:
             'x3 min': 0.0,
             'x3 max': 1.0,
 
-            'resolution x1': 64,
+            'resolution x1': 1024,
             'resolution x2': 128,
             'resolution x3': 128,
 
@@ -86,18 +86,6 @@ class Problem:
         V[vx1, :] = 4.0*np.pi
         V[rho, :] = np.sin(X) + 4.0
 
-        #V[rho, X < 0.25] = 1.0
-        #V[prs, X < 0.25] = 2.0
-        #V[vx1, X < 0.25] = 10.0
-
-        #V[rho, X > 0.25] = 5.0
-        #V[prs, X > 0.25] = 2.0
-        #V[vx1, X > 0.25] = 10.0
-
-        #V[rho, X > 0.75] = 1.0
-        #V[prs, X > 0.25] = 2.0
-        #V[vx1, X > 0.25] = 10.0
-
         return
 
     def internal_bc():
@@ -107,6 +95,8 @@ class Problem:
 if __name__ == "__main__":
 
     p = Problem()
+    main_loop(p)
+    '''
     resol = np.logspace(np.log10(8), np.log10(1024), 10, dtype=np.int32, endpoint=True)
     #resol = np.linspace(8, 1024, 10, dtype=np.int32, endpoint=True)
     error1 = []
@@ -127,3 +117,4 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig(f'output/error_sin.png')
     plt.close()
+    '''
