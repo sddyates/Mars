@@ -61,7 +61,8 @@ class Algorithm:
         else:
             print('Error: invalid riennman solver.')
             sys.exit()
-
+            
+            
     def assign_reconstruction_(self, p):
         """
         Synopsis
