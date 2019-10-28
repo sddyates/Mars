@@ -40,7 +40,7 @@ def Euler(U, dt, g, a, t, p):
     None
     """
 
-    U_new = U + dt*RHSOperator(U, g, a)
+    U_new = U + RHSOperator(U, g, a, t, dt)
     g.boundary(U_new, p)
     del U
 

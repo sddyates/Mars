@@ -9,27 +9,23 @@ The code uses either a single or two step predictor corrector method to evolve t
 The code uses a single or two step predictor corrector method with an approximate Riemann solver, based on reconstructed fluid states of first or second order accuracy. This is achieved via a mix of the following algorithms:
 
 
-Time integration
-
 | Name        | order |
 | ----------- | ----- |
+| **Time integration** |
 | Euler       | 1st   |
-| Runge-Kutta | 2nd   |
-
-Spacial reconstruction
-
-| Name   | order |
-| -------| ----- |
-| Flat   | 1st   |
+| Runge-Kutta (RK2) | 2nd   |
+| **Spacial reconstruction** |
+| flat   | 1st   |
 | linear | 2nd   |
-
-Riemann solver
-
-| Name  | order             |
-| ------| ----------------- |
+| **Riemann solver** |
 | tvdlf | most dissipative  |
 | hll   | in the middle     |
 | hllc  | least dissipative |
+
+One from each category must be chosen and they are all compatible. If a user wants a very diffusive (but robust) combination of algorithms, they would choose 'Euler + flat + tvdlf'. Conversely, if they wanted a higher accuracy scheme, capable of capturing shocks they would choose 'RK2 + linear + hllc'. These two cases are illustrated below.
+
+<img src="docs/images/Euler_flat_tvdlf.jpg" alt="Most dissipative" style="width:300px;"/>
+<img src="docs/images/RK2_linear_hllc.jpg" alt="Least dissipative" style="width:300px;"/>
 
 ## Dependencies
 * Python 3.5 or greater
