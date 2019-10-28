@@ -4,6 +4,30 @@ This Code is intended to be used as a learning code and test bed for python opti
 
 Mars is inspired by the code [PLUTO](http://plutocode.ph.unito.it/) and makes use of algorithms and from that project.
 
+The code uses either a single or two step predictor corrector method to evolve the Euler equations in time in 1D, 2D, and 3D using
+
+The code uses a single or two step predictor corrector method with an approximate Riemann solver, based on reconstructed fluid states of first or second order accuracy. This is achieved via a mix of the following algorithms:
+
+
+Time integration
+| Name        | order |
+| ----------- |:-----:|
+| Euler       | 1st   |
+| Runge-Kutta | 2nd   |
+
+Spacial reconstruction
+| Name   | order |
+| -------|:-----:|
+| Flat   | 1st   |
+| linear | 2nd   |
+
+Riemann solver
+| Name  | order             |
+| ------|:-----------------:|
+| tvdlf | most dissipative  |
+| hll   | in the middle     |
+| hllc  | least dissipative |
+
 ## Dependencies
 * Python 3.5 or greater
 * Numpy
@@ -25,7 +49,7 @@ Running a simulation with Mars is centered around executing a problem script, i.
 
     $ python problem.py
 
-
+A collection of these scripts can be found under 'mars/problems/', they test the code in 1D, 2D and 3D using the reconstruction and Riemann solvers available.
 
 ## Todo
 ### Code Infrastructure
@@ -35,6 +59,6 @@ Running a simulation with Mars is centered around executing a problem script, i.
 - [ ] MPI
 - [ ] Implement non regular grid
 ### Extra Physics
-- [ ] Self-gravity.
+- [ ] Cooling Physics
+- [ ] User source terms
 - [ ] MHD
-- [ ] AMR
