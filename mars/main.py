@@ -106,6 +106,10 @@ def main_loop(problem):
             num += 1
             timing.stop_io()
 
+        #timing.start_io()
+        #io.check(t)
+        #timing.stop_io()
+
         t += dt
         i += 1
 
@@ -129,8 +133,6 @@ def main_loop(problem):
 
     log.end(i, timing)
 
-    #V2 = np.zeros_like(U[rho])
-    #V2[grid.x1 < 0.25] = 1.0
-    #V2[grid.x1 > 0.25] = 5.0
-    #V2[grid.x1 > 0.75] = 1.0
-    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)
+    V2 = np.zeros_like(U[rho])
+    V2 = np.sin(grid.x1) + 4.0
+    return np.absolute((V2 - U[rho])).sum()/len(grid.x1)

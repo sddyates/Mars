@@ -28,7 +28,7 @@ class Problem:
 
             'Dimensions': '1D',
             'x1 min': 0.0,
-            'x1 max': 1.0,
+            'x1 max': 4.0*np.pi,
             'x2 min': 0.0,
             'x2 max': 1.0,
             'x3 min': 0.0,
@@ -41,9 +41,9 @@ class Problem:
             'cfl': 0.6,
             'initial dt': 1.0e-4,
             'max dt increase': 1.0,
-            'max time': 1.0e-1,
+            'max time': 1.0,
 
-            'plot frequency': 1.0e-2,
+            'plot frequency': 1.0e-1,
             'print to file': False,
             'profiling': True,
 
@@ -52,6 +52,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
+            'optimisation': 'numba',
             'riemann': 'hllc',
             'reconstruction': 'flat',
             'limiter': 'minmod',
@@ -82,19 +83,20 @@ class Problem:
             R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
 
         V[prs, :] = 2.0
-        V[vx1, :] = 10.0
+        V[vx1, :] = 4.0*np.pi
+        V[rho, :] = np.sin(X) + 4.0
 
-        V[rho, X < 0.25] = 1.0
-        V[prs, X < 0.25] = 2.0
-        V[vx1, X < 0.25] = 10.0
+        #V[rho, X < 0.25] = 1.0
+        #V[prs, X < 0.25] = 2.0
+        #V[vx1, X < 0.25] = 10.0
 
-        V[rho, X > 0.25] = 5.0
-        V[prs, X > 0.25] = 2.0
-        V[vx1, X > 0.25] = 10.0
+        #V[rho, X > 0.25] = 5.0
+        #V[prs, X > 0.25] = 2.0
+        #V[vx1, X > 0.25] = 10.0
 
-        V[rho, X > 0.75] = 1.0
-        V[prs, X > 0.25] = 2.0
-        V[vx1, X > 0.25] = 10.0
+        #V[rho, X > 0.75] = 1.0
+        #V[prs, X > 0.25] = 2.0
+        #V[vx1, X > 0.25] = 10.0
 
         return
 
@@ -105,7 +107,8 @@ class Problem:
 if __name__ == "__main__":
 
     p = Problem()
-    resol = np.linspace(8, 1024, 20, dtype=np.int32, endpoint=True)
+    resol = np.logspace(np.log10(8), np.log10(1024), 10, dtype=np.int32, endpoint=True)
+    #resol = np.linspace(8, 1024, 10, dtype=np.int32, endpoint=True)
     error1 = []
     error2 = []
     for (recon, error) in zip(['linear', 'flat'], [error1, error2]):
@@ -115,12 +118,12 @@ if __name__ == "__main__":
             error.append(main_loop(p))
 
     f, ax1 = plt.subplots()
-    ax1.plot(resol, error1, 'C0o-', label='linear')
-    ax1.plot(resol, error2, 'C1o-', label='flat')
+    ax1.loglog(resol, error1, 'C0o-', label='linear')
+    ax1.loglog(resol, error2, 'C1o-', label='flat')
     ax1.set_xlabel(r'Resolution')
     ax1.set_ylabel(r'Error')
-    ax1.set_yscale('log')
-    ax1.set_ylim(1.0e-2, 1.0e+1)
+    #ax1.set_yscale('log')
+    #ax1.set_ylim(1.0e-2, 1.0e+1)
     plt.legend()
-    plt.savefig(f'output/error.png')
+    plt.savefig(f'output/error_sin.png')
     plt.close()
