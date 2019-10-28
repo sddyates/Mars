@@ -1,113 +1,138 @@
-#!/usr/bin/env python3
- 
+
 __author__ = "Simon Daley-Yates"
-__version__ = "0.1"
+__version__ = "0.2"
 __license__ = "MIT"
 
 import numpy as np
 from settings import *
 from grid import Grid
 from algorithms import Algorithm
-from tools import time_step
-from evolve import incriment
+from tools import time_step, prims_to_cons
+from datetime import datetime
 from output import dump
-from settings import *
+from log import Log
+from timer import Timer
 import sys
+
 
 def main_loop(problem):
     """
     Synopsis
     --------
     Evolve the (M)HD equations through t = 0 to t = "max time".
-    
     Args
     ----
     problem: object-like.
     User defined simulation problem.
-
     Attributes
     ----------
     None.
-
     TODO
     ----
     None.
     """
 
-    # Set global parameters.    
-    print("")
+    timing = Timer(problem.parameter)
 
-    # Initialise g.
-    print(f"    Setting up problem: {problem.parameter['Name']}")
-    print("")
-    g = Grid(problem.parameter)
+    timing.start_sim()
 
-    # Initialise g.
+    log = Log(problem.parameter)
+
+    log.logo()
+
+    log.options()
+
+    #  Initialise grid.
+    grid = Grid(problem.parameter, log)
+
+    #  Initialise Algorithms.
     print("    Assigning algorithms...")
-    print("")
-    a = Algorithm(problem.parameter)
+    a = Algorithm(problem.parameter, log)
 
-    # Generate state vector to hold conservative 
-    # and primative variables.
+    #  Generate state vector to hold conservative
+    #  and primative variables.
     print("    Creating arrays...")
-    V = g.state_vector(problem.parameter)
+    V = grid.state_vector(problem.parameter)
 
-    # Initialise the state vector accourding to 
-    # user defined problem.
+    #  Initialise the state vector accourding to
+    #  user defined problem.
     print("    Initialising grid...")
-    problem.initialise(V, g)
+    problem.initialise(V, grid, log)
 
-    # Apply boundary conditions.
+    #  Apply boundary conditions.
     print("    Applying boundary conditions...")
-    g.boundary(V, problem.parameter)
+    grid.boundary(V, problem.parameter)
+    print("")
 
-    # Check initial grid for nans.
+    #  Check initial grid for nans.
     if np.isnan(np.sum(V)):
         print("Error, nan in array, function: main")
         sys.exit()
 
-    # Integrate in time.
-    print("    Starting time integration loop...")
-    print("")
-    
-    # First output.
-    dump(V, g, problem.parameter, 0)
+    U = np.empty(shape=V.shape, dtype=np.float64)
+    prims_to_cons(V, U, a.igamma_1)
+    del V
 
-    # Perform main integration loop.
+    #  First output.
+    if problem.parameter['plot frequency'] > 0.0:
+        dump(U, grid, a, problem.parameter, 0)
+    print("")
+
+    #  Perform main integration loop.
     t = 0.0
     dt = problem.parameter['initial dt']
     i = 0
     num = 1
-    percent = 100.0/problem.parameter['max time']
+    Mcell_av = 0.0
+    step_av = 0.0
 
+    #  Integrate in time.
+    log.begin()
     while t < problem.parameter['max time']:
 
-        V = incriment(V, dt, g, a, problem.parameter)
+        timing.start_step()
 
-        dt_new, max_velocity, mach_number = time_step(V, g, problem.parameter)
+        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
 
-        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-        + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
+        dt = time_step(t, grid, a, problem.parameter)
 
-        dt = min(dt_new, problem.parameter['max dt increase']*dt)
+        timing.stop_step()
+        log.step(i, t, dt, timing)
 
-        if (t + dt) > problem.parameter['max time']:
-            dt = problem.parameter['max time'] - t
-
-        if (t + dt) > num*problem.parameter['plot frequency']:
-            dump(V, g, problem.parameter, num)
+        if (problem.parameter['plot frequency'] > 0.0) &\
+            ((t + dt) > num*problem.parameter['plot frequency']):
+            timing.start_io()
+            dump(U, grid, a, problem.parameter, num)
             num += 1
+            timing.stop_io()
+
+        #timing.start_io()
+        #io.check(t)
+        #timing.stop_io()
 
         t += dt
         i += 1
 
     else:
-        print(f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, "
-        + f"{percent*t:.1f}% [{max_velocity:.1f}, {mach_number:.1f}]")
 
-        V = incriment(V, dt, g, a, problem.parameter)
-        dump(V, g, problem.parameter, num)
+        timing.start_step()
 
-    print("")
-    print(f"    Simulation {parameter['Name']} complete...")
-    print("")
+        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
+
+        timing.stop_step()
+        log.step(i, t, dt, timing)
+
+        if problem.parameter['plot frequency'] > 0.0:
+            timing.start_io()
+            dump(U, grid, a, problem.parameter, num)
+            timing.stop_io()
+
+        i += 1
+
+    timing.stop_sim()
+
+    log.end(i, timing)
+
+    #V2 = np.zeros_like(U[rho])
+    #V2 = np.sin(grid.x1) + 4.0
+    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)

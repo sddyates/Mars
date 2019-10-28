@@ -1,0 +1,25 @@
+
+#  Python cache files
+mars/__pycache__/
+*.pyc
+
+#  Cython stuff
+*.c
+*.so
+*.html
+
+#  IO files
+*.npy
+*.vti
+*.lprof
+*.txt
+*.png
+*.tab
+*.vtr
+
+#  Mac file system stuff
+.DS_Store
+
+#  analysis logs
+*log
+*prof

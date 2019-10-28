@@ -1,15 +1,14 @@
 
-                py aMr AstRophySics
-                    _  _  _    _ 
     --------------------------------------------
 
        \\\\\\\\\      /\     |\\\\\ /\\\\\
        ||  ||  \\    //\\    ||  // ||
        ||  ||  ||   //  \\   ||\\\\ \\\\\\
        ||  ||  ||  //\\\\\\  ||  ||     ||
-       ||  ||  || //      \\ ||  || \\\\\/ 0.1
+       ||  ||  || //      \\ ||  || \\\\\/ 0.2
 
     --------------------------------------------
+
   This Code is intended to be used by as a learning 
   code and test bed for python optimisation via the 
   numpy, numba and scipy modules.

@@ -1,17 +1,28 @@
+
+Code Infrastructure
+-------------------
+
+Implement the non regular grid:
+    - this requires rewriting the Grid object so that dx, dy, dz are arrays
+    and that vertices are arrays, this will also mean rewriting the output function.
+
 To Do list for project:
-
-- Get hllc solver running in 3D.
-
-- Check the flow features in the shock cloud.
 
 - choose type of output via user parameters.
 
-- Make terminal output more comprehensive e.g. print solver, reconstruction methods etc...
+- make io class.
+
+- do comparison to cython.
 
 - Restart files.
 
-- MHD
 
-- MPI
+Extra Physics
+-------------
+[ ] Self-gravity.
 
-- AMR
+[ ] MHD
+
+[ ] MPI
+
+[ ] AMR
