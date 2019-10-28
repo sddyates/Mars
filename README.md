@@ -11,19 +11,19 @@ The code uses a single or two step predictor corrector method with an approximat
 
 Time integration
 | Name        | order |
-| ----------- |:-----:|
+| ----------- | ----- |
 | Euler       | 1st   |
 | Runge-Kutta | 2nd   |
 
 Spacial reconstruction
 | Name   | order |
-| -------|:-----:|
+| -------| ----- |
 | Flat   | 1st   |
 | linear | 2nd   |
 
 Riemann solver
 | Name  | order             |
-| ------|:-----------------:|
+| ------| ----------------- |
 | tvdlf | most dissipative  |
 | hll   | in the middle     |
 | hllc  | least dissipative |
