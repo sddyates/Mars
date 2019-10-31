@@ -34,6 +34,8 @@ class Algorithm:
         self.gamma_1 = np.float64(self.gamma - 1.0)
         self.igamma_1 = 1.0/self.gamma_1
         self.cfl = np.float64(p['cfl'])
+        sef.small_dt = 1.0e-12
+        delf.smapp_pressure = 1.0e-12
 
     def assign_riemann_solver_(self, p):
         """
