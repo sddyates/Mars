@@ -53,60 +53,6 @@ def flux_tensor(U, V, F, vxn, vxt, vxb):
 
 
 @nb.jit(cache=True)
-def mhd_flux_tensor(U, V, F, vxn, vxt, vxb):
-    """
-    Synopsis
-    --------
-    construct the MHD flux tensor from the
-    conservative and primative vaiables.
-
-    Args
-    ----
-    U: numpy array-like
-    State vector containing all
-    conservative variables.
-
-    a: object-like
-    object containing specified algorithms for use
-    in the seprate stages of a time step.
-
-    vx(n,t,b): int-like
-    Indexes for for the normal, tangential and
-    bi-tangential velocity components.
-
-    Returns
-    -------
-    F: numpy array-like
-    Array of numerical fluxes.
-
-    Attributes
-    ----------
-    None.
-
-    TODO
-    ----
-    None
-    """
-
-    F[rho] = U[vxn]
-    F[vxn] = U[vxn]*V[vxn] - V[bxn]*V[bx1]
-    F[vxt] = U[vxn]*V[vxt] - V[bxn]*V[bx2]
-    F[vxb] = U[vxn]*V[vxb] - V[bxn]*V[bx3]
-
-    F[bxn] = 0.0
-    F[bxt] = V[bx2]*V[vxn] - V[bx1]*V[vxb]
-    F[bxb] = V[bx3]*V[vxn] - V[bx1]*V[vxb]
-
-    B2 = V[bx1]*V[bx1] + V[bx2]*V[bx2] + V[bx3]*V[bx3]
-    vb = V[bx1]*V[vx1] + V[bx2]*V[vx2] + V[bx3]*V[vx3]
-
-    pT = v[prs] + 0.5*B2
-    F[eng] = V[vxn]*(U[eng] + pT) - V[bxn]*vb
-
-    return
-
-
-@nb.jit(cache=True)
 def cons_to_prims(U, V, gamma_1):
 
     V[rho] = U[rho]
