@@ -5,10 +5,10 @@ import numba as nb
 from numba import prange
 
 from settings import *
-from tools import flux_tensor, cons_to_prims, prims_to_cons, time_step
+from tools import flux_tensor, cons_to_prims, prims_to_cons
 
 
-def flux_difference(U, g, a, t, vxn, vxt, vxb):
+def flux_difference(U, g, a, t):
     """
     Synopsis
     --------
@@ -56,14 +56,14 @@ def flux_difference(U, g, a, t, vxn, vxt, vxb):
 
     FL = np.empty(shape=VL.shape, dtype=np.float64)
     FR = np.empty(shape=VR.shape, dtype=np.float64)
-    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[3])
-    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[3])
+    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
+    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
 
     t.start_riemann()
     dflux, g.speed_max = a.riemann_solver(
         FL, FR, UL, UR, VL, VR,
-        g.speed_max, a.gamma, g.dt/g.dxi[vxn-2],
-        g.vxntb[0], g.vxntb[1], g.vxntb[3]
+        g.speed_max, a.gamma, g.dt/g.dxi[g.vxntb[0]-2],
+        g.vxntb[0], g.vxntb[1], g.vxntb[2]
     )
     t.stop_riemann()
 

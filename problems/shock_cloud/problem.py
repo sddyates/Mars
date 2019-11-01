@@ -38,8 +38,8 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':128,
-            'resolution x2':128,
+            'resolution x1':512,
+            'resolution x2':512,
             'resolution x3':64,
 
             'cfl':0.3,
@@ -47,8 +47,8 @@ class Problem:
             'max dt increase':1.5,
             'max time':1.0e-1,
 
-            'plot frequency':1.0e-2,
-            'output type': ['numpy, vtk, h5'],
+            'save frequency':1.0e-2,
+            'output type': ['vtk'],
             'output primitives': True,
             'print to file':False,
             'profiling': True,
@@ -59,7 +59,7 @@ class Problem:
             'velocity unit':1.0,
 
             'optimisation': 'numba',
-            'riemann':'hll',
+            'riemann':'hllc',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',

@@ -34,12 +34,12 @@ class Grid:
 
         self.speed_max = np.float64(0.0)
         self.cfl = np.float64(p['cfl'])
-        sef.small_dt = np.float64(1.0e-12)
+        self.small_dt = np.float64(1.0e-12)
         self.dt = np.float64(p['initial dt'])
         self.ddt = np.float64(p['max dt increase'])
         self.t_max = np.float64(p['max time'])
         self.t = np.float64(0.0)
-        g.vxntb = [2, 3, 4]
+        self.vxntb = [2, 3, 4]
 
         if p['reconstruction'] == 'flat':
             self.gz = 1
@@ -298,6 +298,8 @@ class Grid:
             print("dt to small, exiting.")
             print("")
             sys.exit()
+
+        self.t += self.dt
 
         return
 
