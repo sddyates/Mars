@@ -77,7 +77,7 @@ class OutputInput:
             sys.exit()
 
 
-    def check(self, t):
+    def output(self, t):
         if (self.save_freq > 0.0) & ((t + dt) > num*self.save_freq):
             timing.start_io()
             dump(U, grid, a)
@@ -86,10 +86,17 @@ class OutputInput:
 
 
     def write(self, A, g, a, p, num):
+
+        if num == 0:
+            print(f"    Writing initial conditions: 0000")
+        else:
+            print(f"    Writing output file: {num:04}")
+
         if p['output primitives']:
             A = self._convert(A, a)
         for write in self.write_file:
             write(A, g, a, p, num)
+
         return
 
 

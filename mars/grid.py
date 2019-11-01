@@ -32,7 +32,14 @@ class Grid:
 
     def __init__(self, p, l):
 
-        self.speed_max = 0.0
+        self.speed_max = np.float64(0.0)
+        self.cfl = np.float64(p['cfl'])
+        sef.small_dt = np.float64(1.0e-12)
+        self.dt = np.float64(p['initial dt'])
+        self.ddt = np.float64(p['max dt increase'])
+        self.t_max = np.float64(p['max time'])
+        self.t = np.float64(0.0)
+        g.vxntb = [2, 3, 4]
 
         if p['reconstruction'] == 'flat':
             self.gz = 1
@@ -278,8 +285,24 @@ class Grid:
         self.SR = np.zeros(shape=array_shape[1])
         self.pres = np.zeros(shape=array_shape[1])
 
-    def boundary(self, V, p):
 
+    def update_dt(self):
+
+        dt_new = self.cfl*self.min_dxi/self.speed_max
+        self.dt = min(dt_new, self.ddt*dt_new)
+
+        if (self.t + self.dt) > self.t_max:
+            self.dt = self.t_max - self.t
+
+        if self.dt < self.small_dt:
+            print("dt to small, exiting.")
+            print("")
+            sys.exit()
+
+        return
+
+
+    def boundary(self, V, p):
         if p['Dimensions'] == '1D':
             self._lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
             self._upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])

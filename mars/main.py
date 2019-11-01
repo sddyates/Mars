@@ -75,41 +75,32 @@ def main_loop(problem):
     del V
 
     #  First output.
-    if problem.parameter['plot frequency'] > 0.0:
-        dump(U, grid, a, problem.parameter, 0)
+    timing.start_io()
+    io.output(grid.t)
+    timing.stop_io()
     print("")
 
     #  Perform main integration loop.
-    t = 0.0
-    dt = problem.parameter['initial dt']
     i = 0
     num = 1
     Mcell_av = 0.0
     step_av = 0.0
 
-    #  Integrate in time.
     log.begin()
-    while t < problem.parameter['max time']:
+
+    while grid.t < grid.t_max:
 
         timing.start_step()
-
-        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-
-        dt = time_step(t, grid, a, problem.parameter)
-
+        U = a.time_incriment(U, grid, a, timing, problem.parameter)
+        dt = time_step(grid, a, problem.parameter)
+        grid.update_dt()
         timing.stop_step()
-        log.step(i, t, dt, timing)
 
-        if (problem.parameter['plot frequency'] > 0.0) &\
-            ((t + dt) > num*problem.parameter['plot frequency']):
-            timing.start_io()
-            dump(U, grid, a, problem.parameter, num)
-            num += 1
-            timing.stop_io()
+        log.step(i, grid, timing)
 
-        #timing.start_io()
-        #io.check(t)
-        #timing.stop_io()
+        timing.start_io()
+        io.output(grid.t)
+        timing.stop_io()
 
         t += dt
         i += 1
@@ -117,16 +108,14 @@ def main_loop(problem):
     else:
 
         timing.start_step()
-
-        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-
+        U = a.time_incriment(U, grid, a, timing, problem.parameter)
         timing.stop_step()
-        log.step(i, t, dt, timing)
 
-        if problem.parameter['plot frequency'] > 0.0:
-            timing.start_io()
-            dump(U, grid, a, problem.parameter, num)
-            timing.stop_io()
+        log.step(i, grid, timing)
+
+        timing.start_io()
+        io.output(grid.t)
+        timing.stop_io()
 
         i += 1
 

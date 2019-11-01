@@ -3,7 +3,7 @@ from right_hand_side import RHSOperator
 from tools import prims_to_cons, cons_to_prims
 
 
-def Euler(U, dt, g, a, t, p):
+def Euler(U, g, a, t, p):
     """
     Synopsis
     --------
@@ -40,14 +40,14 @@ def Euler(U, dt, g, a, t, p):
     None
     """
 
-    U_new = U + RHSOperator(U, g, a, t, dt)
+    U_new = U + RHSOperator(U, g, a, t)
     g.boundary(U_new, p)
     del U
 
     return U_new
 
 
-def RungaKutta2(U, dt, g, a, t, p):
+def RungaKutta2(U, g, a, t, p):
     """
     Synopsis
     --------
@@ -84,12 +84,12 @@ def RungaKutta2(U, dt, g, a, t, p):
     None
     """
 
-    K1 = RHSOperator(U, g, a, t, dt)
+    K1 = RHSOperator(U, g, a, t)
     g.boundary(K1, p)
 
     # My need to recalculate the time step here.
 
-    U_new = U + 0.5*(K1 + RHSOperator(U+K1, g, a, t, dt))
+    U_new = U + 0.5*(K1 + RHSOperator(U+K1, g, a, t))
     g.boundary(U_new, p)
     del K1, U
 

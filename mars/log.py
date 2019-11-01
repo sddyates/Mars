@@ -52,9 +52,9 @@ class Log:
     def begin(self):
         return print("    Starting time integration loop...")
 
-    def step(self, i, t, dt, timing):
+    def step(self, i, g, timing):
         percent = t*100.0/self.p['max time']
-        string = f"    n = {i}, t = {t:.2e}, dt = {dt:.2e}, {percent:.1f}%"
+        string = f"    n = {i}, t = {g.t:.2e}, dt = {g.dt:.2e}, {percent:.1f}%"
         if timing.active:
             string += f", {timing.Mcell:.3f} Mcell/s ({timing.step_diff:.3f} s)"
 

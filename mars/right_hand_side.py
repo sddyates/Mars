@@ -8,7 +8,7 @@ from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons, time_step
 
 
-def flux_difference(U, g, a, t, dt, vxn, vxt, vxb):
+def flux_difference(U, g, a, t, vxn, vxt, vxb):
     """
     Synopsis
     --------
@@ -56,21 +56,21 @@ def flux_difference(U, g, a, t, dt, vxn, vxt, vxb):
 
     FL = np.empty(shape=VL.shape, dtype=np.float64)
     FR = np.empty(shape=VR.shape, dtype=np.float64)
-    flux_tensor(UL, VL, FL, vxn, vxt, vxb)
-    flux_tensor(UR, VR, FR, vxn, vxt, vxb)
+    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[3])
+    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[3])
 
     t.start_riemann()
     dflux, g.speed_max = a.riemann_solver(
         FL, FR, UL, UR, VL, VR,
-        g.speed_max, a.gamma, dt/g.dxi[vxn-2],
-        vxn, vxt, vxb
+        g.speed_max, a.gamma, g.dt/g.dxi[vxn-2],
+        g.vxntb[0], g.vxntb[1], g.vxntb[3]
     )
     t.stop_riemann()
 
     return dflux
 
 
-def RHSOperator(U, g, a, t, dt):
+def RHSOperator(U, g, a, t):
     """
     Synopsis
     --------
@@ -104,29 +104,35 @@ def RHSOperator(U, g, a, t, dt):
 
     if U.shape[0] == 3:
 
-        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t, dt, vxn=2, vxt=3, vxb=4)
+        g.vxntb = [2, 3, 4]
+        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
 
     if U.shape[0] == 4:
 
         for j in prange(g.jbeg, g.jend):
-            rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, t, dt, vxn=2, vxt=3, vxb=4)
+            g.vxntb = [2, 3, 4]
+            rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, t)
 
         for i in prange(g.ibeg, g.iend):
-            rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t, dt, vxn=3, vxt=2, vxb=4)
+            g.vxntb = [3, 2, 4]
+            rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t)
 
     if U.shape[0] == 5:
 
         for k in range(g.jbeg, g.jend):
             for j in range(g.jbeg, g.jend):
-                rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, t, dt, vxn=2, vxt=3, vxb=4)
+                g.vxntb = [2, 3, 4]
+                rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, t)
 
         for k in range(g.kbeg, g.kend):
             for i in range(g.ibeg, g.iend):
-                rhs[:, k, g.jbeg:g.jend, i] += flux_difference(U[:, k, :, i], g, a, t, dt, vxn=3, vxt=2, vxb=4)
+                g.vxntb = [3, 2, 4]
+                rhs[:, k, g.jbeg:g.jend, i] += flux_difference(U[:, k, :, i], g, a, t)
 
         for j in range(g.jbeg, g.jend):
             for i in range(g.ibeg, g.iend):
-                rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t, dt, vxn=4, vxt=2, vxb=3)
+                g.vxntb = [4, 2, 3]
+                rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t)
     t.stop_space_loop()
 
     return rhs
