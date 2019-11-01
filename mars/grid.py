@@ -38,7 +38,7 @@ class Grid:
         self.dt = np.float64(p['initial dt'])
         self.ddt = np.float64(p['max dt increase'])
         self.t_max = np.float64(p['max time'])
-        self.t = np.float64(0.0)
+        self.t = np.float64(p['initial t'])
         self.vxntb = [2, 3, 4]
 
         if p['reconstruction'] == 'flat':
@@ -246,7 +246,7 @@ class Grid:
         b = self.x3[-1] + self.dx3/2.0
         return np.append(a, b)
 
-    def state_vector(self, p):
+    def state_vector(self, p, l):
         if p['Dimensions'] == '1D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx1),

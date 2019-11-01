@@ -9,65 +9,28 @@ from settings import *
 from tools import cons_to_prims
 
 
-def dump(U, g, a, p, num):
-
-    V = np.zeros(shape=U.shape, dtype=np.float64)
-    cons_to_prims(U, V, a.gamma_1)
-    del U
-
-    if num == 0:
-        print(f"    Writing initial conditions: 0000")
-    else:
-        print(f"    Writing output file: {num:04}")
-
-    if p['Dimensions'] == '1D':
-        np.save(f'output/1D/data.{num:04}.npy', (V, g.x1))
-
-    if p['Dimensions'] == '2D':
-        np.save(f'output/2D/data.{num:04}.npy', (V, g.x1, g.x2))
-
-        V_vtk = np.expand_dims(V, axis=4)
-        V_vtk_rho = np.copy(
-            np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :],
-            order='F')
-        V_vtk_prs = np.copy(
-            np.swapaxes(V_vtk, 1, 2)[prs, g.jbeg:g.jend, g.ibeg:g.iend, :],
-            order='F')
-        V_vtk_vx1 = np.copy(
-            np.swapaxes(V_vtk, 1, 2)[vx1, g.jbeg:g.jend, g.ibeg:g.iend, :],
-            order='F')
-        V_vtk_vx2 = np.copy(
-            np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
-            order='F')
-
-        imageToVTK(f"output/2D/data.{num:04}",
-                  origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
-                  spacing = (g.dx1, g.dx2, 0.0),
-                  cellData = {"rho":V_vtk_rho,
-                              "prs":V_vtk_prs,
-                              "vx1":V_vtk_vx1,
-                              "vx2":V_vtk_vx2})
-
-    if p['Dimensions'] == '3D':
-        np.save(f'output/3D/data.{num:04}.npy', (V, g.x1, g.x2, g.x3))
-
-        gridToVTK(f"output/3D/data.{num:04}",
-                  g.x1_verts, g.x2_verts, g.x3_verts,
-                  cellData = {"rho":V[rho].T,
-                              "prs":V[prs].T,
-                              "vx1":V[vx1].T,
-                              "vx2":V[vx2].T,
-                              "vx3":V[vx3].T})
-
-
 class OutputInput:
 
 
     def __init__(self, p, l):
-        self.save_freq = np.float64(p['save frequency'])
-        self.output_number = 0
-        self.output_prims = p['output primitives']
+
+        self._output_number = 0
+        self._save_freq = np.float64(p['save frequency'])
+        self._output_prims = p['output primitives']
         self._io_type = p['output type']
+        self._io_folder = "./output/" + p['Dimensions'] + "/"
+
+        if not os.path.isdir(self._io_folder):
+            os.makedirs(self._io_folder)
+            print(f'    Created io folder at: "{self._io_folder}"')
+
+        self._file_prefix = "data_" + p['Dimensions'] + "_"
+
+        self._base_file_name = self._io_folder + self._file_prefix
+
+        if p['restart file'] is not None:
+            self._restart_file = self._io_folder + self._file_prefix + f"{p['restart file']:04}" + ".h5"
+
         self._recognised_types = [
             'numpy',
             'vtk',
@@ -89,27 +52,21 @@ class OutputInput:
             sys.exit()
 
 
-    #def output(self, U, g, a, p):
-    #    if self.output_number == 0:
-    #        dump(U, g, a, p, self.output_number)
-    #        self.output_number += 1
-
-    #    if (self.save_freq > 0.0) \
-    #        & ((g.t) >= self.output_number*self.save_freq):
-    #        dump(U, g, a, p, self.output_number)
-    #        self.output_number += 1
-
-
     def output(self, U, g, a, p):
-        if (self.save_freq > 0.0) \
-            & (g.t >= self.output_number*self.save_freq):
-            print(f"    Writing {self._io_type}: {self.output_number:04}")
+        if (self._save_freq > 0.0) \
+            & (g.t >= self._output_number*self._save_freq):
 
-            if self.output_prims:
+            self._file_name = self._base_file_name + f"{self._output_number:04}"
+
+            print(f"    Writing {self._io_type}: {self._output_number:04}")
+
+            if self._output_prims:
                 V = self._convert(U, a.gamma_1)
+
             for write in self.write_file:
-                write(V, g, a, p, self.output_number)
-                self.output_number += 1
+                write(V, g, a, p)
+
+            self._output_number += 1
 
         return
 
@@ -121,11 +78,40 @@ class OutputInput:
         return V
 
 
-    def _write_h5(self):
-        file = h5py.File(f"output/2D/data.{self.output_number:04}.h5", "w")
+    def _write_h5(self, V, g, a, p):
+
+        data = h5py.File(self._file_name + ".h5", "w")
+
+        data.create_dataset('density', data=V[rho])
+        data.create_dataset('pressure', data=V[prs])
+        data.create_dataset('velocity x1', data=V[vx1])
+
+        origin = [g.x1min]
+        extent = [g.x1max]
+        resolution = [g.nx1]
+        if p['Dimensions'] == "2D":
+            data.create_dataset('velocity x2', data=V[vx2])
+            origin.append(g.x2min)
+            extent.append(g.x2max)
+            resolution.append(g.nx2)
+        if p['Dimensions'] == "3D":
+            data.create_dataset('velocity x3', data=V[vx3])
+            origin.append(g.x3min)
+            extent.append(g.x3max)
+            resolution.append(g.nx3)
+
+        data.attrs['origin'] = origin[::-1]
+        data.attrs['extent'] = extent[::-1]
+        data.attrs['resolution'] = resolution[::-1]
+        data.attrs['time'] = g.t
+        data.attrs['dt'] = g.dt
+        data.attrs['output_number'] = self._output_number
+
+        data.close()
+        return
 
 
-    def _write_vtk(self, V, g, a, p, num):
+    def _write_vtk(self, V, g, a, p):
         if p['Dimensions'] == '2D':
             V_vtk = np.expand_dims(V, axis=4)
             V_vtk_rho = np.copy(
@@ -141,7 +127,7 @@ class OutputInput:
                 np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
                 order='F')
             imageToVTK(
-                f"output/2D/data.{self.output_number:04}",
+                self._file_name,
                 origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
                 spacing = (g.dx1, g.dx2, 0.0),
                 cellData = {"rho":V_vtk_rho,
@@ -149,10 +135,11 @@ class OutputInput:
                             "vx1":V_vtk_vx1,
                             "vx2":V_vtk_vx2}
             )
+        return
 
         if p['Dimensions'] == '3D':
             gridToVTK(
-                f"output/3D/data.{self.output_number:04}",
+                self._file_name,
                 g.x1_verts,
                 g.x2_verts,
                 g.x3_verts,
@@ -164,35 +151,65 @@ class OutputInput:
             )
 
 
-    def _write_numpy(self, V, g, a, p, num):
+    def _write_numpy(self, V, g, a, p):
         if p['Dimensions'] == '1D':
-            np.save(
-                f'output/1D/data.{self.output_number:04}.npy',
-                (V, g.x1)
-            )
+            np.save(self._file_name, (V, g.x1))
         if p['Dimensions'] == '2D':
-            np.save(
-                f'output/2D/data.{self.output_number:04}.npy',
-                (V, g.x1, g.x2)
-            )
+            np.save(self._file_name, (V, g.x1, g.x2))
         if p['Dimensions'] == '3D':
-            np.save(
-                f'output/3D/data.{self.output_number:04}.npy',
-                (V, g.x1, g.x2, g.x3)
-                )
+            np.save(self._file_name, (V, g.x1, g.x2, g.x3))
+        return
 
 
-    def read(self):
+    def input(self, p):
+        return self._read_h5(p)
+
+
+    def _read_h5(self, p):
+
+        print(f'    Restarting from file: "{self._restart_file}"')
+
+        data = h5py.File(self._restart_file, "r")
+        array_size = [len([var for var in data])]
+
+        density = data['density'][()]
+        pressure = data['pressure'][()]
+        velocity_x1 = data['velocity x1'][()]
+
+        p['x1 min'] = data.attrs['origin'][-1]
+        p['x1 max'] = data.attrs['extent'][-1]
+        p['resolution x1'] = data.attrs['resolution'][-1]
+        array_size.append(density.shape[-1])
+        if p['Dimensions'] == "2D":
+            velocity_x2 = data['velocity x2'][()]
+            p['x2 min'] = data.attrs['origin'][-2]
+            p['x2 max'] = data.attrs['extent'][-2]
+            p['resolution x2'] = data.attrs['resolution'][-2]
+            array_size.append(density.shape[-2])
+        if p['Dimensions'] == "3D":
+            velocity_x3 = data['velocity x3'][()]
+            p['x3 min'] = data.attrs['origin'][-3]
+            p['x3 max'] = data.attrs['extent'][-3]
+            p['resolution x3'] = data.attrs['resolution'][-3]
+            array_size.append(density.shape[-3])
+
+        self._output_number = data.attrs['output_number']
+        p['initial t'] = data.attrs['time']
+        p['initial dt'] = data.attrs['dt']
+
+        V = np.zeros(array_size, dtype=np.float64)
+
+        V[rho] = density
+        V[prs] = pressure
+        V[vx1] = velocity_x1
+        if p['Dimensions'] == "2D":
+            V[vx2] = velocity_x2
+        if p['Dimensions'] == "3D":
+            V[vx3] = velocity_x3
+
+        return V
+
+
+    def _read_numpy(self):
+        V, x1, x2, x3 = np.load()
         None
-
-
-        def _read_h5(self):
-            None
-
-
-        def _read_vtk(self):
-            None
-
-
-        def _read_numpy(self):
-            None

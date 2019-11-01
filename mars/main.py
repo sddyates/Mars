@@ -42,6 +42,12 @@ def main_loop(problem):
 
     log.options()
 
+    print("    Initialising IO...")
+    io = OutputInput(problem.parameter, log)
+
+    if problem.parameter['restart file'] is not None:
+        V = io.input(problem.parameter)
+
     #  Initialise grid.
     grid = Grid(problem.parameter, log)
 
@@ -49,18 +55,15 @@ def main_loop(problem):
     print("    Assigning algorithms...")
     algorithm = Algorithm(problem.parameter, log)
 
-    print("    Initialising IO...")
-    io = OutputInput(problem.parameter, log)
-
     #  Generate state vector to hold conservative
     #  and primative variables.
-    print("    Creating arrays...", log)
-    V = grid.state_vector(problem.parameter)
-
     #  Initialise the state vector accourding to
     #  user defined problem.
-    print("    Initialising grid...")
-    problem.initialise(V, grid, log)
+    if problem.parameter['restart file'] is None:
+        print("    Creating arrays...")
+        V = grid.state_vector(problem.parameter, log)
+        print("    Setting intial conditions...")
+        problem.initialise(V, grid, log)
 
     #  Apply boundary conditions.
     print("    Applying boundary conditions...")
@@ -123,6 +126,4 @@ def main_loop(problem):
 
     log.end(timing)
 
-    #V2 = np.zeros_like(U[rho])
-    #V2 = np.sin(grid.x1) + 4.0
-    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)
+    return U

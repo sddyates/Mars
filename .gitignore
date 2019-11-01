@@ -11,6 +11,7 @@ mars/cython_lib/*.html
 #  IO files
 *.npy
 *.vti
+*.h5
 *.lprof
 *.txt
 *.png

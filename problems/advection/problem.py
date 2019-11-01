@@ -105,7 +105,10 @@ if __name__ == "__main__":
         p.parameter['reconstruction'] = recon
         for res in resol:
             p.parameter['resolution x1'] = res
-            error.append(main_loop(p))
+            U = main_loop(p)
+            V2 = np.zeros_like(U[rho])
+            V2 = np.sin(grid.x1) + 4.0
+            error.append(np.absolute((V2 - U[rho])).sum()/len(grid.x1))
 
     f, ax1 = plt.subplots()
     ax1.loglog(resol, error1, 'C0o-', label='linear')
