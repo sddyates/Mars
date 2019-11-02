@@ -109,11 +109,11 @@ def RHSOperator(U, g, a, t):
 
     if U.shape[0] == 4:
 
-        for j in prange(g.jbeg, g.jend):
+        for j in range(g.jbeg, g.jend):
             g.vxntb = [2, 3, 4]
             rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, t)
 
-        for i in prange(g.ibeg, g.iend):
+        for i in range(g.ibeg, g.iend):
             g.vxntb = [3, 2, 4]
             rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t)
 
