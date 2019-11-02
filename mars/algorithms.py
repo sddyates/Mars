@@ -24,20 +24,19 @@ class Algorithm:
     """
 
     def __init__(self, p, l):
-        self.assign_riemann_solver_(p)
-        self.assign_reconstruction_(p)
-        self.assign_time_stepping_(p)
+        self._assign_riemann_solver(p)
+        self._assign_reconstruction(p)
+        self._assign_time_stepping(p)
         self.is_1D = p['Dimensions'] == '1D'
         self.is_2D = p['Dimensions'] == '2D'
         self.is_3D = p['Dimensions'] == '3D'
         self.gamma = np.float64(p['gamma'])
         self.gamma_1 = np.float64(self.gamma - 1.0)
         self.igamma_1 = 1.0/self.gamma_1
-        self.cfl = np.float64(p['cfl'])
-        sef.small_dt = 1.0e-12
-        delf.smapp_pressure = 1.0e-12
+        self.smapp_pressure = 1.0e-12
 
-    def assign_riemann_solver_(self, p):
+
+    def _assign_riemann_solver(self, p):
         """
         Synopsis
         --------
@@ -66,7 +65,7 @@ class Algorithm:
             sys.exit()
 
 
-    def assign_reconstruction_(self, p):
+    def _assign_reconstruction(self, p):
         """
         Synopsis
         --------
@@ -91,7 +90,8 @@ class Algorithm:
             sys.exit()
         return
 
-    def assign_time_stepping_(self, p):
+
+    def _assign_time_stepping(self, p):
         """
         Synopsis
         --------
@@ -111,6 +111,7 @@ class Algorithm:
             print('Error: Invalid integrator.')
             sys.exit()
         return
+
 
     def assign_boundary_conditions(self, p):
         if p['Dimensions'] == '1D' and p['']:

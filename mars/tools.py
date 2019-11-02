@@ -91,19 +91,3 @@ def prims_to_cons(V, U, igamma_1):
     U[eng] = 0.5*V[rho]*v2 + V[prs]*igamma_1
 
     return
-
-
-def time_step(t, g, a, p):
-
-    dt_new = a.cfl*g.min_dxi/g.speed_max
-
-    dt = min(dt_new, p['max dt increase']*dt_new)
-
-    if (t + dt) > p['max time']:
-        dt = p['max time'] - t
-
-    if dt < a.small_dt:
-        print("dt to small, exiting.")
-        sys.exit()
-
-    return dt

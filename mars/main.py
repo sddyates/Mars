@@ -5,15 +5,14 @@ __license__ = "MIT"
 
 import numpy as np
 import sys
+from datetime import datetime
 
-from settings import *
+from timer import Timer
+from log import Log
 from grid import Grid
 from algorithms import Algorithm
-from tools import time_step, prims_to_cons
-from datetime import datetime
-from output import dump
-from log import Log
-from timer import Timer
+from output import OutputInput
+from tools import prims_to_cons
 
 
 def main_loop(problem):
@@ -43,22 +42,28 @@ def main_loop(problem):
 
     log.options()
 
+    print("    Initialising IO...")
+    io = OutputInput(problem.parameter, log)
+
+    if problem.parameter['restart file'] is not None:
+        V = io.input(problem.parameter)
+
     #  Initialise grid.
     grid = Grid(problem.parameter, log)
 
     #  Initialise Algorithms.
     print("    Assigning algorithms...")
-    a = Algorithm(problem.parameter, log)
+    algorithm = Algorithm(problem.parameter, log)
 
     #  Generate state vector to hold conservative
     #  and primative variables.
-    print("    Creating arrays...")
-    V = grid.state_vector(problem.parameter)
-
     #  Initialise the state vector accourding to
     #  user defined problem.
-    print("    Initialising grid...")
-    problem.initialise(V, grid, log)
+    if problem.parameter['restart file'] is None:
+        print("    Creating arrays...")
+        V = grid.state_vector(problem.parameter, log)
+        print("    Setting intial conditions...")
+        problem.initialise(V, grid, log)
 
     #  Apply boundary conditions.
     print("    Applying boundary conditions...")
@@ -67,73 +72,58 @@ def main_loop(problem):
 
     #  Check initial grid for nans.
     if np.isnan(np.sum(V)):
-        print("Error, nan in array, function: main")
+        print("Error, nan in initial conditions, exiting.")
+        print("")
         sys.exit()
 
     U = np.empty(shape=V.shape, dtype=np.float64)
-    prims_to_cons(V, U, a.igamma_1)
+    prims_to_cons(V, U, algorithm.igamma_1)
     del V
 
     #  First output.
-    if problem.parameter['plot frequency'] > 0.0:
-        dump(U, grid, a, problem.parameter, 0)
+    timing.start_io()
+    io.output(U, grid, algorithm, problem.parameter)
+    timing.stop_io()
     print("")
 
-    #  Perform main integration loop.
-    t = 0.0
-    dt = problem.parameter['initial dt']
-    i = 0
-    num = 1
-    Mcell_av = 0.0
-    step_av = 0.0
-
-    #  Integrate in time.
     log.begin()
-    while t < problem.parameter['max time']:
+
+    while grid.t < grid.t_max:
 
         timing.start_step()
-
-        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-
-        dt = time_step(t, grid, a, problem.parameter)
-
+        U = algorithm.time_incriment(
+            U, grid, algorithm, timing, problem.parameter
+        )
         timing.stop_step()
-        log.step(i, t, dt, timing)
 
-        if (problem.parameter['plot frequency'] > 0.0) &\
-            ((t + dt) > num*problem.parameter['plot frequency']):
-            timing.start_io()
-            dump(U, grid, a, problem.parameter, num)
-            num += 1
-            timing.stop_io()
+        log.step(grid, timing)
 
-        #timing.start_io()
-        #io.check(t)
-        #timing.stop_io()
+        timing.start_io()
+        io.output(
+            U, grid, algorithm, problem.parameter
+        )
+        timing.stop_io()
 
-        t += dt
-        i += 1
+        grid.update_dt()
 
     else:
 
         timing.start_step()
-
-        U = a.time_incriment(U, dt, grid, a, timing, problem.parameter)
-
+        U = algorithm.time_incriment(
+            U, grid, algorithm, timing, problem.parameter
+        )
         timing.stop_step()
-        log.step(i, t, dt, timing)
 
-        if problem.parameter['plot frequency'] > 0.0:
-            timing.start_io()
-            dump(U, grid, a, problem.parameter, num)
-            timing.stop_io()
+        log.step(grid, timing)
 
-        i += 1
+    timing.start_io()
+    io.output(
+        U, grid, algorithm, problem.parameter
+    )
+    timing.stop_io()
 
     timing.stop_sim()
 
-    log.end(i, timing)
+    log.end(timing)
 
-    #V2 = np.zeros_like(U[rho])
-    #V2 = np.sin(grid.x1) + 4.0
-    #return np.absolute((V2 - U[rho])).sum()/len(grid.x1)
+    return U
