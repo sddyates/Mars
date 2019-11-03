@@ -448,8 +448,8 @@ class Grid:
 
         elif bc_type == 'outflow' and dim == '2D':
 
-            for o in range(self.upper_bc_ibeg, self.upper_bc_iend+1):
-                V[:, o, :] = V[:, self.upper_bc_ibeg - 1, :]
+            for o in range(self.upper_bc_jbeg, self.upper_bc_jend+1):
+                V[:, o, :] = V[:, self.upper_bc_jbeg - 1, :]
 
             #V[:, self.upper_bc_jbeg:, :] = \
             #    V[:, self.upper_bc_jbeg - 1, :].reshape(

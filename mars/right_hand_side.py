@@ -4,10 +4,14 @@ import numpy as np
 import numba as nb
 from numba import prange
 
+from multiprocessing import Pool
+from multiprocessing import Process, Value, Array
+
 from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons
 
 
+#@nb.jit(nopython=False, forceobj=True, parallel=False)
 def flux_difference(U, g, a, t):
     """
     Synopsis
@@ -70,6 +74,7 @@ def flux_difference(U, g, a, t):
     return dflux
 
 
+#@nb.jit(nopython=False, forceobj=True, parallel=True)
 def RHSOperator(U, g, a, t):
     """
     Synopsis
@@ -100,6 +105,7 @@ def RHSOperator(U, g, a, t):
     """
 
     t.start_space_loop()
+
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
     if U.shape[0] == 3:
@@ -133,6 +139,7 @@ def RHSOperator(U, g, a, t):
             for i in range(g.ibeg, g.iend):
                 g.vxntb = [4, 2, 3]
                 rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t)
+
     t.stop_space_loop()
 
     return rhs

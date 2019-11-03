@@ -1,10 +1,10 @@
 
 import numba as nb
-from numba import jit
+from numba import prange
 import numpy as np
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, parallel=False, fastmath=True)
 def minmod(V):
     """
     Synopsis
@@ -37,8 +37,6 @@ def minmod(V):
 
             a = (V[var, i+1] - V[var, i])
             b = (V[var, i+2] - V[var, i+1])
-
-            # print(var, i, a, b)
 
             if np.absolute(a) < np.absolute(b):
                 gradient = a

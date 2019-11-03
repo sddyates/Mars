@@ -115,16 +115,16 @@ class OutputInput:
         if p['Dimensions'] == '2D':
             V_vtk = np.expand_dims(V, axis=4)
             V_vtk_rho = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[rho, g.ibeg:g.iend, g.jbeg:g.jend, :],
                 order='F')
             V_vtk_prs = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[prs, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[prs, g.ibeg:g.iend, g.jbeg:g.jend, :],
                 order='F')
             V_vtk_vx1 = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[vx1, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[vx1, g.ibeg:g.iend, g.jbeg:g.jend, :],
                 order='F')
             V_vtk_vx2 = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[vx2, g.ibeg:g.iend, g.jbeg:g.jend, :],
                 order='F')
             imageToVTK(
                 self._file_name,
@@ -135,7 +135,6 @@ class OutputInput:
                             "vx1":V_vtk_vx1,
                             "vx2":V_vtk_vx2}
             )
-        return
 
         if p['Dimensions'] == '3D':
             gridToVTK(
@@ -149,6 +148,8 @@ class OutputInput:
                             "vx2":V[vx2].T,
                             "vx3":V[vx3].T}
             )
+
+        return
 
 
     def _write_numpy(self, V, g, a, p):
