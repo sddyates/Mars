@@ -11,7 +11,7 @@ def line_plot():
 
         x1p, x2p, Prho, Pvx1, Pprs = np.loadtxt(
             f'output/pluto/data.{num:04}.tab', unpack=True)
-        V, x1 = np.load(f'output/1D/data.{num:04}.npy')
+        V, x1 = np.load(f'output/1D/data_1D_{num:04}.npy', allow_pickle=True)
 
         ax1.plot(x1, V[rho], 'b', label=r'$\rho$')
         ax1.plot(x1, V[prs], 'r', label=r'$p$')

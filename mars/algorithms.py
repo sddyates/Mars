@@ -6,7 +6,7 @@ from riemann_solvers import tvdlf, hll, hllc
 from cython_lib.riemann_solvers import tvdlf_pyx, hll_pyx, hllc_pyx
 from reconstruction import flat, minmod
 from cython_lib.reconstruction import flat_pyx, minmod_pyx
-from time_stepping import Euler, RungaKutta2
+from time_stepping import Euler, RungaKutta2, RungaKutta3
 
 
 class Algorithm:
@@ -107,6 +107,8 @@ class Algorithm:
             self.time_incriment = Euler
         elif p['time stepping'] == 'RK2':
             self.time_incriment = RungaKutta2
+        elif p['time stepping'] == 'RK3':
+            self.time_incriment = RungaKutta3
         else:
             print('Error: Invalid integrator.')
             sys.exit()
