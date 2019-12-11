@@ -57,8 +57,8 @@ Mars outputs simulation results in several formats
 | format | dimensions | extension  | Visualisation   |
 | ------ | ---------- | ---------- | --------------- |
 | numpy  | 1D, 2D, 3D | .npy       | python, yt      |
-| vtk    | 2D, 3D     | .vti, .vtr | Paraview, VisIt |
-| hdf5   | 1D, 2D, 3D | .h5        | python          |
+| vtk    | 2D, 3D     | .vti, .vtr | Paraview, VisIt, python |
+| hdf5   | 1D, 2D, 3D | .h5        | python, yt      |
 
 Mars is written in python allowing for rich on the fly analysis. This can be done in the `problem.py` file, as part of calling the `main_loop` function.
 
@@ -73,14 +73,15 @@ This can be modified to perform batch simulations where simulation parameters ar
             p.parameter['x1 resolution'] = res
             main_loop(p)
 
-Some modifications would also be required to the output file names to prevent overwriting, but the example serves to illustrate the point. 
+Some modifications would also be required to the output file names to prevent overwriting, but the example serves to illustrate the point.
 
 ## Todo
 ### Code Infrastructure
 - [ ] Improve io class.
 - [ ] Improve cython performance.
-- [ ] Restart files.
-- [ ] MPI
+- [x] Restart files.
+- [ ] Distributed memory parallel (MPI)
+- [ ] Shared memory parallel (numba prange)
 - [ ] Implement non regular grid
 ### Extra Physics
 - [ ] Cooling Physics
