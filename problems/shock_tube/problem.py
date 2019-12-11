@@ -39,20 +39,26 @@ class Problem:
             'cfl': 0.3,
             'initial dt': 1.0e-5,
             'max dt increase': 1.5,
+            'initial t': 0.0,
             'max time': 1.0,
 
-            'plot frequency': 1.0e-1,
+            'save frequency': 1.0e-1,
+            'output primitives': True,
+            'output type': ['numpy'],
             'print to file': False,
+            'profiling': True,
+            'restart file': None,
 
             'gamma': 1.666666,
             'density unit': 1.0,
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'riemann': 'tvdlf',
+            'optimisation': 'numba',
+            'riemann': 'hllc',
             'reconstruction': 'linear',
             'limiter': 'minmod',
-            'time stepping': 'RK2',
+            'time stepping': 'RK3',
             'method': 'hydro',
 
             'lower x1 boundary': 'outflow',
@@ -62,7 +68,7 @@ class Problem:
             'internal boundary': False
             }
 
-    def initialise(self, V, grid):
+    def initialise(self, V, grid, l):
 
         if self.parameter['Dimensions'] == '1D':
             for i in range(grid.ibeg, grid.iend):

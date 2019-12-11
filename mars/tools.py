@@ -54,6 +54,37 @@ def flux_tensor(U, V, F, vxn, vxt, vxb):
 
 @nb.jit(cache=True)
 def cons_to_prims(U, V, gamma_1):
+    """
+    Synopsis
+    --------
+    Convert from Conservative (rho, e, mvx1)
+    to Primative (rho, p, vx1) variables.
+
+    Args
+    ----
+    U: numpy array-like
+    State vector containing all
+    conservative variables.
+
+    V: numpy array-like
+    State vector containing all
+    primative variables.
+
+    gamma_1: numpy float64
+    gamma - 1, ratio of specific heats minus one.
+
+    Returns
+    -------
+    None.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
 
     V[rho] = U[rho]
 
@@ -76,6 +107,38 @@ def cons_to_prims(U, V, gamma_1):
 
 @nb.jit(cache=True)
 def prims_to_cons(V, U, igamma_1):
+    """
+    Synopsis
+    --------
+    Convert from Primative (rho, p, vx1)
+    to Conservative (rho, e, mvx1) variables.
+
+    Args
+    ----
+    V: numpy array-like
+    State vector containing all
+    primative variables.
+
+    U: numpy array-like
+    State vector containing all
+    conservative variables.
+
+    1gamma_1: numpy float64
+    1/(gamma - 1), one divided by the ratio
+    of specific heats minus one.
+
+    Returns
+    -------
+    None.
+
+    Attributes
+    ----------
+    None.
+
+    TODO
+    ----
+    None
+    """
 
     U[rho] = V[rho]
 

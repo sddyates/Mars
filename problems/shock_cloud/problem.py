@@ -48,7 +48,7 @@ class Problem:
             'initial t': 0.0,
             'max time':2.0e-1,
 
-            'save frequency':1.0e-2,
+            'save frequency': 1.0e-2,
             'output type': ['numpy', 'vtk', 'h5'],
             'output primitives': True,
             'print to file':False,
