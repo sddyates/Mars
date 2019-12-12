@@ -5,7 +5,7 @@ import sys
 
 from settings import *
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, nopython=True)
 def flux_tensor(U, V, F, vxn, vxt, vxb):
     """
     Synopsis
@@ -52,7 +52,7 @@ def flux_tensor(U, V, F, vxn, vxt, vxb):
     return
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, nopython=True)
 def cons_to_prims(U, V, gamma_1):
     """
     Synopsis
@@ -105,7 +105,7 @@ def cons_to_prims(U, V, gamma_1):
     return
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, nopython=True)
 def prims_to_cons(V, U, igamma_1):
     """
     Synopsis

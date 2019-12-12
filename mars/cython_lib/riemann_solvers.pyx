@@ -55,7 +55,7 @@ def tvdlf_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.
@@ -137,7 +137,7 @@ def hll_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.
@@ -267,7 +267,7 @@ def hllc_pyx(np.ndarray[DTYPE_t, ndim=2] FL,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.

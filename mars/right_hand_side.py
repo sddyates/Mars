@@ -9,10 +9,12 @@ from multiprocessing import Process, Value, Array
 
 from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons
+from reconstruction import flat, minmod
+from riemann_solvers import tvdlf, hll, hllc
 
 
-#@nb.jit(nopython=False, forceobj=True, parallel=False)
-def flux_difference(U, g, a, t):
+@nb.jit(cache=True)
+def flux_difference(U, vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max):
     """
     Synopsis
     --------
@@ -47,35 +49,31 @@ def flux_difference(U, g, a, t):
     """
 
     V = np.empty(shape=U.shape, dtype=np.float64)
-    cons_to_prims(U, V, a.gamma_1)
+    cons_to_prims(U, V, gamma_1)
 
-    t.start_reconstruction()
-    VL, VR = a.reconstruction(V)
-    t.stop_reconstruction()
+    VL, VR = minmod(V)
 
     UL = np.empty(shape=VL.shape, dtype=np.float64)
     UR = np.empty(shape=VR.shape, dtype=np.float64)
-    prims_to_cons(VL, UL, a.igamma_1)
-    prims_to_cons(VR, UR, a.igamma_1)
+    prims_to_cons(VL, UL, igamma_1)
+    prims_to_cons(VR, UR, igamma_1)
 
     FL = np.empty(shape=VL.shape, dtype=np.float64)
     FR = np.empty(shape=VR.shape, dtype=np.float64)
-    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
-    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
+    flux_tensor(UL, VL, FL, vxntb[0], vxntb[1], vxntb[2])
+    flux_tensor(UR, VR, FR, vxntb[0], vxntb[1], vxntb[2])
 
-    t.start_riemann()
-    dflux, g.speed_max = a.riemann_solver(
+    dflux, speed_max = hll(
         FL, FR, UL, UR, VL, VR,
-        g.speed_max, a.gamma, g.dt/g.dxi[g.vxntb[0]-2],
-        g.vxntb[0], g.vxntb[1], g.vxntb[2]
+        speed_max, gamma, dt/dxi[vxntb[0]-2],
+        vxntb[0], vxntb[1], vxntb[2]
     )
-    t.stop_riemann()
 
-    return dflux
+    return dflux, np.float64(speed_max)
 
 
-#@nb.jit(nopython=False, forceobj=True, parallel=True)
-def RHSOperator(U, g, a, t):
+#@nb.jit(cache=True, nopython=False, parallel=True)
+def RHSOperator(U, ibeg, iend, jbeg, jend, kbeg, kend, gamma, dt, dxi, speed_max):
     """
     Synopsis
     --------
@@ -104,42 +102,63 @@ def RHSOperator(U, g, a, t):
     None
     """
 
-    t.start_space_loop()
+    gamma_1 = gamma - 1.0
+    igamma_1 = 1.0/gamma_1
+
+    #  t.start_space_loop()
 
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    if U.shape[0] == 3:
-
-        g.vxntb = [2, 3, 4]
-        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
+    # if U.shape[0] == 3:
+    #
+    #     vxntb = np.array([2, 3, 4], dtype=np.int32)
+    #     df = flux_difference(
+    #         U, vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+    #     rhs[:, ibeg:iend] = df[0]
+    #     speed_max = df[1]
 
     if U.shape[0] == 4:
 
-        for j in range(g.jbeg, g.jend):
-            g.vxntb = [2, 3, 4]
-            rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, t)
+        vxntb = np.array([2, 3, 4], dtype=np.int32)
+        for j in prange(jbeg, jend):
+            df = flux_difference(
+                U[:, j, :], vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+            print(type(df[0]), type(df[1]), type(U[:, j, :]), type(speed_max))
+            rhs[:, j, ibeg:iend] = df[0]
+            speed_max = df[1]
 
-        for i in range(g.ibeg, g.iend):
-            g.vxntb = [3, 2, 4]
-            rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t)
+        vxntb = np.array([3, 2, 4], dtype=np.int32)
+        for i in prange(ibeg, iend):
+            df = flux_difference(
+                U[:, :, i], vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+            rhs[:, jbeg:jend, i] += df[0]
+            speed_max = df[1]
 
-    if U.shape[0] == 5:
+    # if U.shape[0] == 5:
+    #
+    #     vxntb = np.array([2, 3, 4], dtype=np.int32)
+    #     for k in range(jbeg, jend):
+    #         for j in range(jbeg, jend):
+    #             df = flux_difference(
+    #                 U[:, k, j, :], vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+    #             rhs[:, k, j, ibeg:iend] = df[0]
+    #             speed_max = df[1]
+    #
+    #     vxntb = np.array([3, 2, 4], dtype=np.int32)
+    #     for k in range(kbeg, kend):
+    #         for i in range(ibeg, iend):
+    #             df = flux_difference(
+    #                 U[:, k, :, i], vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+    #             rhs[:, k, jbeg:jend, i] += df[0]
+    #             speed_max = df[1]
+    #
+    #     vxntb = np.array([4, 2, 3], dtype=np.int32)
+    #     for j in range(jbeg, jend):
+    #         for i in range(ibeg, iend):
+    #             df = flux_difference(U[:, :, j, i], vxntb, dxi, dt, gamma, gamma_1, igamma_1, speed_max)
+    #             rhs[:, kbeg:kend, j, i] += df[0]
+    #             speed_max = df[1]
 
-        for k in range(g.jbeg, g.jend):
-            for j in range(g.jbeg, g.jend):
-                g.vxntb = [2, 3, 4]
-                rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, t)
+    #  t.stop_space_loop()
 
-        for k in range(g.kbeg, g.kend):
-            for i in range(g.ibeg, g.iend):
-                g.vxntb = [3, 2, 4]
-                rhs[:, k, g.jbeg:g.jend, i] += flux_difference(U[:, k, :, i], g, a, t)
-
-        for j in range(g.jbeg, g.jend):
-            for i in range(g.ibeg, g.iend):
-                g.vxntb = [4, 2, 3]
-                rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t)
-
-    t.stop_space_loop()
-
-    return rhs
+    return rhs, speed_max

@@ -1,10 +1,10 @@
 
 import numba as nb
-from numba import prange
+import numba as nb
 import numpy as np
 
 
-@nb.jit(cache=True, parallel=False, fastmath=True)
+@nb.jit(cache=True, nopython=True, parallel=False, fastmath=True)
 def minmod(V):
     """
     Synopsis
@@ -28,9 +28,13 @@ def minmod(V):
     a non-regular grid can be used.
     """
 
-    m = np.empty((V.shape[0], V.shape[1] - 2), dtype=np.float64)
-    L = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
-    R = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    # m = np.empty((V.shape[0], V.shape[1] - 2), dtype=np.float64)
+    # L = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    # R = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+
+    m = np.zeros((V.shape[0], V.shape[1] - 2), dtype=np.float64)
+    L = np.zeros((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    R = np.zeros((V.shape[0], m.shape[1] - 1), dtype=np.float64)
 
     for var in range(V.shape[0]):
         for i in range(m.shape[1]):
@@ -44,6 +48,7 @@ def minmod(V):
                 gradient = b
 
             if a*b > 0.0:
+                #print(type(gradient), type(a), type(b))
                 m[var, i] = gradient
             else:
                 m[var, i] = 0.0
@@ -55,7 +60,7 @@ def minmod(V):
     return L, R
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, nopython=True)
 def flat(V):
     """
     Synopsis

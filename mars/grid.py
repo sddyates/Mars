@@ -57,7 +57,7 @@ class Grid:
             self.rez = self.nx1
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
-            self.dxi = [self.dx1]
+            self.dxi = np.array([self.dx1], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.ibeg = self.gz
@@ -94,11 +94,12 @@ class Grid:
 
             self.nx1 = p['resolution x1']
             self.nx2 = p['resolution x2']
+            self.nx3 = p['resolution x3']
             self.rez = self.nx1*self.nx2
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
-            self.dxi = [self.dx1, self.dx2]
+            self.dxi = np.array([self.dx1, self.dx2], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.da = self.dx1*self.dx2
@@ -107,6 +108,8 @@ class Grid:
             self.iend = self.nx1 + self.gz
             self.jbeg = self.gz
             self.jend = self.nx2 + self.gz
+            self.kbeg = self.gz
+            self.kend = self.nx3 + self.gz
 
             self.lower_bc_ibeg = 0
             self.lower_bc_iend = self.gz - 1
@@ -155,7 +158,7 @@ class Grid:
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
             self.dx3 = (abs(self.x3min) + abs(self.x3max))/self.nx3
-            self.dxi = [self.dx1, self.dx2, self.dx3]
+            self.dxi = np.array([self.dx1, self.dx2, self.dx3], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.dv = self.dx1*self.dx2*self.dx3

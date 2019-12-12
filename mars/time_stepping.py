@@ -1,4 +1,6 @@
 
+import numpy as np
+
 from right_hand_side import RHSOperator
 from tools import prims_to_cons, cons_to_prims
 
@@ -89,14 +91,14 @@ def RungaKutta2(U_n, g, a, t, p):
     None
     """
 
-    L_n = RHSOperator(U_n, g, a, t)
+    L_n, g.speed_max = RHSOperator(U_n, g.ibeg, g.iend, g.jbeg, g.jend, g.kbeg, g.kend, a.gamma, g.dt, g.dxi, np.float64(g.speed_max))
 
     U_star = U_n + L_n
     # User source term call.
     g.boundary(U_star, p)
     # My need to recalculate the time step here.
 
-    L_star = RHSOperator(U_star, g, a, t)
+    L_star, g.speed_max = RHSOperator(U_star, g.ibeg, g.iend, g.jbeg, g.jend, g.kbeg, g.kend, a.gamma, g.dt, g.dxi, np.float64(g.speed_max))
 
     U_np1 = U_n + 0.5*(L_n + L_star)
     # User source term call.
@@ -166,21 +168,21 @@ def RungaKutta3(U_n, g, a, t, p):
     None
     """
 
-    L_n = RHSOperator(U_n, g, a, t)
+    L_n, g.speed_max = RHSOperator(U_n, g.ibeg, g.iend, g.jbeg, g.jend, g.kbeg, g.kend, a.gamma, g.dt, g.dxi, g.speed_max)
 
     U_star = U_n + L_n
     # User source term call.
     g.boundary(U_star, p)
     # My need to recalculate the time step here.
 
-    L_star = RHSOperator(U_star, g, a, t)
+    L_star, g.speed_max = RHSOperator(U_star, g.ibeg, g.iend, g.jbeg, g.jend, g.kbeg, g.kend, a.gamma, g.dt, g.dxi, g.speed_max)
 
     U_star_star = 0.25*(3.0*U_n + U_star + L_n)
     # User source term call.
     g.boundary(U_star_star, p)
     # My need to recalculate the time step here.
 
-    L_star_star = RHSOperator(U_star_star, g, a, t)
+    L_star_star, g.speed_max = RHSOperator(U_star_star, g.ibeg, g.iend, g.jbeg, g.jend, g.kbeg, g.kend, a.gamma, g.dt, g.dxi, g.speed_max)
 
     U_np1 = 1.0/3.0*(U_n + 2.0*U_star_star + 2.0*L_star_star)
     # User source term call.

@@ -30,16 +30,27 @@ class Problem:
         self.parameter = {
             'Name':'Shock Cloud',
 
-            'Dimensions':'3D',
-            'x1 min':-0.5,
-            'x1 max':1.5,
+            'Dimensions':'2D',
+            # 'x1 min':-0.5,
+            # 'x1 max':1.5,
+            # 'x2 min':0.0,
+            # 'x2 max':1.0,
+            # 'x3 min':-2.0,
+            # 'x3 max':2.0,
+            #
+            # 'resolution x1':64,
+            # 'resolution x2':32,
+            # 'resolution x3':128,
+
+            'x1 min':0.0,
+            'x1 max':1.0,
             'x2 min':0.0,
             'x2 max':1.0,
-            'x3 min':-2.0,
-            'x3 max':2.0,
+            'x3 min':0.0,
+            'x3 max':1.0,
 
-            'resolution x1':64,
-            'resolution x2':32,
+            'resolution x1':128,
+            'resolution x2':128,
             'resolution x3':128,
 
             'cfl':0.3,
@@ -61,7 +72,7 @@ class Problem:
             'velocity unit':1.0,
 
             'optimisation': 'numba',
-            'riemann':'hllc',
+            'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
@@ -92,13 +103,13 @@ class Problem:
         V[prs, X < shock] = 167.345
         V[vx1, X < shock] = 0.0
         V[vx2, X < shock] = 0.0
-        V[vx3, X < shock] = 0.0
+        #V[vx3, X < shock] = 0.0
 
         V[rho, X > shock] = 1.0
         V[prs, X > shock] = 1.0
         V[vx1, X > shock] = -11.2536
         V[vx2, X > shock] = 0.0
-        V[vx3, X < shock] = 0.0
+        #V[vx3, X < shock] = 0.0
 
         cloud = 0.15
         V[rho, R < cloud] = 10.0

@@ -1,4 +1,5 @@
 
+import sys
 import numba as nb
 import numpy as np
 from numba import prange
@@ -6,7 +7,7 @@ from numba import prange
 from settings import *
 
 
-@nb.jit(cache=True, parallel=False)
+@nb.jit(cache=True, nopython=True, parallel=False)
 def tvdlf(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
@@ -45,7 +46,7 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.
@@ -69,8 +70,8 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
     flux = 0.5*(FL + FR - Smax*(UR - UL))
     pres = 0.5*(VL[prs] + VR[prs])
 
-    if Smax.max() > speed_max:
-        speed_max = Smax.max()
+    if np.maximum(Smax) > speed_max:
+        speed_max = np.maximum(Smax, dtype=np.float64)
 
     dflux = -(flux[:, 1:] - flux[:, :-1])*dtdx
     dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
@@ -78,7 +79,7 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
     return dflux, speed_max
 
 
-@nb.jit(cache=True, parallel=False)
+@nb.jit(cache=True, nopython=True, parallel=False)
 def hll(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
@@ -118,7 +119,7 @@ def hll(FL, FR, UL, UR, VL, VR,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.
@@ -153,8 +154,8 @@ def hll(FL, FR, UL, UR, VL, VR,
     scrh = np.maximum(np.absolute(SL),
                       np.absolute(SR))
 
-    if np.max(scrh) > speed_max:
-        speed_max = np.max(scrh)
+    if np.minimum(scrh) > speed_max:
+        speed_max = np.maximum(scrh, dtype=np.float64)
 
     imax = flux.shape[1]
 
@@ -182,7 +183,7 @@ def hll(FL, FR, UL, UR, VL, VR,
 
 
 #@profile
-@nb.jit(cache=True, parallel=False)
+@nb.jit(cache=True, nopython=True, parallel=False)
 def hllc(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
@@ -222,7 +223,7 @@ def hllc(FL, FR, UL, UR, VL, VR,
     dtdx: numpy.float64-like
         Ratio of time and space deltas.
 
-    vxn, vxt, vxb: numpy.int8-like
+    vxn, vxt, vxb: numpy.int32-like
         index representing the normal, tangential and
         bitangential velocity components relative to the
         sweep direction.
@@ -263,8 +264,8 @@ def hllc(FL, FR, UL, UR, VL, VR,
     scrh = np.maximum(np.absolute(SL),
                       np.absolute(SR))
 
-    if scrh.max() > speed_max:
-        speed_max = scrh.max()
+    if scrh.minimum() > speed_max:
+        speed_max = np.maximum(scrh, dtype=np.float64)
 
     #print(nb.typeof(flux.shape[1]))
 
