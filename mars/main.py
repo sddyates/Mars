@@ -4,6 +4,7 @@ __version__ = "0.2"
 __license__ = "MIT"
 
 import numpy as np
+import numba as nb
 import sys
 from datetime import datetime
 
@@ -31,6 +32,8 @@ def main_loop(problem):
     ----
     None.
     """
+
+    nb.config.THREADING_LAYER = 'omp'
 
     timing = Timer(problem.parameter)
 
@@ -104,7 +107,7 @@ def main_loop(problem):
         )
         timing.stop_io()
 
-        grid.update_dt()
+        grid.update_dt(U)
 
     else:
 
