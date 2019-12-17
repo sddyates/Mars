@@ -7,9 +7,7 @@ from settings import *
 
 
 @nb.jit(cache=True, parallel=False)
-def tvdlf(FL, FR, UL, UR, VL, VR,
-    speed_max, gamma, dtdx,
-    vxn, vxt, vxb):
+def tvdlf(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
     """
     Synopsis
     --------
@@ -79,9 +77,7 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
 
 
 @nb.jit(cache=True, parallel=False)
-def hll(FL, FR, UL, UR, VL, VR,
-    speed_max, gamma, dtdx,
-    vxn, vxt, vxb):
+def hll(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
 
     """
     Synopsis
@@ -183,9 +179,7 @@ def hll(FL, FR, UL, UR, VL, VR,
 
 #@profile
 @nb.jit(cache=True, parallel=False)
-def hllc(FL, FR, UL, UR, VL, VR,
-    speed_max, gamma, dtdx,
-    vxn, vxt, vxb):
+def hllc(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
 
     """
     Synopsis

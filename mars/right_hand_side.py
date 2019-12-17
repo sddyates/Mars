@@ -102,12 +102,12 @@ def RHSOperator(U, g, a, t):
     t.start_space_loop()
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    if U.shape[0] == 3:
+    if a.is_1D:
 
         g.vxntb = [2, 3, 4]
         rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
 
-    if U.shape[0] == 4:
+    if a.is_2D:
 
         for j in range(g.jbeg, g.jend):
             g.vxntb = [2, 3, 4]
@@ -117,7 +117,7 @@ def RHSOperator(U, g, a, t):
             g.vxntb = [3, 2, 4]
             rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t)
 
-    if U.shape[0] == 5:
+    if a.is_3D:
 
         for k in range(g.jbeg, g.jend):
             for j in range(g.jbeg, g.jend):

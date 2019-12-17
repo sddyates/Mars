@@ -2,8 +2,8 @@
 import os
 import sys
 import numpy as np
-from evtk.hl import gridToVTK, imageToVTK
 import h5py
+import evtk
 
 from settings import *
 from tools import cons_to_prims
@@ -126,7 +126,7 @@ class OutputInput:
             V_vtk_vx2 = np.copy(
                 np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
                 order='F')
-            imageToVTK(
+            evtk.hl.imageToVTK(
                 self._file_name,
                 origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
                 spacing = (g.dx1, g.dx2, 0.0),
@@ -138,7 +138,7 @@ class OutputInput:
         return
 
         if p['Dimensions'] == '3D':
-            gridToVTK(
+            evtk.hl.gridToVTK(
                 self._file_name,
                 g.x1_verts,
                 g.x2_verts,

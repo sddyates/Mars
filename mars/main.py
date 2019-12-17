@@ -53,7 +53,7 @@ def main_loop(problem):
 
     #  Initialise Algorithms.
     print("    Assigning algorithms...")
-    algorithm = Algorithm(problem.parameter, log)
+    algorithm = Algorithm(problem.parameter)
 
     #  Generate state vector to hold conservative
     #  and primative variables.

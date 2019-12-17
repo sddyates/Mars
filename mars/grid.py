@@ -3,6 +3,86 @@ import numpy as np
 import sys
 
 
+spec = [
+
+        self.speed_max = np.float64(0.0)
+        self.cfl = np.float64(p['cfl'])
+        self.small_dt = np.float64(1.0e-12)
+        self.dt = np.float64(p['initial dt'])
+        self.ddt = np.float64(p['max dt increase'])
+        self.t_max = np.float64(p['max time'])
+        self.t = np.float64(p['initial t'])
+        self.vxntb = [2, 3, 4]
+
+        if p['reconstruction'] == 'flat':
+            self.gz = 1
+        elif p['reconstruction'] == 'linear':
+            self.gz = 2
+        elif p['reconstruction'] == 'parabolic':
+            self.gz = 3
+
+    ('speed_max', nb.float64),
+
+    ('x1min', nb.float64),
+    ('x1max', nb.float64),
+    ('x2min', nb.float64),
+    ('x2max', nb.float64),
+    ('x3min', nb.float64),
+    ('x3max', nb.float64),
+
+    ('nx1', nb.int64),
+    ('nx2', nb.int64),
+    ('nx3', nb.int64),
+    ('rez', nb.int64),
+
+    ('dx1', nb.float64),
+    ('dx2', nb.float64),
+    ('dx3', nb.float64),
+    ('dxi', nb.float64),
+    ('min_dxi', nb.float64),
+
+    ('dv', nb.float64),
+
+    ('ibeg', nb.int64),
+    ('iend', nb.int64),
+    ('jbeg', nb.int64),
+    ('jend', nb.int64),
+    ('kbeg', nb.int64),
+    ('kend', nb.int64),
+
+    ('lower_bc_ibeg', nb.int64),
+    ('lower_bc_iend', nb.int64),
+    ('lower_bc_jbeg', nb.int64),
+    ('lower_bc_jend', nb.int64),
+    ('lower_bc_kbeg', nb.int64),
+    ('lower_bc_kend', nb.int64),
+
+    ('upper_bc_ibeg', nb.int64),
+    ('upper_bc_iend', nb.int64),
+    ('upper_bc_jbeg', nb.int64),
+    ('upper_bc_jend', nb.int64),
+    ('upper_bc_kbeg', nb.int64),
+    ('upper_bc_kend', nb.int64),
+
+    ('imax', nb.int64),
+    ('jmax', nb.int64),
+    ('kmax', nb.int64),
+
+    ('nvar', nb.int64),
+
+    ('shape_flux_x1', nb.int64[:, :]),
+    ('shape_flux_x2', nb.int64[:, :]),
+    ('shape_flux_x3', nb.int64[:, :]),
+
+    ('x1', nb.float64),
+    ('x2', nb.float64),
+    ('x3', nb.float64),
+
+    ('x1_verts', nb.float64),
+    ('x2_verts', nb.float64),
+    ('x3_verts', nb.float64),
+]
+
 class Grid:
 
     """
@@ -57,7 +137,7 @@ class Grid:
             self.rez = self.nx1
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
-            self.dxi = [self.dx1]
+            self.dxi = np.array([self.dx1], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.ibeg = self.gz
@@ -76,10 +156,12 @@ class Grid:
             elif p['method'] == 'mhd':
                 self.nvar = 4
 
-            self.shape_internal = [self.nvar, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
-
-            self.shape_flux = [[self.nvar, self.nx1 + 1]]
+            self.shape_internal = np.array(
+                [self.nvar, self.nx1], dtype=np.int64)
+            self.shape_flux_x1 = np.array(
+                [self.nvar, self.nx1 + 1], dtype=np.int64)
+            self.shape_flux = np.array(
+                [[self.nvar, self.nx1 + 1]], dtype=np.int64)
 
             self.x1 = self._x1()
 
@@ -98,7 +180,7 @@ class Grid:
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
-            self.dxi = [self.dx1, self.dx2]
+            self.dxi = np.array([self.dx1, self.dx2], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.da = self.dx1*self.dx2
@@ -125,12 +207,15 @@ class Grid:
             elif p['method'] == 'mhd':
                 self.nvar = 6
 
-            self.shape_internal = [self.nvar, self.nx2, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
-            self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
+            self.shape_internal = np.array(
+                [self.nvar, self.nx2, self.nx1], dtype=np.int64)
+            self.shape_flux_x1 = np.array(
+                [self.nvar, self.nx1 + 1], dtype=np.int64)
+            self.shape_flux_x2 = np.array(
+                [self.nvar, self.nx2 + 1], dtype=np.int64)
 
-            self.shape_flux = [[self.nvar, self.nx1 + 1],
-                               [self.nvar, self.nx2 + 1]]
+            self.shape_flux = np.array([[self.nvar, self.nx1 + 1],
+                               [self.nvar, self.nx2 + 1]], dtype=np.int64)
 
             self.x1 = self._x1()
             self.x2 = self._x2()
@@ -155,7 +240,8 @@ class Grid:
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
             self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
             self.dx3 = (abs(self.x3min) + abs(self.x3max))/self.nx3
-            self.dxi = [self.dx1, self.dx2, self.dx3]
+            self.dxi = np.array(
+                [self.dx1, self.dx2, self.dx3], dtype=np.float64)
             self.min_dxi = np.amin(self.dxi)
 
             self.dv = self.dx1*self.dx2*self.dx3
@@ -190,14 +276,18 @@ class Grid:
             elif p['method'] == 'mhd':
                 self.nvar = 8
 
-            self.shape_internal = [self.nvar, self.nx3, self.nx2, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
-            self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
-            self.shape_flux_x3 = [self.nvar, self.nx3 + 1]
+            self.shape_internal = np.array(
+                [self.nvar, self.nx3, self.nx2, self.nx1], dtype=np.int64)
+            self.shape_flux_x1 = np.array(
+                [self.nvar, self.nx1 + 1], dtype=np.int64)
+            self.shape_flux_x2 = np.array(
+                [self.nvar, self.nx2 + 1], dtype=np.int64)
+            self.shape_flux_x3 = np.array(
+                [self.nvar, self.nx3 + 1], dtype=np.int64)
 
-            self.shape_flux = [[self.nvar, self.nx1 + 1],
+            self.shape_flux = np.array([[self.nvar, self.nx1 + 1],
                                [self.nvar, self.nx2 + 1],
-                               [self.nvar, self.nx3 + 1]]
+                               [self.nvar, self.nx3 + 1]], np.int64)
 
             self.x1 = self._x1()
             self.x2 = self._x2()

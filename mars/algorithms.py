@@ -1,14 +1,26 @@
 
 import sys
 import numpy as np
+import numba as nb
 
-from riemann_solvers import tvdlf, hll, hllc
-from cython_lib.riemann_solvers import tvdlf_pyx, hll_pyx, hllc_pyx
-from reconstruction import flat, minmod
-from cython_lib.reconstruction import flat_pyx, minmod_pyx
 from time_stepping import Euler, RungaKutta2, RungaKutta3
+from riemann_solvers import tvdlf, hll, hllc
+from reconstruction import flat, minmod
+from cython_lib.riemann_solvers import tvdlf_pyx, hll_pyx, hllc_pyx
+from cython_lib.reconstruction import flat_pyx, minmod_pyx
 
+# spec = [
+#     ('is_1D', nb.boolean),
+#     ('is_2D', nb.boolean),
+#     ('is_3D', nb.boolean),
+#     ('p', ),
+#     ('gamma', nb.float64),
+#     ('gamma_1', nb.float64),
+#     ('igamma_1', nb.float64),
+#     ('small_pressure', nb.float64)
+# ]
 
+#@nb.jitclass(spec)
 class Algorithm:
     """
     Synopsis
@@ -23,7 +35,7 @@ class Algorithm:
     dictionary of problem parameters.
     """
 
-    def __init__(self, p, l):
+    def __init__(self, p):
         self._assign_riemann_solver(p)
         self._assign_reconstruction(p)
         self._assign_time_stepping(p)
@@ -33,7 +45,7 @@ class Algorithm:
         self.gamma = np.float64(p['gamma'])
         self.gamma_1 = np.float64(self.gamma - 1.0)
         self.igamma_1 = 1.0/self.gamma_1
-        self.smapp_pressure = 1.0e-12
+        self.small_pressure = 1.0e-12
 
 
     def _assign_riemann_solver(self, p):
@@ -63,6 +75,8 @@ class Algorithm:
         else:
             print('Error: invalid riennman solver.')
             sys.exit()
+        print(nb.typeof(self.riemann_solver))
+        return
 
 
     def _assign_reconstruction(self, p):

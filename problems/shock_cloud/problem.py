@@ -38,9 +38,9 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':64,
-            'resolution x2':64,
-            'resolution x3':64,
+            'resolution x1':256,
+            'resolution x2':256,
+            'resolution x3':256,
 
             'cfl':0.3,
             'initial dt':1.0e-6,
@@ -53,7 +53,7 @@ class Problem:
             'output primitives': True,
             'print to file':False,
             'profiling': True,
-            'restart file': 10,
+            'restart file':None,
 
             'gamma':1.666666,
             'density unit':1.0,
