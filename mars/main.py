@@ -43,13 +43,13 @@ def main_loop(problem):
     log.options()
 
     print("    Initialising IO...")
-    io = OutputInput(problem.parameter, log)
+    io = OutputInput(problem.parameter)
 
     if problem.parameter['restart file'] is not None:
         V = io.input(problem.parameter)
 
     #  Initialise grid.
-    grid = Grid(problem.parameter, log)
+    grid = Grid(problem.parameter)
 
     #  Initialise Algorithms.
     print("    Assigning algorithms...")
@@ -61,9 +61,9 @@ def main_loop(problem):
     #  user defined problem.
     if problem.parameter['restart file'] is None:
         print("    Creating arrays...")
-        V = grid.state_vector(problem.parameter, log)
+        V = grid.state_vector(problem.parameter)
         print("    Setting intial conditions...")
-        problem.initialise(V, grid, log)
+        problem.initialise(V, grid)
 
     #  Apply boundary conditions.
     print("    Applying boundary conditions...")

@@ -77,14 +77,14 @@ class Problem:
             'internal boundary':False
             }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, grid):
 
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x2, g.x1, indexing='ij')
+            Y, X = np.meshgrid(grid.x2, grid.x1, indexing='ij')
             R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2)
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x3, g.x2, g.x1, indexing='ij')
+            Z, Y, X = np.meshgrid(grid.x3, grid.x2, grid.x1, indexing='ij')
             R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
 
         shock = 0.6

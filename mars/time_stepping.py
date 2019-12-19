@@ -3,7 +3,7 @@ from right_hand_side import RHSOperator
 from tools import prims_to_cons, cons_to_prims
 
 
-def Euler(U, g, a, t, p):
+def Euler(U, grid, algorithm, timer, parameter):
     """
     Synopsis
     --------
@@ -40,11 +40,11 @@ def Euler(U, g, a, t, p):
     None
     """
 
-    U_new = U + RHSOperator(U, g, a, t)
+    U_new = U + RHSOperator(U, grid, algorithm, timer)
 
     # User source term call.
 
-    g.boundary(U_new, p)
+    g.boundary(U_new, parameter)
     del U
 
     # Analysis function call.
@@ -52,7 +52,7 @@ def Euler(U, g, a, t, p):
     return U_new
 
 
-def RungaKutta2(U_n, g, a, t, p):
+def RungaKutta2(U_n, grid, algorithm, timer, parameter):
     """
     Synopsis
     --------
@@ -89,18 +89,18 @@ def RungaKutta2(U_n, g, a, t, p):
     None
     """
 
-    L_n = RHSOperator(U_n, g, a, t)
+    L_n = RHSOperator(U_n, grid, algorithm, timer)
 
     U_star = U_n + L_n
     # User source term call.
-    g.boundary(U_star, p)
+    g.boundary(U_star, parameter)
     # My need to recalculate the time step here.
 
-    L_star = RHSOperator(U_star, g, a, t)
+    L_star = RHSOperator(U_star, grid, algorithm, timer)
 
     U_np1 = U_n + 0.5*(L_n + L_star)
     # User source term call.
-    g.boundary(U_np1, p)
+    g.boundary(U_np1, parameter)
 
     del L_n, U_star, L_star, U_n
 
@@ -129,7 +129,7 @@ def RungaKutta2(U_n, g, a, t, p):
     # return U_new
 
 
-def RungaKutta3(U_n, g, a, t, p):
+def RungaKutta3(U_n, grid, algorithm, timer, parameter):
     """
     Synopsis
     --------
@@ -166,25 +166,25 @@ def RungaKutta3(U_n, g, a, t, p):
     None
     """
 
-    L_n = RHSOperator(U_n, g, a, t)
+    L_n = RHSOperator(U_n, grid, algorithm, timer)
 
     U_star = U_n + L_n
     # User source term call.
-    g.boundary(U_star, p)
+    g.boundary(U_star, parameter)
     # My need to recalculate the time step here.
 
-    L_star = RHSOperator(U_star, g, a, t)
+    L_star = RHSOperator(U_star, grid, algorithm, timer)
 
     U_star_star = 0.25*(3.0*U_n + U_star + L_n)
     # User source term call.
-    g.boundary(U_star_star, p)
+    g.boundary(U_star_star, parameter)
     # My need to recalculate the time step here.
 
-    L_star_star = RHSOperator(U_star_star, g, a, t)
+    L_star_star = RHSOperator(U_star_star, grid, algorithm, timer)
 
     U_np1 = 1.0/3.0*(U_n + 2.0*U_star_star + 2.0*L_star_star)
     # User source term call.
-    g.boundary(U_np1, p)
+    g.boundary(U_np1, parameter)
 
     del L_n, U_star, U_star_star, L_star, L_star_star, U_n
 

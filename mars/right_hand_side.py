@@ -8,7 +8,7 @@ from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons
 
 
-def flux_difference(U, g, a, t):
+def flux_difference(U, grid, algorithm, timer):
     """
     Synopsis
     --------
@@ -43,34 +43,34 @@ def flux_difference(U, g, a, t):
     """
 
     V = np.empty(shape=U.shape, dtype=np.float64)
-    cons_to_prims(U, V, a.gamma_1)
+    cons_to_prims(U, V, algorithm.gamma_1)
 
-    t.start_reconstruction()
-    VL, VR = a.reconstruction(V)
-    t.stop_reconstruction()
+    timer.start_reconstruction()
+    VL, VR = algorithm.reconstruction(V)
+    timer.stop_reconstruction()
 
     UL = np.empty(shape=VL.shape, dtype=np.float64)
     UR = np.empty(shape=VR.shape, dtype=np.float64)
-    prims_to_cons(VL, UL, a.igamma_1)
-    prims_to_cons(VR, UR, a.igamma_1)
+    prims_to_cons(VL, UL, algorithm.igamma_1)
+    prims_to_cons(VR, UR, algorithm.igamma_1)
 
     FL = np.empty(shape=VL.shape, dtype=np.float64)
     FR = np.empty(shape=VR.shape, dtype=np.float64)
-    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
-    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
+    flux_tensor(UL, VL, FL, grid.vxntb[0], grid.vxntb[1], grid.vxntb[2])
+    flux_tensor(UR, VR, FR, grid.vxntb[0], grid.vxntb[1], grid.vxntb[2])
 
-    t.start_riemann()
-    dflux, g.speed_max = a.riemann_solver(
+    timer.start_riemann()
+    dflux, grid.speed_max = algorithm.riemann_solver(
         FL, FR, UL, UR, VL, VR,
-        g.speed_max, a.gamma, g.dt/g.dxi[g.vxntb[0]-2],
-        g.vxntb[0], g.vxntb[1], g.vxntb[2]
+        grid.speed_max, a.gamma, grid.dt/grid.dxi[grid.vxntb[0]-2],
+        grid.vxntb[0], grid.vxntb[1], grid.vxntb[2]
     )
-    t.stop_riemann()
+    timer.stop_riemann()
 
     return dflux
 
 
-def RHSOperator(U, g, a, t):
+def RHSOperator(U, grid, algorithm, timer):
     """
     Synopsis
     --------
@@ -84,7 +84,7 @@ def RHSOperator(U, g, a, t):
 
     g: object-like
     object containing all variables related to
-    the grid, e.g. cell width.
+    the grid, e.grid. cell width.
 
     a: object-like
     object containing specified algorithms for use
@@ -99,40 +99,48 @@ def RHSOperator(U, g, a, t):
     None
     """
 
-    t.start_space_loop()
+    timer.start_space_loop()
+
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    if a.is_1D:
+    if algorithm.is_1D:
 
-        g.vxntb = [2, 3, 4]
-        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
+        grid.vxntb = [2, 3, 4]
+        rhs[:, grid.ibeg:grid.iend] = flux_difference(
+            U, grid, algorithm, timer)
 
-    if a.is_2D:
+    if algorithm.is_2D:
 
-        for j in range(g.jbeg, g.jend):
-            g.vxntb = [2, 3, 4]
-            rhs[:, j, g.ibeg:g.iend] = flux_difference(U[:, j, :], g, a, t)
+        for j in range(grid.jbeg, grid.jend):
+            grid.vxntb = [2, 3, 4]
+            rhs[:, j, grid.ibeg:grid.iend] = flux_difference(
+                U[:, j, :], grid, algorithm, timer)
 
-        for i in range(g.ibeg, g.iend):
-            g.vxntb = [3, 2, 4]
-            rhs[:, g.jbeg:g.jend, i] += flux_difference(U[:, :, i], g, a, t)
+        for i in range(grid.ibeg, grid.iend):
+            grid.vxntb = [3, 2, 4]
+            rhs[:, grid.jbeg:grid.jend, i] += flux_difference(
+                U[:, :, i], grid, algorithm, timer)
 
-    if a.is_3D:
+    if algorithm.is_3D:
 
-        for k in range(g.jbeg, g.jend):
-            for j in range(g.jbeg, g.jend):
-                g.vxntb = [2, 3, 4]
-                rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, t)
+        for k in range(grid.jbeg, grid.jend):
+            for j in range(grid.jbeg, grid.jend):
+                grid.vxntb = [2, 3, 4]
+                rhs[:, k, j, grid.ibeg:grid.iend] = flux_difference(
+                    U[:, k, j, :], grid, algorithm, timer)
 
-        for k in range(g.kbeg, g.kend):
-            for i in range(g.ibeg, g.iend):
-                g.vxntb = [3, 2, 4]
-                rhs[:, k, g.jbeg:g.jend, i] += flux_difference(U[:, k, :, i], g, a, t)
+        for k in range(grid.kbeg, grid.kend):
+            for i in range(grid.ibeg, grid.iend):
+                grid.vxntb = [3, 2, 4]
+                rhs[:, k, grid.jbeg:grid.jend, i] += flux_difference(
+                    U[:, k, :, i], grid, algorithm, timer)
 
-        for j in range(g.jbeg, g.jend):
-            for i in range(g.ibeg, g.iend):
-                g.vxntb = [4, 2, 3]
-                rhs[:, g.kbeg:g.kend, j, i] += flux_difference(U[:, :, j, i], g, a, t)
-    t.stop_space_loop()
+        for j in range(grid.jbeg, grid.jend):
+            for i in range(grid.ibeg, grid.iend):
+                grid.vxntb = [4, 2, 3]
+                rhs[:, grid.kbeg:grid.kend, j, i] += flux_difference(
+                    U[:, :, j, i], grid, algorithm, timer)
+
+    timer.stop_space_loop()
 
     return rhs

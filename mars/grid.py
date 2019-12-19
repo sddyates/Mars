@@ -1,27 +1,20 @@
 
 import numpy as np
+import numba as nb
 import sys
 
 
 spec = [
 
-        self.speed_max = np.float64(0.0)
-        self.cfl = np.float64(p['cfl'])
-        self.small_dt = np.float64(1.0e-12)
-        self.dt = np.float64(p['initial dt'])
-        self.ddt = np.float64(p['max dt increase'])
-        self.t_max = np.float64(p['max time'])
-        self.t = np.float64(p['initial t'])
-        self.vxntb = [2, 3, 4]
-
-        if p['reconstruction'] == 'flat':
-            self.gz = 1
-        elif p['reconstruction'] == 'linear':
-            self.gz = 2
-        elif p['reconstruction'] == 'parabolic':
-            self.gz = 3
-
     ('speed_max', nb.float64),
+    ('cfl', nb.float64),
+    ('small_dt', nb.float64),
+    ('dt', nb.float64),
+    ('ddt', nb.float64),
+    ('t_max', nb.float64),
+    ('t', nb.float64),
+    ('vxntb', nb.int64[:]),
+    ('gz', nb.int64),
 
     ('x1min', nb.float64),
     ('x1max', nb.float64),
@@ -82,7 +75,7 @@ spec = [
     ('x2_verts', nb.float64),
     ('x3_verts', nb.float64),
 ]
-
+@nb.jitclass(spec)
 class Grid:
 
     """
@@ -110,30 +103,30 @@ class Grid:
     Expand the definitions to 3D.
     """
 
-    def __init__(self, p, l):
+    def __init__(self, parameter):
 
         self.speed_max = np.float64(0.0)
-        self.cfl = np.float64(p['cfl'])
+        self.cfl = np.float64(parameter['cfl'])
         self.small_dt = np.float64(1.0e-12)
-        self.dt = np.float64(p['initial dt'])
-        self.ddt = np.float64(p['max dt increase'])
-        self.t_max = np.float64(p['max time'])
-        self.t = np.float64(p['initial t'])
+        self.dt = np.float64(parameter['initial dt'])
+        self.ddt = np.float64(parameter['max dt increase'])
+        self.t_max = np.float64(parameter['max time'])
+        self.t = np.float64(parameter['initial t'])
         self.vxntb = [2, 3, 4]
 
-        if p['reconstruction'] == 'flat':
+        if parameter['reconstruction'] == 'flat':
             self.gz = 1
-        elif p['reconstruction'] == 'linear':
+        elif parameter['reconstruction'] == 'linear':
             self.gz = 2
-        elif p['reconstruction'] == 'parabolic':
+        elif parameter['reconstruction'] == 'parabolic':
             self.gz = 3
 
-        if p['Dimensions'] == '1D':
+        if parameter['Dimensions'] == '1D':
 
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
+            self.x1min = parameter['x1 min']
+            self.x1max = parameter['x1 max']
 
-            self.nx1 = p['resolution x1']
+            self.nx1 = parameter['resolution x1']
             self.rez = self.nx1
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
@@ -151,9 +144,9 @@ class Grid:
 
             self.imax = self.upper_bc_iend
 
-            if p['method'] == 'hydro':
+            if parameter['method'] == 'hydro':
                 self.nvar = 3
-            elif p['method'] == 'mhd':
+            elif parameter['method'] == 'mhd':
                 self.nvar = 4
 
             self.shape_internal = np.array(
@@ -167,15 +160,15 @@ class Grid:
 
             self.x1_verts = self._x1_verts()
 
-        if p['Dimensions'] == '2D':
+        if parameter['Dimensions'] == '2D':
 
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
-            self.x2min = p['x2 min']
-            self.x2max = p['x2 max']
+            self.x1min = parameter['x1 min']
+            self.x1max = parameter['x1 max']
+            self.x2min = parameter['x2 min']
+            self.x2max = parameter['x2 max']
 
-            self.nx1 = p['resolution x1']
-            self.nx2 = p['resolution x2']
+            self.nx1 = parameter['resolution x1']
+            self.nx2 = parameter['resolution x2']
             self.rez = self.nx1*self.nx2
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
@@ -202,9 +195,9 @@ class Grid:
 
             self.jmax = self.upper_bc_jend
 
-            if p['method'] == 'hydro':
+            if parameter['method'] == 'hydro':
                 self.nvar = 4
-            elif p['method'] == 'mhd':
+            elif parameter['method'] == 'mhd':
                 self.nvar = 6
 
             self.shape_internal = np.array(
@@ -223,18 +216,18 @@ class Grid:
             self.x1_verts = self._x1_verts()
             self.x2_verts = self._x2_verts()
 
-        if p['Dimensions'] == '3D':
+        if parameter['Dimensions'] == '3D':
 
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
-            self.x2min = p['x2 min']
-            self.x2max = p['x2 max']
-            self.x3min = p['x3 min']
-            self.x3max = p['x3 max']
+            self.x1min = parameter['x1 min']
+            self.x1max = parameter['x1 max']
+            self.x2min = parameter['x2 min']
+            self.x2max = parameter['x2 max']
+            self.x3min = parameter['x3 min']
+            self.x3max = parameter['x3 max']
 
-            self.nx1 = p['resolution x1']
-            self.nx2 = p['resolution x2']
-            self.nx3 = p['resolution x3']
+            self.nx1 = parameter['resolution x1']
+            self.nx2 = parameter['resolution x2']
+            self.nx3 = parameter['resolution x3']
             self.rez = self.nx1*self.nx2*self.nx3
 
             self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
@@ -271,9 +264,9 @@ class Grid:
             self.jmax = self.upper_bc_jend
             self.kmax = self.upper_bc_kend
 
-            if p['method'] == 'hydro':
+            if parameter['method'] == 'hydro':
                 self.nvar = 5
-            elif p['method'] == 'mhd':
+            elif parameter['method'] == 'mhd':
                 self.nvar = 8
 
             self.shape_internal = np.array(
@@ -336,17 +329,17 @@ class Grid:
         b = self.x3[-1] + self.dx3/2.0
         return np.append(a, b)
 
-    def state_vector(self, p, l):
-        if p['Dimensions'] == '1D':
+    def state_vector(self, parameter):
+        if parameter['Dimensions'] == '1D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx1),
                              dtype=np.float64)
-        elif p['Dimensions'] == '2D':
+        elif parameter['Dimensions'] == '2D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx2,
                              2*self.gz + self.nx1),
                              dtype=np.float64)
-        elif p['Dimensions'] == '3D':
+        elif parameter['Dimensions'] == '3D':
             return np.zeros((self.nvar,
                              2*self.gz + self.nx3,
                              2*self.gz + self.nx2,
@@ -394,22 +387,34 @@ class Grid:
         return
 
 
-    def boundary(self, V, p):
-        if p['Dimensions'] == '1D':
-            self._lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            self._upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-        elif p['Dimensions'] == '2D':
-            self._lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            self._upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-            self._lowerX2BC(V, p['lower x2 boundary'], p['Dimensions'])
-            self._upperX2BC(V, p['upper x2 boundary'], p['Dimensions'])
-        elif p['Dimensions'] == '3D':
-            self._lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            self._upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-            self._lowerX2BC(V, p['lower x2 boundary'], p['Dimensions'])
-            self._upperX2BC(V, p['upper x2 boundary'], p['Dimensions'])
-            self._lowerX3BC(V, p['lower x3 boundary'], p['Dimensions'])
-            self._upperX3BC(V, p['upper x3 boundary'], p['Dimensions'])
+    def boundary(self, V, parameter):
+        if parameter['Dimensions'] == '1D':
+            self._lowerX1BC(
+                V, parameter['lower x1 boundary'], parameter['Dimensions'])
+            self._upperX1BC(
+                V, parameter['upper x1 boundary'], parameter['Dimensions'])
+        elif parameter['Dimensions'] == '2D':
+            self._lowerX1BC(
+                V, parameter['lower x1 boundary'], parameter['Dimensions'])
+            self._upperX1BC(
+                V, parameter['upper x1 boundary'], parameter['Dimensions'])
+            self._lowerX2BC(
+                V, parameter['lower x2 boundary'], parameter['Dimensions'])
+            self._upperX2BC(
+                V, parameter['upper x2 boundary'], parameter['Dimensions'])
+        elif parameter['Dimensions'] == '3D':
+            self._lowerX1BC(
+                V, parameter['lower x1 boundary'], parameter['Dimensions'])
+            self._upperX1BC(
+                V, parameter['upper x1 boundary'], parameter['Dimensions'])
+            self._lowerX2BC(
+                V, parameter['lower x2 boundary'], parameter['Dimensions'])
+            self._upperX2BC(
+                V, parameter['upper x2 boundary'], parameter['Dimensions'])
+            self._lowerX3BC(
+                V, parameter['lower x3 boundary'], parameter['Dimensions'])
+            self._upperX3BC(
+                V, parameter['upper x3 boundary'], parameter['Dimensions'])
         else:
             print('Error, invalid number of dimensions.')
             sys.exit()

@@ -4,18 +4,21 @@ from datetime import datetime
 
 class Timer:
 
-    def __init__(self, p):
+    def __init__(self, parameter):
 
-        self.active = p['profiling']
+        self.active = parameter['profiling']
 
         if self.active:
 
-            if p['Dimensions'] == '1D':
-                self._resolution = p['resolution x1']
-            elif p['Dimensions'] == '2D':
-                self._resolution = p['resolution x1']*p['resolution x2']
+            if parameter['Dimensions'] == '1D':
+                self._resolution = parameter['resolution x1']
+            elif parameter['Dimensions'] == '2D':
+                self._resolution = parameter['resolution x1']\
+                    *parameter['resolution x2']
             else:
-                self._resolution = p['resolution x1']*p['resolution x2']*p['resolution x3']
+                self._resolution = parameter['resolution x1']\
+                    *parameter['resolution x2']\
+                    *parameter['resolution x3']
 
             self.total_sim = 0.0
             self.total_io = 0.0
