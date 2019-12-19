@@ -30,30 +30,41 @@ class Problem:
         self.parameter = {
             'Name':'Shock Cloud',
 
-            'Dimensions':'2D',
+            'Dimensions':'3D',
             'x1 min':0.0,
             'x1 max':1.0,
-            'x2 min':0.0,
-            'x2 max':1.0,
-            'x3 min':0.0,
+            'x2 min':0.25,
+            'x2 max':0.75,
+            'x3 min':-1.0,
             'x3 max':1.0,
 
-            'resolution x1':64,
-            'resolution x2':64,
+            'resolution x1':32,
+            'resolution x2':16,
             'resolution x3':64,
+
+            # 'x1 min':0.0,
+            # 'x1 max':1.0,
+            # 'x2 min':0.0,
+            # 'x2 max':1.0,
+            # 'x3 min':0.0,
+            # 'x3 max':1.0,
+            #
+            # 'resolution x1':64,
+            # 'resolution x2':64,
+            # 'resolution x3':64,
 
             'cfl':0.3,
             'initial dt':1.0e-6,
             'max dt increase':1.5,
             'initial t': 0.0,
-            'max time':2.0e-1,
+            'max time':1.0e-1,
 
             'save frequency': 1.0e-2,
-            'output type': ['numpy', 'vtk', 'h5'],
+            'output type': ['vtk'],
             'output primitives': True,
             'print to file':False,
             'profiling': True,
-            'restart file': 10,
+            'restart file':None,
 
             'gamma':1.666666,
             'density unit':1.0,
@@ -79,13 +90,17 @@ class Problem:
 
     def initialise(self, V, g, l):
 
+        x_shift = 0.8
+        y_shift = 0.5
+        z_shift = 0.5
+
         if self.parameter['Dimensions'] == '2D':
             Y, X = np.meshgrid(g.x2, g.x1, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2)
+            R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2)
 
         if self.parameter['Dimensions'] == '3D':
             Z, Y, X = np.meshgrid(g.x3, g.x2, g.x1, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
+            R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2 + (Z - z_shift)**2)
 
         shock = 0.6
         V[rho, X < shock] = 3.86859

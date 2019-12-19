@@ -119,7 +119,7 @@ def RHSOperator(U, g, a, t):
 
     if U.shape[0] == 5:
 
-        for k in range(g.jbeg, g.jend):
+        for k in range(g.kbeg, g.kend):
             for j in range(g.jbeg, g.jend):
                 g.vxntb = [2, 3, 4]
                 rhs[:, k, j, g.ibeg:g.iend] = flux_difference(U[:, k, j, :], g, a, t)

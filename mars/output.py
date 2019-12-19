@@ -2,7 +2,7 @@
 import os
 import sys
 import numpy as np
-from evtk.hl import gridToVTK, imageToVTK
+import evtk
 import h5py
 
 from settings import *
@@ -85,15 +85,16 @@ class OutputInput:
         data.create_dataset('density', data=V[rho])
         data.create_dataset('pressure', data=V[prs])
         data.create_dataset('velocity x1', data=V[vx1])
-
         origin = [g.x1min]
         extent = [g.x1max]
         resolution = [g.nx1]
+
         if p['Dimensions'] == "2D":
             data.create_dataset('velocity x2', data=V[vx2])
             origin.append(g.x2min)
             extent.append(g.x2max)
             resolution.append(g.nx2)
+
         if p['Dimensions'] == "3D":
             data.create_dataset('velocity x3', data=V[vx3])
             origin.append(g.x3min)
@@ -126,7 +127,7 @@ class OutputInput:
             V_vtk_vx2 = np.copy(
                 np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
                 order='F')
-            imageToVTK(
+            evtk.hl.imageToVTK(
                 self._file_name,
                 origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
                 spacing = (g.dx1, g.dx2, 0.0),
@@ -135,10 +136,9 @@ class OutputInput:
                             "vx1":V_vtk_vx1,
                             "vx2":V_vtk_vx2}
             )
-        return
 
         if p['Dimensions'] == '3D':
-            gridToVTK(
+            evtk.hl.gridToVTK(
                 self._file_name,
                 g.x1_verts,
                 g.x2_verts,
@@ -149,6 +149,8 @@ class OutputInput:
                             "vx2":V[vx2].T,
                             "vx3":V[vx3].T}
             )
+
+        return
 
 
     def _write_numpy(self, V, g, a, p):

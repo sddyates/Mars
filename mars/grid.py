@@ -213,16 +213,19 @@ class Grid:
             self.x2_verts = self._x2_verts()
             self.x3_verts = self._x3_verts()
 
+
     def _x1(self):
         a = self.x1min - self.dx1*self.gz
         b = self.x1max + self.dx1*self.gz
         c = self.nx1 + 2*self.gz
         return np.linspace(a, b, c)
 
+
     def _x1_verts(self):
         a = self.x1 - self.dx1/2.0
         b = self.x1[-1] + self.dx1/2.0
         return np.append(a, b)
+
 
     def _x2(self):
         a = self.x2min - self.dx2*self.gz
@@ -230,10 +233,12 @@ class Grid:
         c = self.nx2 + 2*self.gz
         return np.linspace(a, b, c)
 
+
     def _x2_verts(self):
         a = self.x2 - self.dx2/2.0
         b = self.x2[-1] + self.dx2/2.0
         return np.append(a, b)
+
 
     def _x3(self):
         a = self.x3min - self.dx3*self.gz
@@ -241,10 +246,12 @@ class Grid:
         c = self.nx3 + 2*self.gz
         return np.linspace(a, b, c)
 
+
     def _x3_verts(self):
         a = self.x3 - self.dx3/2.0
         b = self.x3[-1] + self.dx3/2.0
         return np.append(a, b)
+
 
     def state_vector(self, p, l):
         if p['Dimensions'] == '1D':
@@ -265,6 +272,7 @@ class Grid:
         else:
             print('Error, invalid number of dimensions.')
             sys.exit()
+
 
     def build_fluxes(self, vxn):
         if vxn == 2:
@@ -324,6 +332,7 @@ class Grid:
             print('Error, invalid number of dimensions.')
             sys.exit()
 
+
     def _lowerX1BC(self, V, bc_type, dim):
 
         if bc_type == 'reciprocal' and dim == '1D':
@@ -364,6 +373,7 @@ class Grid:
         else:
             print('Error, invalid lower x1 boundary.')
             sys.exit()
+
 
     def _upperX1BC(self, V, bc_type, dim):
 
@@ -407,6 +417,7 @@ class Grid:
             print('Error, invalid upper x1 boundary.')
             sys.exit()
 
+
     def _lowerX2BC(self, V, bc_type, dim):
 
         if bc_type == 'reciprocal' and dim == '2D':
@@ -439,6 +450,7 @@ class Grid:
         else:
             print('Error, invalid lower x2 boundary.')
             sys.exit()
+
 
     def _upperX2BC(self, V, bc_type, dim):
 
@@ -473,6 +485,7 @@ class Grid:
             print('Error, invalid upper x2 boundary.')
             sys.exit()
 
+
     def _lowerX3BC(self, V, bc_type, dim):
 
         if bc_type == 'reciprocal' and dim == '3D':
@@ -490,6 +503,7 @@ class Grid:
         else:
             print('Error, invalid upper x3 boundary.')
             sys.exit()
+
 
     def _upperX3BC(self, V, bc_type, dim):
 
