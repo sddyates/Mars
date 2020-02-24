@@ -65,7 +65,7 @@ Mars is written in python allowing for rich on the fly analysis. This can be don
     if __name__ == "__main__":
         main_loop(Problem())
 
-This can be modified to perform batch simulations where simulation parameters are modified per iteration. For example, to perform three simulations concurrently at increasing resolution in the `x1`-direction:
+This can be modified to perform batch simulations where simulation parameters are modified per iteration. For example, to perform three simulations, run one at a time, at increasing resolution in the `x1`-direction:
 
     if __name__ == "__main__":
         p = Problem()
