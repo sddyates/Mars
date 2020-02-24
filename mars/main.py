@@ -33,7 +33,6 @@ def main_loop(problem):
     """
 
     timing = Timer(problem.parameter)
-
     timing.start_sim()
 
     log = Log(problem.parameter)

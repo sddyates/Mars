@@ -33,17 +33,22 @@ class Problem:
             'x3 min': 0.0,
             'x3 max': 1.0,
 
-            'resolution x1': 128,
-            'resolution x2': 128,
+            'resolution x1': 64,
+            'resolution x2': 64,
             'resolution x3': 1,
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
             'max dt increase': 1.5,
+            'initial t': 0.0,
             'max time': 0.5,
 
-            'plot frequency': 5.0e-2,
-            'print to file': False,
+            'save frequency': 1.0e-2,
+            'output type': ['vtk'],
+            'output primitives': True,
+            'print to file':False,
+            'profiling': True,
+            'restart file':None,
 
             'gamma': 1.666666,
             'density unit': 1.0,
