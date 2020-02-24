@@ -14,6 +14,10 @@ class OutputInput:
 
     def __init__(self, parameter):
 
+        #if parameter['restart file'] != None:
+        self._restart_file_number = parameter['restart file']
+        #else:
+        #    self._restart_file_number
         self._output_number = 0
         self._save_freq = np.float64(parameter['save frequency'])
         self._output_prims = parameter['output primitives']
@@ -52,9 +56,10 @@ class OutputInput:
             sys.exit()
 
 
-    def output(self, U, grid, algorithm, parameter):
+    def output(self, U, grid, algorithm):
         if (self._save_freq > 0.0) \
-            & (grid.t >= self._output_number*self._save_freq):
+            & (grid.t >= self._output_number*self._save_freq) \
+            & (self._output_number != self._restart_file_number):
 
             self._file_name = self._base_file_name + f"{self._output_number:04}"
 
@@ -64,7 +69,7 @@ class OutputInput:
                 V = self._convert(U, algorithm.gamma_1)
 
             for write in self.write_file:
-                write(V, grid, algorithm, parameter)
+                write(V, grid)
 
             self._output_number += 1
 
@@ -78,7 +83,7 @@ class OutputInput:
         return V
 
 
-    def _write_h5(self, V, grid, algorithm, parameter):
+    def _write_h5(self, V, grid):
 
         data = h5py.File(self._file_name + ".h5", "w")
 
@@ -89,12 +94,12 @@ class OutputInput:
         origin = [grid.x1min]
         extent = [grid.x1max]
         resolution = [grid.nx1]
-        if parameter['Dimensions'] == "2D":
+        if grid.dimensions == "2D":
             data.create_dataset('velocity x2', data=V[vx2])
             origin.append(grid.x2min)
             extent.append(grid.x2max)
             resolution.append(grid.nx2)
-        if parameter['Dimensions'] == "3D":
+        if grid.dimensions == "3D":
             data.create_dataset('velocity x3', data=V[vx3])
             origin.append(grid.x3min)
             extent.append(grid.x3max)
@@ -106,13 +111,13 @@ class OutputInput:
         data.attrs['time'] = grid.t
         data.attrs['dt'] = grid.dt
         data.attrs['output_number'] = self._output_number
-
         data.close()
+
         return
 
 
-    def _write_vtk(self, V, grid, algorithm, parameter):
-        if parameter['Dimensions'] == '2D':
+    def _write_vtk(self, V, grid):
+        if grid.dimensions == '2D':
             V_vtk = np.expand_dims(V, axis=4)
             V_vtk_rho = np.copy(
                 np.swapaxes(V_vtk, 1, 2)[rho, grid.jbeg:grid.jend, grid.ibeg:grid.iend, :],
@@ -135,9 +140,8 @@ class OutputInput:
                             "vx1":V_vtk_vx1,
                             "vx2":V_vtk_vx2}
             )
-        return
 
-        if parameter['Dimensions'] == '3D':
+        if grid.dimensions == '3D':
             evtk.hl.gridToVTK(
                 self._file_name,
                 grid.x1_verts,
@@ -149,23 +153,24 @@ class OutputInput:
                             "vx2":V[vx2].T,
                             "vx3":V[vx3].T}
             )
+        return
 
 
-    def _write_numpy(self, V, grid, algorithm, parameter):
-        if parameter['Dimensions'] == '1D':
+    def _write_numpy(self, V, grid):
+        if grid.dimensions == '1D':
             np.save(self._file_name, (V, grid.x1))
-        if parameter['Dimensions'] == '2D':
+        if grid.dimensions == '2D':
             np.save(self._file_name, (V, grid.x1, grid.x2))
-        if parameter['Dimensions'] == '3D':
+        if grid.dimensions == '3D':
             np.save(self._file_name, (V, grid.x1, grid.x2, grid.x3))
         return
 
 
-    def input(self, p):
-        return self._read_h5(p)
+    def input(self, parameter):
+        return self._read_h5(parameter)
 
 
-    def _read_h5(self, p):
+    def _read_h5(self, parameter):
 
         print(f'    Restarting from file: "{self._restart_file}"')
 
@@ -194,7 +199,7 @@ class OutputInput:
             array_size.append(density.shape[-3])
 
         self._output_number = data.attrs['output_number']
-        parameter['initial t'] = data.attrs['time']
+        parameter['initial time'] = data.attrs['time']
         parameter['initial dt'] = data.attrs['dt']
 
         V = np.zeros(array_size, dtype=np.float64)

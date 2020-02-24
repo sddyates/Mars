@@ -32,12 +32,12 @@ class Timer:
         else:
             None
 
-    def start_sim(self):
-        self._start_sim = self.start()
+    def start_simulation(self):
+        self._start_simulation = self.start()
         return
 
-    def stop_sim(self):
-        diff = self.stop(self._start_sim)
+    def stop_simulation(self):
+        diff = self.stop(self._start_simulation)
         self.total_sim += diff
         return
 

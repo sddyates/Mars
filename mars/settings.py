@@ -32,3 +32,13 @@ eng = prs
 mvx1 = vx1
 mvx2 = vx2
 mvx3 = vx3
+
+# class Settings:
+#
+#     def __init__(self, problem):
+#
+#
+#
+# class Convert_to_settings:
+#
+#     def __

@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import numba as nb
 
+from settings import *
 from time_stepping import Euler, RungaKutta2, RungaKutta3
 from riemann_solvers import tvdlf, hll, hllc
 from reconstruction import flat, minmod
@@ -35,17 +36,60 @@ class Algorithm:
     dictionary of problem parameters.
     """
 
-    def __init__(self, parameter):
-        self._assign_riemann_solver(p)
-        self._assign_reconstruction(p)
-        self._assign_time_stepping(p)
-        self.is_1D = parameter['Dimensions'] == '1D'
-        self.is_2D = parameter['Dimensions'] == '2D'
-        self.is_3D = parameter['Dimensions'] == '3D'
-        self.gamma = np.float64(parameter['gamma'])
+    def __init__(self, problem):
+        self._assign_riemann_solver(problem.parameter)
+        self._assign_reconstruction(problem.parameter)
+        self._assign_time_stepping(problem.parameter)
+        self._assign_source_terms(problem)
+
+        self.is_1D = problem.parameter['Dimensions'] == '1D'
+        self.is_2D = problem.parameter['Dimensions'] == '2D'
+        self.is_3D = problem.parameter['Dimensions'] == '3D'
+
+        self.unit_density = problem.parameter['density unit']
+        self.unit_length = problem.parameter['length unit']
+        self.unit_velocity = problem.parameter['velocity unit']
+
+        self.gamma = np.float64(problem.parameter['gamma'])
         self.gamma_1 = np.float64(self.gamma - 1.0)
         self.igamma_1 = 1.0/self.gamma_1
         self.small_pressure = 1.0e-12
+
+
+    def normalise_state_variables(self, V):
+        """
+        Synopsis
+        --------
+        This method normalises the state variables
+        with user defined units.
+
+        Args
+        ----
+        problem: python class
+        Instance of problem class
+        """
+        V[rho] /= self.unit_density
+        V[prs] /= self.unit_density*self.unit_velocity*self.unit_velocity
+        V[vx1] /= self.unit_velocity
+        V[vx2] /= self.unit_velocity
+        V[vx3] /= self.unit_velocity
+        return V
+
+
+    def _assign_source_terms(self, problem):
+        """
+        Synopsis
+        --------
+        This method assigns the function call for
+        the source terms.
+
+        Args
+        ----
+        problem: python class
+        Instance of problem class
+        """
+        self.source_terms = problem.source
+        return
 
 
     def _assign_riemann_solver(self, parameter):
@@ -87,7 +131,6 @@ class Algorithm:
         else:
             print('Error: invalid riennman solver.')
             sys.exit()
-        print(nb.typeof(self.riemann_solver))
 
         return
 

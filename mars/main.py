@@ -34,13 +34,13 @@ def main_loop(problem):
 
     timing = Timer(problem.parameter)
 
-    timing.start_sim()
+    timing.start_simulation()
 
     log = Log(problem.parameter)
 
-    log.logo()
+    log.logo(problem.parameter)
 
-    log.options()
+    log.options(problem.parameter)
 
     print("    Initialising IO...")
     io = OutputInput(problem.parameter)
@@ -53,7 +53,7 @@ def main_loop(problem):
 
     #  Initialise Algorithms.
     print("    Assigning algorithms...")
-    algorithm = Algorithm(problem.parameter)
+    algorithm = Algorithm(problem)
 
     #  Generate state vector to hold conservative
     #  and primative variables.
@@ -64,6 +64,9 @@ def main_loop(problem):
         V = grid.state_vector(problem.parameter)
         print("    Setting intial conditions...")
         problem.initialise(V, grid)
+
+    if problem.parameter['normalise']:
+        algorithm.normalise_state_variables(V)
 
     #  Apply boundary conditions.
     print("    Applying boundary conditions...")
@@ -81,10 +84,11 @@ def main_loop(problem):
     del V
 
     #  First output.
-    timing.start_io()
-    io.output(U, grid, algorithm, problem.parameter)
-    timing.stop_io()
-    print("")
+    if problem.parameter['restart file'] is None:
+        timing.start_io()
+        io.output(U, grid, algorithm)
+        timing.stop_io()
+        print("")
 
     log.begin()
 
@@ -96,12 +100,10 @@ def main_loop(problem):
         )
         timing.stop_step()
 
-        log.step(grid, timing)
+        log.step(grid, timing, problem.parameter)
 
         timing.start_io()
-        io.output(
-            U, grid, algorithm, problem.parameter
-        )
+        io.output(U, grid, algorithm)
         timing.stop_io()
 
         grid.update_dt()
@@ -114,16 +116,14 @@ def main_loop(problem):
         )
         timing.stop_step()
 
-        log.step(grid, timing)
+        log.step(grid, timing, problem.parameter)
 
     timing.start_io()
-    io.output(
-        U, grid, algorithm, problem.parameter
-    )
+    io.output(U, grid, algorithm)
     timing.stop_io()
 
-    timing.stop_sim()
+    timing.stop_simulation()
 
-    log.end(timing)
+    log.end(timing, problem.parameter)
 
     return U

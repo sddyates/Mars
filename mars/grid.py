@@ -4,78 +4,78 @@ import numba as nb
 import sys
 
 
-spec = [
-
-    ('speed_max', nb.float64),
-    ('cfl', nb.float64),
-    ('small_dt', nb.float64),
-    ('dt', nb.float64),
-    ('ddt', nb.float64),
-    ('t_max', nb.float64),
-    ('t', nb.float64),
-    ('vxntb', nb.int64[:]),
-    ('gz', nb.int64),
-
-    ('x1min', nb.float64),
-    ('x1max', nb.float64),
-    ('x2min', nb.float64),
-    ('x2max', nb.float64),
-    ('x3min', nb.float64),
-    ('x3max', nb.float64),
-
-    ('nx1', nb.int64),
-    ('nx2', nb.int64),
-    ('nx3', nb.int64),
-    ('rez', nb.int64),
-
-    ('dx1', nb.float64),
-    ('dx2', nb.float64),
-    ('dx3', nb.float64),
-    ('dxi', nb.float64),
-    ('min_dxi', nb.float64),
-
-    ('dv', nb.float64),
-
-    ('ibeg', nb.int64),
-    ('iend', nb.int64),
-    ('jbeg', nb.int64),
-    ('jend', nb.int64),
-    ('kbeg', nb.int64),
-    ('kend', nb.int64),
-
-    ('lower_bc_ibeg', nb.int64),
-    ('lower_bc_iend', nb.int64),
-    ('lower_bc_jbeg', nb.int64),
-    ('lower_bc_jend', nb.int64),
-    ('lower_bc_kbeg', nb.int64),
-    ('lower_bc_kend', nb.int64),
-
-    ('upper_bc_ibeg', nb.int64),
-    ('upper_bc_iend', nb.int64),
-    ('upper_bc_jbeg', nb.int64),
-    ('upper_bc_jend', nb.int64),
-    ('upper_bc_kbeg', nb.int64),
-    ('upper_bc_kend', nb.int64),
-
-    ('imax', nb.int64),
-    ('jmax', nb.int64),
-    ('kmax', nb.int64),
-
-    ('nvar', nb.int64),
-
-    ('shape_flux_x1', nb.int64[:, :]),
-    ('shape_flux_x2', nb.int64[:, :]),
-    ('shape_flux_x3', nb.int64[:, :]),
-
-    ('x1', nb.float64),
-    ('x2', nb.float64),
-    ('x3', nb.float64),
-
-    ('x1_verts', nb.float64),
-    ('x2_verts', nb.float64),
-    ('x3_verts', nb.float64),
-]
-@nb.jitclass(spec)
+# spec = [
+#
+#     ('speed_max', nb.float64),
+#     ('cfl', nb.float64),
+#     ('small_dt', nb.float64),
+#     ('dt', nb.float64),
+#     ('ddt', nb.float64),
+#     ('t_max', nb.float64),
+#     ('t', nb.float64),
+#     ('vxntb', nb.int64[:]),
+#     ('gz', nb.int64),
+#
+#     ('x1min', nb.float64),
+#     ('x1max', nb.float64),
+#     ('x2min', nb.float64),
+#     ('x2max', nb.float64),
+#     ('x3min', nb.float64),
+#     ('x3max', nb.float64),
+#
+#     ('nx1', nb.int64),
+#     ('nx2', nb.int64),
+#     ('nx3', nb.int64),
+#     ('rez', nb.int64),
+#
+#     ('dx1', nb.float64),
+#     ('dx2', nb.float64),
+#     ('dx3', nb.float64),
+#     ('dxi', nb.float64),
+#     ('min_dxi', nb.float64),
+#
+#     ('dv', nb.float64),
+#
+#     ('ibeg', nb.int64),
+#     ('iend', nb.int64),
+#     ('jbeg', nb.int64),
+#     ('jend', nb.int64),
+#     ('kbeg', nb.int64),
+#     ('kend', nb.int64),
+#
+#     ('lower_bc_ibeg', nb.int64),
+#     ('lower_bc_iend', nb.int64),
+#     ('lower_bc_jbeg', nb.int64),
+#     ('lower_bc_jend', nb.int64),
+#     ('lower_bc_kbeg', nb.int64),
+#     ('lower_bc_kend', nb.int64),
+#
+#     ('upper_bc_ibeg', nb.int64),
+#     ('upper_bc_iend', nb.int64),
+#     ('upper_bc_jbeg', nb.int64),
+#     ('upper_bc_jend', nb.int64),
+#     ('upper_bc_kbeg', nb.int64),
+#     ('upper_bc_kend', nb.int64),
+#
+#     ('imax', nb.int64),
+#     ('jmax', nb.int64),
+#     ('kmax', nb.int64),
+#
+#     ('nvar', nb.int64),
+#
+#     ('shape_flux_x1', nb.int64[:, :]),
+#     ('shape_flux_x2', nb.int64[:, :]),
+#     ('shape_flux_x3', nb.int64[:, :]),
+#
+#     ('x1', nb.float64),
+#     ('x2', nb.float64),
+#     ('x3', nb.float64),
+#
+#     ('x1_verts', nb.float64),
+#     ('x2_verts', nb.float64),
+#     ('x3_verts', nb.float64),
+# ]
+# @nb.jitclass(spec)
 class Grid:
 
     """
@@ -111,8 +111,9 @@ class Grid:
         self.dt = np.float64(parameter['initial dt'])
         self.ddt = np.float64(parameter['max dt increase'])
         self.t_max = np.float64(parameter['max time'])
-        self.t = np.float64(parameter['initial t'])
+        self.t = np.float64(parameter['initial time'])
         self.vxntb = [2, 3, 4]
+        self.dimensions = parameter['Dimensions']
 
         if parameter['reconstruction'] == 'flat':
             self.gz = 1

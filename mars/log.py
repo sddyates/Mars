@@ -18,7 +18,7 @@ class Log:
                 + f"x{parameter['resolution x2']}"\
                 + f"x{parameter['resolution x3']}"
 
-    def logo(self):
+    def logo(self, parameter):
         print("")
         print(r"    -----------------------------------------------")
         print(r"                                                   ")
@@ -31,7 +31,7 @@ class Log:
         print(r"    -----------------------------------------------")
         return
 
-    def options(self):
+    def options(self, parameter):
         print(f"    Problem settings:")
         print(f"        - Name: {parameter['Name']}")
         print(f"        - Dimensions: {parameter['Dimensions']}")
@@ -52,20 +52,22 @@ class Log:
         return print("    Starting time integration loop...")
 
 
-    def step(self, g, timer):
+    def step(self, grid, timer, parameter):
 
         percent = grid.t*100.0/parameter['max time']
 
         string = f"    n = {self.iteration}, t = {grid.t:.2e}, dt = {grid.dt:.2e}, {percent:.1f}%"
 
         if timer.active & (self.iteration > 0):
-            string += f", {timer.Mcell_av/self.iteration:.3f} Mcell/s ({timer.step_av/self.iteration:.3f} s,"
+            string += f", ({timer.Mcell_av/self.iteration:.3f} Mcell/s {timer.step_av/self.iteration:.3f} s/update),"
 
         if self.iteration > 0:
-            total_time_at_current_dt = gridt_max/griddt*timer.step_av/self.iteration
-            time_done = timer.get_time() - timer._start_sim
+            total_time_at_current_dt = grid.t_max/grid.dt*timer.step_av/self.iteration
+            time_done = timer.get_time() - timer._start_simulation
+            #time_left = time_done*grid.t/parameter['max time'] -
 
-            string += f" {total_time_at_current_dt - time_done:.3f} s)"
+            #string += f" {total_time_at_current_dt - time_done:.3f} s)"
+            #string += f" time: (elapsed = {time_done:.3f} s, estimate remaining = {time_done:.3f} s)"
 
         print(string)
 
@@ -73,7 +75,7 @@ class Log:
         return
 
 
-    def end(self, timer):
+    def end(self, timer, parameter):
         print("")
         print(f"    Simulation {parameter['Name']} complete...")
         print("")

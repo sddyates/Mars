@@ -62,7 +62,7 @@ def flux_difference(U, grid, algorithm, timer):
     timer.start_riemann()
     dflux, grid.speed_max = algorithm.riemann_solver(
         FL, FR, UL, UR, VL, VR,
-        grid.speed_max, a.gamma, grid.dt/grid.dxi[grid.vxntb[0]-2],
+        grid.speed_max, algorithm.gamma, grid.dt/grid.dxi[grid.vxntb[0]-2],
         grid.vxntb[0], grid.vxntb[1], grid.vxntb[2]
     )
     timer.stop_riemann()
