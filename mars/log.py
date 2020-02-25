@@ -3,6 +3,25 @@ import datetime as dt
 
 
 class Log:
+    """
+    Synopsis
+    --------
+    Timer class for timings of fuction calls and related.
+
+    Args
+    ----
+    p: dic-like
+    Dictionary of user defined ps, e.g.
+    maximum simulation time.
+
+    Methods
+    -------
+    Various
+
+    TODO
+    ----
+    None
+    """
 
     def __init__(self, p):
 
@@ -19,6 +38,7 @@ class Log:
                 + f" x {self.p['resolution x2']}"\
                 + f" x {self.p['resolution x3']}"
 
+
     def logo(self):
         print("")
         print(r"    -----------------------------------------------")
@@ -31,6 +51,7 @@ class Log:
         print(r"                                                   ")
         print(r"    -----------------------------------------------")
         return
+
 
     def options(self):
         print(f"    Problem settings:")
@@ -82,12 +103,13 @@ class Log:
         print("")
         print(f"    Simulation {self.p['Name']} complete...")
         print("")
-        print(f"    Total simulation time: {tot:.3f} s")
-        print(f"    IO time: {io:.3f} s ({100.0*io/tot:.1f} %)")
-        print(f"    Space integration time: {space:.3f} s ({100.0*space/tot:.1f} %)")
-        print(f"    Reconstruction time: {rec:.3f} s ({100.0*rec/tot:.1f} %)")
-        print(f"    Riemann time: {rie:.3f} s ({100.0*rie/tot:.1f} %)")
-        print(f"    Other: {other:.3f} s ({100.0*other/tot:.1f} %)")
+        print(f"    Timings:")
+        print(f"    Total simulation:    {tot:.3f} s")
+        print(f"    Spatial integration: {space:.3f} s ({100.0*space/tot:.1f} %)")
+        print(f"    Riemann:             {rie:.3f} s ({100.0*rie/tot:.1f} %)")
+        print(f"    Reconstruction:      {rec:.3f} s ({100.0*rec/tot:.1f} %)")
+        print(f"    IO:                  {io:.3f} s ({100.0*io/tot:.1f} %)")
+        print(f"    Other:               {other:.3f} s ({100.0*other/tot:.1f} %)")
         print("")
         print(f"    Average performance: {timing.Mcell_av/self.iteration:.3f} Mcell/s")
         print(f"    Average time per iteration: {timing.step_av/self.iteration:.3f} s")

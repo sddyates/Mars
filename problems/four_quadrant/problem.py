@@ -7,15 +7,18 @@ class Problem:
     Synopsis
     --------
     Proble class for the four quadrant.
+
     Args
     ----
     None
+
     Methods
     -------
     initialise
         Set all variables in each cell to  initialise the simulation.
     internal_bc
         Specify the internal boundary for the simulation.
+        
     TODO
     ----
     None

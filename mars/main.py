@@ -20,13 +20,16 @@ def main_loop(problem):
     Synopsis
     --------
     Evolve the (M)HD equations through t = 0 to t = "max time".
+
     Args
     ----
     problem: object-like.
     User defined simulation problem.
+
     Attributes
     ----------
     None.
+
     TODO
     ----
     None.

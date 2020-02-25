@@ -10,7 +10,9 @@ class Timer:
 
     Args
     ----
-    None
+    p: dic-like
+    Dictionary of user defined ps, e.g.
+    maximum simulation time.
 
     Methods
     -------
