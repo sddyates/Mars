@@ -6,6 +6,8 @@ Mars is inspired by the code [PLUTO](http://plutocode.ph.unito.it/) and makes us
 
 The code uses a single or two step predictor corrector method with an approximate Riemann solver, based on reconstructed fluid states of first or second order accuracy.
 
+Please see the [Wiki](https://github.com/sddyates/mars/wiki) pages for documentation
+
 ## Todo
 ### Code Infrastructure
 - [ ] Improve io class.
