@@ -44,16 +44,22 @@ class Problem:
             'cfl':0.3,
             'initial dt':1.0e-4,
             'max dt increase':1.5,
+            'initial t': 0.0,
             'max time':3.0e-1,
 
-            'plot frequency':3.0e-2,
+            'save frequency':3.0e-2,
+            'output type': ['numpy'],
+            'output primitives': True,
             'print to file':False,
+            'profiling': True,
+            'restart file':None,
 
             'gamma':1.666666,
             'density unit':100.0,
             'length unit':1.0,
             'velocity unit':1.0,
 
+            'optimisation': 'numba',
             'riemann':'hllc',
             'reconstruction':'linear',
             'limiter':'minmod',
@@ -70,41 +76,23 @@ class Problem:
             'internal boundary':False
             }
 
-    def initialise(self, V, g):
+    def initialise(self, V, g, l):
 
         if self.parameter['Dimensions'] == '2D':
-            for j in range(g.jbeg, g.jend):
-                for i in range(g.ibeg, g.iend):
-
-                    V[rho, j, i] = 1.0
-                    V[prs, j, i] = 1.0/self.parameter['gamma']
-
-                    r = np.sqrt(g.x1[i]*g.x1[i] + g.x2[j]*g.x2[j])
-                    if r < 0.1:
-                        V[rho, j, i] = 100.0
-                        V[prs, j, i] = 100.0
-
-                    V[vx1, j, i] = 0.0
-                    V[vx2, j, i] = 0.0
-
+            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
+            R = np.sqrt(X*X + Y*Y)
 
         if self.parameter['Dimensions'] == '3D':
-            for k in range(g.kbeg, g.kend):
-                for j in range(g.jbeg, g.jend):
-                    for i in range(g.ibeg, g.iend):
+            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
+            R = np.sqrt(X*X + Y*Y + Z*Z)
 
-                        V[rho, k, j, i] = 1.0
-                        V[prs, k, j, i] = 1.0/self.parameter['gamma']
+        V[vx1:] = 0.0
 
-                        r = np.sqrt(g.x1[i]*g.x1[i] + g.x2[j]*g.x2[j] + g.x3[k]*g.x3[k])
-                        if r < 0.1:
-                            V[rho, k, j, i] = 100.0
-                            V[prs, k, j, i] = 100.0
+        V[rho] = 1.0
+        V[prs] = 1.0/self.parameter['gamma']
 
-                        V[vx1, k, j, i] = 0.0
-                        V[vx2, k, j, i] = 0.0
-                        V[vx3, k, j, i] = 0.0
-
+        V[rho, R < 0.1] = 100.0
+        V[prs, R < 0.1] = 100.0
 
     def internal_bc():
         return None
