@@ -60,8 +60,8 @@ class Problem:
             'velocity unit':1.0,
 
             'optimisation': 'numba',
-            'riemann':'hllc',
-            'reconstruction':'linear',
+            'riemann':'tvdlf',
+            'reconstruction':'flat',
             'limiter':'minmod',
             'time stepping':'RK2',
             'method':'hydro',

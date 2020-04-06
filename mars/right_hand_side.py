@@ -6,7 +6,7 @@ from numba import prange
 
 from settings import *
 from tools import flux_tensor, cons_to_prims, prims_to_cons
-
+from stencils import OneD_first_order_stencil
 
 def flux_difference(U, g, a, t):
     """
@@ -42,30 +42,36 @@ def flux_difference(U, g, a, t):
     None
     """
 
-    V = np.empty(shape=U.shape, dtype=np.float64)
-    cons_to_prims(U, V, a.gamma_1)
-
-    t.start_reconstruction()
-    VL, VR = a.reconstruction(V)
-    t.stop_reconstruction()
-
-    UL = np.empty(shape=VL.shape, dtype=np.float64)
-    UR = np.empty(shape=VR.shape, dtype=np.float64)
-    prims_to_cons(VL, UL, a.igamma_1)
-    prims_to_cons(VR, UR, a.igamma_1)
-
-    FL = np.empty(shape=VL.shape, dtype=np.float64)
-    FR = np.empty(shape=VR.shape, dtype=np.float64)
-    flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
-    flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
-
-    t.start_riemann()
-    dflux, g.speed_max = a.riemann_solver(
-        FL, FR, UL, UR, VL, VR,
-        g.speed_max, a.gamma, g.dt/g.dxi[g.vxntb[0]-2],
+    dflux, g.speed_max = OneD_first_order_stencil(
+        U, a.gamma, a.gamma_1, a.igamma_1,
+        g.speed_max, g.dt/g.dxi[g.vxntb[0]-2],
         g.vxntb[0], g.vxntb[1], g.vxntb[2]
     )
-    t.stop_riemann()
+
+    # V = np.empty(shape=U.shape, dtype=np.float64)
+    # cons_to_prims(U, V, a.gamma_1)
+    #
+    # t.start_reconstruction()
+    # VL, VR = a.reconstruction(V)
+    # t.stop_reconstruction()
+    #
+    # UL = np.empty(shape=VL.shape, dtype=np.float64)
+    # UR = np.empty(shape=VR.shape, dtype=np.float64)
+    # prims_to_cons(VL, UL, a.igamma_1)
+    # prims_to_cons(VR, UR, a.igamma_1)
+    #
+    # FL = np.empty(shape=VL.shape, dtype=np.float64)
+    # FR = np.empty(shape=VR.shape, dtype=np.float64)
+    # flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
+    # flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
+    #
+    # t.start_riemann()
+    # dflux, g.speed_max = a.riemann_solver(
+    #     FL, FR, UL, UR, VL, VR,
+    #     g.speed_max, a.gamma, g.dt/g.dxi[g.vxntb[0]-2],
+    #     g.vxntb[0], g.vxntb[1], g.vxntb[2]
+    # )
+    # t.stop_riemann()
 
     return dflux
 
