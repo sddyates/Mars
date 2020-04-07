@@ -107,7 +107,7 @@ def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
     """
 
     #t.start_space_loop()
-    rhs = np.empty(shape=U.shape, dtype=np.float64)
+    rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
     gamma_1 = gamma - 1.0
     igamma_1 = 1.0/gamma_1
@@ -125,7 +125,9 @@ def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
         vxntb = [2, 3, 4]
         dtdx = dt/dxi[vxntb[0]-2]
 
-        #print("U shape before stencil:", U.shape)
+        if np.isnan(U[rho]).any():
+            print("rho is nan before:", U[rho])
+            sys.exit()
 
         dflux = OneD_first_order_stencil(
             U, gamma, gamma_1, igamma_1,

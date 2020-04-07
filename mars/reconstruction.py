@@ -28,9 +28,9 @@ def minmod(V):
     a non-regular grid can be used.
     """
 
-    m = np.empty((V.shape[0], V.shape[1] - 2), dtype=np.float64)
-    L = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
-    R = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    m = np.zeros((V.shape[0], V.shape[1] - 2), dtype=np.float64)
+    L = np.zeros((V.shape[0], m.shape[1] - 1), dtype=np.float64)
+    R = np.zeros((V.shape[0], m.shape[1] - 1), dtype=np.float64)
 
     #print(V.shape, m.shape, L.shape, R.shape)
 

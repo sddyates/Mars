@@ -133,8 +133,8 @@ def hll(FL, FR, UL, UR, VL, VR,
     None
     """
 
-    flux = np.empty(shape=FL.shape, dtype=np.float64)
-    pres = np.empty(shape=FL.shape[1], dtype=np.float64)
+    flux = np.zeros(shape=FL.shape, dtype=np.float64)
+    pres = np.zeros(shape=FL.shape[1], dtype=np.float64)
 
     # Estimate the leftmost and rightmost wave signal
     # speeds bounding the Riemann fan based on the
@@ -235,10 +235,10 @@ def hllc(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
     None
     """
 
-    usL = np.empty(FL.shape[0], dtype=np.float64)
-    usR = np.empty(FL.shape[0], dtype=np.float64)
-    flux = np.empty(shape=FL.shape, dtype=np.float64)
-    pres = np.empty(shape=FL.shape[1], dtype=np.float64)
+    usL = np.zeros(FL.shape[0], dtype=np.float64)
+    usR = np.zeros(FL.shape[0], dtype=np.float64)
+    flux = np.zeros(shape=FL.shape, dtype=np.float64)
+    pres = np.zeros(shape=FL.shape[1], dtype=np.float64)
 
     mxn = vxn
     mxt = vxt

@@ -77,7 +77,7 @@ def main_loop(problem):
         print("")
         sys.exit()
 
-    U = np.empty(shape=V.shape, dtype=np.float64)
+    U = np.zeros(shape=V.shape, dtype=np.float64)
     prims_to_cons(V, U, algorithm.igamma_1)
     del V
 

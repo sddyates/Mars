@@ -297,7 +297,7 @@ class Grid:
     def update_dt(self):
 
         dt_new = self.cfl*self.min_dxi/self.speed_max
-        self.dt = min(dt_new, self.ddt*dt_new)
+        self.dt = min(dt_new, self.ddt*self.dt)
 
         if (self.t + self.dt) > self.t_max:
             self.dt = self.t_max - self.t

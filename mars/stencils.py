@@ -10,7 +10,11 @@ from reconstruction import flat, minmod
 #@nb.jit(cache=True)
 def OneD_first_order_stencil(U, gamma, gamma_1, igamma_1, speed_max, dtdx, vxn, vxt, vxb):
 
-    V = np.empty(shape=U.shape, dtype=np.float64)
+    V = np.zeros(shape=U.shape, dtype=np.float64)
+
+    if np.isnan(U[rho]).any() or  np.isnan(V[rho]).any():
+        print("rho is nan before:", U[rho], V[rho])
+        sys.exit()
 
     # Conservitive to primative
     #print("before", U[rho], V[rho])
@@ -18,9 +22,13 @@ def OneD_first_order_stencil(U, gamma, gamma_1, igamma_1, speed_max, dtdx, vxn, 
 
     #print("After", U[rho], V[rho])
     #sys.exit()
-    if np.isnan(V[rho]).any():
-        print("U[rho] is nan:", U[rho])
+    if np.isnan(U[rho]).any() or  np.isnan(V[rho]).any():
+        print("rho is nan after:", U[rho], V[rho])
         sys.exit()
+
+    # if np.isnan(V[rho]).any():
+    #     print("V[rho] is nan:", V[rho])
+    #     sys.exit()
 
     if (V[rho] < 0).any():
         print("U[rho] < 0:", U[rho])
@@ -32,15 +40,15 @@ def OneD_first_order_stencil(U, gamma, gamma_1, igamma_1, speed_max, dtdx, vxn, 
 
     #print("Left and right states for V after reconstruction:", VL.shape, VR.shape)
 
-    UL = np.empty(shape=VL.shape, dtype=np.float64)
-    UR = np.empty(shape=VR.shape, dtype=np.float64)
+    UL = np.zeros(shape=VL.shape, dtype=np.float64)
+    UR = np.zeros(shape=VR.shape, dtype=np.float64)
 
     # Primative to conservative
     prims_to_cons(VL, UL, igamma_1)
     prims_to_cons(VR, UR, igamma_1)
 
-    FL = np.empty(shape=VL.shape, dtype=np.float64)
-    FR = np.empty(shape=VR.shape, dtype=np.float64)
+    FL = np.zeros(shape=VL.shape, dtype=np.float64)
+    FR = np.zeros(shape=VR.shape, dtype=np.float64)
 
     # Flux tensor
     flux_tensor(UL, VL, FL, vxn, vxt, vxb)
