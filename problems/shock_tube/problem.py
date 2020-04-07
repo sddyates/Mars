@@ -42,7 +42,7 @@ class Problem:
             'initial t': 0.0,
             'max time': 1.0,
 
-            'save frequency': 1.0e-1,
+            'save frequency': 1.0e-10,
             'output primitives': True,
             'output type': ['numpy'],
             'print to file': False,
@@ -55,10 +55,10 @@ class Problem:
             'velocity unit': 1.0,
 
             'optimisation': 'numba',
-            'riemann': 'hllc',
+            'riemann': 'tvdlf',
             'reconstruction': 'linear',
             'limiter': 'minmod',
-            'time stepping': 'RK3',
+            'time stepping': 'RK2',
             'method': 'hydro',
 
             'lower x1 boundary': 'outflow',

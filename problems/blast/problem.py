@@ -42,13 +42,13 @@ class Problem:
             'resolution x3':200,
 
             'cfl':0.3,
-            'initial dt':1.0e-4,
+            'initial dt':1.0e-5,
             'max dt increase':1.5,
             'initial t': 0.0,
             'max time':3.0e-1,
 
-            'save frequency':3.0e-2,
-            'output type': ['numpy'],
+            'save frequency':3.0e-10,
+            'output type': ['numpy', 'vtk'],
             'output primitives': True,
             'print to file':False,
             'profiling': True,
@@ -61,7 +61,7 @@ class Problem:
 
             'optimisation': 'numba',
             'riemann':'tvdlf',
-            'reconstruction':'flat',
+            'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
             'method':'hydro',

@@ -4,7 +4,7 @@ from numba import jit
 import numpy as np
 
 
-@nb.jit(cache=True)
+#@nb.jit(cache=True)
 def minmod(V):
     """
     Synopsis
@@ -32,7 +32,9 @@ def minmod(V):
     L = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
     R = np.empty((V.shape[0], m.shape[1] - 1), dtype=np.float64)
 
-    for var in range(V.shape[0]):
+    #print(V.shape, m.shape, L.shape, R.shape)
+
+    for var in nb.prange(V.shape[0]):
         for i in range(m.shape[1]):
 
             a = (V[var, i+1] - V[var, i])

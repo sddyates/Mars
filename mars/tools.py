@@ -90,6 +90,8 @@ def cons_to_prims(U, V, gamma_1):
 
     irho = 1.0/V[rho]
 
+    #print(V[rho])
+
     m2 = U[mvx1]**2
     V[vx1] = U[mvx1]*irho
     if U.shape[0] > 3:

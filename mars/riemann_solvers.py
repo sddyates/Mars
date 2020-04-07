@@ -2,11 +2,12 @@
 import numba as nb
 import numpy as np
 from numba import prange
+import sys
 
 from settings import *
 
 
-@nb.jit(cache=True, parallel=False)
+#@nb.jit(cache=True, parallel=False)
 def tvdlf(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
@@ -78,7 +79,7 @@ def tvdlf(FL, FR, UL, UR, VL, VR,
     return dflux, speed_max
 
 
-@nb.jit(cache=True, parallel=False)
+#@nb.jit(cache=True, parallel=False)
 def hll(FL, FR, UL, UR, VL, VR,
     speed_max, gamma, dtdx,
     vxn, vxt, vxb):
@@ -182,10 +183,8 @@ def hll(FL, FR, UL, UR, VL, VR,
 
 
 #@profile
-@nb.jit(cache=True, parallel=False)
-def hllc(FL, FR, UL, UR, VL, VR,
-    speed_max, gamma, dtdx,
-    vxn, vxt, vxb):
+#@nb.jit(cache=True, parallel=False)
+def hllc(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
 
     """
     Synopsis
@@ -249,7 +248,31 @@ def hllc(FL, FR, UL, UR, VL, VR,
     # speeds bounding the Riemann fan based on the
     # input states VL and VR accourding to the Davis
     # Method.
-    csL = np.sqrt(gamma*VL[prs, :]/VL[rho, :])
+    temp = gamma*VL[prs, :]/VL[rho, :]
+    csL = np.sqrt(temp)
+    #
+    # print(temp.any() < 0.0)
+    # print(np.isnan(temp.any()))
+
+    # if (temp.any() < 0.0) or np.isnan(temp.any()):
+    #     print(temp)
+    #     sys.exit()
+
+    #print("VL=", VL[prs]/VL[rho])
+    #sys.exit()
+
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            temp = gamma*VL[prs, :]/VL[rho, :]
+            csL = np.sqrt(temp)
+        except Warning as e:
+            print('error found:', e)
+            print("VL=", VL[rho], VL[prs])
+            sys.exit()
+
     sL_min = VL[vxn, :] - csL
     sL_max = VL[vxn, :] + csL
 
