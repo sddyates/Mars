@@ -55,7 +55,7 @@ def OneD_first_order_stencil(U, gamma, gamma_1, igamma_1, speed_max, dtdx, vxn, 
     flux_tensor(UR, VR, FR, vxn, vxt, vxb)
 
     # Riemann solver (tvdlf)
-    dflux, speed_max = tvdlf(
+    dflux, speed_max = hllc(
         FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb
     )
     if np.isnan(dflux).any():

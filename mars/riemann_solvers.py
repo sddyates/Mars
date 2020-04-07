@@ -248,31 +248,7 @@ def hllc(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
     # speeds bounding the Riemann fan based on the
     # input states VL and VR accourding to the Davis
     # Method.
-    temp = gamma*VL[prs, :]/VL[rho, :]
-    csL = np.sqrt(temp)
-    #
-    # print(temp.any() < 0.0)
-    # print(np.isnan(temp.any()))
-
-    # if (temp.any() < 0.0) or np.isnan(temp.any()):
-    #     print(temp)
-    #     sys.exit()
-
-    #print("VL=", VL[prs]/VL[rho])
-    #sys.exit()
-
-    import warnings
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        try:
-            temp = gamma*VL[prs, :]/VL[rho, :]
-            csL = np.sqrt(temp)
-        except Warning as e:
-            print('error found:', e)
-            print("VL=", VL[rho], VL[prs])
-            sys.exit()
-
+    csL = np.sqrt(gamma*VL[prs, :]/VL[rho, :])
     sL_min = VL[vxn, :] - csL
     sL_max = VL[vxn, :] + csL
 
@@ -357,3 +333,16 @@ def hllc(FL, FR, UL, UR, VL, VR, speed_max, gamma, dtdx, vxn, vxt, vxb):
     dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
 
     return dflux, speed_max
+
+
+    # import warnings
+    #
+    # with warnings.catch_warnings():
+    #     warnings.filterwarnings('error')
+    #     try:
+    #         temp = gamma*VL[prs, :]/VL[rho, :]
+    #         csL = np.sqrt(temp)
+    #     except Warning as e:
+    #         print('error found:', e)
+    #         print("VL=", VL[rho], VL[prs])
+    #         sys.exit()

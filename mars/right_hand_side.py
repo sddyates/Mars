@@ -112,37 +112,39 @@ def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
     gamma_1 = gamma - 1.0
     igamma_1 = 1.0/gamma_1
 
-    # if U.shape[0] == 3:
-    #
-    #     g.vxntb = [2, 3, 4]
-    #     rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
-
     if U.shape[0] == 3:
 
-        nvar = U.shape[0]
-        imax = U.shape[1]
+        g.vxntb = [2, 3, 4]
+        rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
 
-        vxntb = [2, 3, 4]
-        dtdx = dt/dxi[vxntb[0]-2]
+    speed_max = g.speed_max
 
-        if np.isnan(U[rho]).any():
-            print("rho is nan before:", U[rho])
-            sys.exit()
-
-        dflux = OneD_first_order_stencil(
-            U, gamma, gamma_1, igamma_1,
-            speed_max, dtdx,
-            2, 3, 4
-        )
-
-        #print("dflux shape:", dflux[0].shape)
-
-        for var in range(nvar):
-            for i in range(ibeg+2, iend-2):
-                #print("i=", i)
-                rhs[var, i] = dflux[0][var, i]
-
-        speed_max = dflux[1]
+    # if U.shape[0] == 3:
+    #
+    #     nvar = U.shape[0]
+    #     imax = U.shape[1]
+    #
+    #     vxntb = [2, 3, 4]
+    #     dtdx = dt/dxi[vxntb[0]-2]
+    #
+    #     if np.isnan(U[rho]).any():
+    #         print("rho is nan before:", U[rho])
+    #         sys.exit()
+    #
+    #     dflux = OneD_first_order_stencil(
+    #         U, gamma, gamma_1, igamma_1,
+    #         speed_max, dtdx,
+    #         2, 3, 4
+    #     )
+    #
+    #     #print("dflux shape:", dflux[0].shape)
+    #
+    #     for var in range(nvar):
+    #         for i in range(ibeg+2, iend-2):
+    #             #print("i=", i)
+    #             rhs[var, i] = dflux[0][var, i]
+    #
+    #     speed_max = dflux[1]
 
     #sys.exit()
 

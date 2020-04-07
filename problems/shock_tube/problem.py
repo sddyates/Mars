@@ -55,7 +55,7 @@ class Problem:
             'velocity unit': 1.0,
 
             'optimisation': 'numba',
-            'riemann': 'tvdlf',
+            'riemann': 'hllc',
             'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
