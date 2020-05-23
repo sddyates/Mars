@@ -2,7 +2,7 @@
 import os
 import sys
 import numpy as np
-import evtk.hl as vtk 
+import evtk.hl as vtk
 import h5py
 
 from settings import *
@@ -114,7 +114,7 @@ class OutputInput:
 
     def _write_vtk(self, V, g, a, p):
         if p['Dimensions'] == '2D':
-            V_vtk = np.expand_dims(V, axis=4)
+            V_vtk = np.expand_dims(V, axis=3)
             V_vtk_rho = np.copy(
                 np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :],
                 order='F')
