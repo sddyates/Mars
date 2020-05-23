@@ -89,16 +89,16 @@ def RungaKutta2(U_n, g, a, t, p):
     None
     """
 
-    #L_n = RHSOperator(U_n, g, a, t)
-    L_n, g.speed_max = RHSOperator(U_n, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
+    L_n = RHSOperator(U_n, g, a, t)
+    #L_n, g.speed_max = RHSOperator(U_n, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_star = U_n + L_n
     # User source term call.
     g.boundary(U_star, p)
     # My need to recalculate the time step here.
 
-    #L_star = RHSOperator(U_star, g, a, t)
-    L_star, g.speed_max = RHSOperator(U_star, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
+    L_star = RHSOperator(U_star, g, a, t)
+    #L_star, g.speed_max = RHSOperator(U_star, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_np1 = U_n + 0.5*(L_n + L_star)
     # User source term call.

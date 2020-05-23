@@ -77,7 +77,8 @@ def flux_difference(U, g, a, t):
 
 
 #@nb.jit(cache=True)
-def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
+def RHSOperator(U, g, a, t):
+#def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
     """
     Synopsis
     --------
@@ -109,15 +110,15 @@ def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
     #t.start_space_loop()
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    gamma_1 = gamma - 1.0
-    igamma_1 = 1.0/gamma_1
+    # gamma_1 = gamma - 1.0
+    # igamma_1 = 1.0/gamma_1
 
     if U.shape[0] == 3:
 
         g.vxntb = [2, 3, 4]
         rhs[:, g.ibeg:g.iend] = flux_difference(U, g, a, t)
 
-    speed_max = g.speed_max
+    #speed_max = g.speed_max
 
     # if U.shape[0] == 3:
     #
@@ -233,4 +234,4 @@ def RHSOperator(U, speed_max, dt, dxi, gamma, ibeg, iend, jbeg, jend):
 
     #print(speed_max)
 
-    return rhs, speed_max
+    return rhs#, speed_max
