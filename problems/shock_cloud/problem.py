@@ -75,7 +75,7 @@ class Problem:
             'upper x3 boundary':'outflow',
 
             'internal boundary':False
-            }
+        }
 
     def initialise(self, V, g, l):
 

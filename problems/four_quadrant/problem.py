@@ -18,7 +18,7 @@ class Problem:
         Set all variables in each cell to  initialise the simulation.
     internal_bc
         Specify the internal boundary for the simulation.
-        
+
     TODO
     ----
     None
@@ -106,38 +106,6 @@ class Problem:
         V[vx1, region_4] = 0.0
         V[vx2, region_4] = 0.0
         V[prs, region_4] = 1.5
-
-
-        # xt = 0.8
-        # yt = 0.8
-        #
-        # if self.parameter['Dimensions'] == '2D':
-        #     for j in range(g.jbeg, g.jend):
-        #         for i in range(g.ibeg, g.iend):
-        #
-        #             if g.x1[i] < xt and g.x2[j] < yt:
-        #                 V[rho, j, i] = 0.138
-        #                 V[vx1, j, i] = 1.206
-        #                 V[vx2, j, i] = 1.206
-        #                 V[prs, j, i] = 0.029
-        #
-        #             if g.x1[i] < xt and g.x2[j] > yt:
-        #                 V[rho, j, i] =  0.5323
-        #                 V[vx1, j, i] = 1.206
-        #                 V[vx2, j, i] = 0.0
-        #                 V[prs, j, i] = 0.3
-        #
-        #             if g.x1[i] > xt and g.x2[j] < yt:
-        #                 V[rho, j, i] = 0.5323
-        #                 V[vx1, j, i] = 0.0
-        #                 V[vx2, j, i] = 1.206
-        #                 V[prs, j, i] = 0.3
-        #
-        #             if g.x1[i] > xt and g.x2[j] > yt:
-        #                 V[rho, j, i] = 1.5
-        #                 V[vx1, j, i] = 0.0
-        #                 V[vx2, j, i] = 0.0
-        #                 V[prs, j, i] = 1.5
 
 
     def internal_bc():

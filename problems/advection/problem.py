@@ -71,20 +71,9 @@ class Problem:
 
     def initialise(self, V, g, l):
 
-        if self.parameter['Dimensions'] == '1D':
-            X = g.x1
-
-        if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2)
-
-        if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
-            R = np.sqrt((X - 0.8)**2 + (Y - 0.5)**2 + Z**2)
-
         V[prs, :] = 2.0
         V[vx1, :] = 4.0*np.pi
-        V[rho, :] = np.sin(X) + 4.0
+        V[rho, :] = np.sin(g.x1) + 4.0
 
         return
 
