@@ -12,7 +12,7 @@ from tools import cons_to_prims
 class OutputInput:
 
 
-    def __init__(self, p, l):
+    def __init__(self, p):
 
         self._output_number = 0
         self._save_freq = np.float64(p['save frequency'])

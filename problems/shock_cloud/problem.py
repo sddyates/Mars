@@ -30,7 +30,7 @@ class Problem:
         self.parameter = {
             'Name':'Shock Cloud',
 
-            'Dimensions':'3D',
+            'Dimensions':'2D',
             'x1 min':0.0,
             'x1 max':1.0,
             'x2 min':0.0,
@@ -38,15 +38,15 @@ class Problem:
             'x3 min':0.0,
             'x3 max':1.0,
 
-            'resolution x1':64,
-            'resolution x2':64,
-            'resolution x3':64,
+            'resolution x1':128,
+            'resolution x2':128,
+            'resolution x3':128,
 
             'cfl':0.3,
             'initial dt':1.0e-6,
             'max dt increase':1.5,
             'initial t': 0.0,
-            'max time':1.0e-1,
+            'max time':2.0e-1,
 
             'save frequency': 1.0e-2,
             'output type': ['vtk'],
@@ -60,24 +60,21 @@ class Problem:
             'length unit':1.0,
             'velocity unit':1.0,
 
+            'MPI': False,
+            'mpi_decomp': [1, 1, 1],
             'optimisation': 'numba',
-            'riemann':'hllc',
+            'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
             'method':'hydro',
 
-            'lower x1 boundary':'outflow',
-            'lower x2 boundary':'outflow',
-            'lower x3 boundary':'outflow',
-            'upper x1 boundary':'outflow',
-            'upper x2 boundary':'outflow',
-            'upper x3 boundary':'outflow',
+            'boundaries': ['outflow', 'periodic', 'outflow'],
 
             'internal boundary':False
         }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, g):
 
         x_shift = 0.8
         y_shift = 0.5

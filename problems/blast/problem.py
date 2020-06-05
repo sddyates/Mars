@@ -66,12 +66,7 @@ class Problem:
             'time stepping':'RK2',
             'method':'hydro',
 
-            'lower x1 boundary':'outflow',
-            'upper x1 boundary':'outflow',
-            'lower x2 boundary':'outflow',
-            'upper x2 boundary':'outflow',
-            'lower x3 boundary':'outflow',
-            'upper x3 boundary':'outflow',
+            'boundaries': ['periodic', 'periodic', 'periodic'],
 
             'internal boundary':False
             }

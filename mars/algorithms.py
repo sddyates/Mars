@@ -23,7 +23,7 @@ class Algorithm:
     dictionary of problem parameters.
     """
 
-    def __init__(self, p, l):
+    def __init__(self, p):
         self._assign_riemann_solver(p)
         self._assign_reconstruction(p)
         self._assign_time_stepping(p)

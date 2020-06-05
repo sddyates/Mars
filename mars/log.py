@@ -1,6 +1,7 @@
 
-import datetime as dt
+import sys
 
+import datetime as dt
 
 class Log:
     """
@@ -50,6 +51,7 @@ class Log:
         print(r"        ||  ||  || //      \\ ||  || \\\\\/ 0.2    ")
         print(r"                                                   ")
         print(r"    -----------------------------------------------")
+        sys.stdout.flush()
         return
 
 
@@ -67,11 +69,14 @@ class Log:
         print(f"        - Physics: {self.p['method']}")
         print(f"        - Gamma: {self.p['gamma']}")
         print("")
+        sys.stdout.flush()
         return
 
 
     def begin(self):
-        return print("    Starting time integration loop...")
+        print("    Starting time integration loop...")
+        sys.stdout.flush()
+        return
 
 
     def step(self, g, timing):
@@ -84,6 +89,7 @@ class Log:
             string += f", ({timing.Mcell:.3f} Mcell/s, {timing.step:.3f} s/n)"
 
         print(string)
+        sys.stdout.flush()
 
         self.iteration += 1
         return
@@ -114,4 +120,5 @@ class Log:
         print(f"    Average performance: {timing.Mcell_av/self.iteration:.3f} Mcell/s")
         print(f"    Average time per iteration: {timing.step_av/self.iteration:.3f} s")
         print("")
+        sys.stdout.flush()
         return

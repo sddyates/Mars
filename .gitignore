@@ -24,3 +24,6 @@ mars/cython_lib/*.html
 #  analysis logs
 *log
 *prof
+
+#  Editor stuff
+.ropeproject/*

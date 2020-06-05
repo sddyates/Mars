@@ -3,7 +3,7 @@ from right_hand_side import RHSOperator
 from tools import prims_to_cons, cons_to_prims
 
 
-def Euler(U, g, a, t, p):
+def Euler(U, g, a, decomp, t, p):
     """
     Synopsis
     --------
@@ -44,7 +44,7 @@ def Euler(U, g, a, t, p):
 
     # User source term call.
 
-    g.boundary(U_new, p)
+    g.boundary(U_new, decomp)
     del U
 
     # Analysis function call.
@@ -52,7 +52,7 @@ def Euler(U, g, a, t, p):
     return U_new
 
 
-def RungaKutta2(U_n, g, a, t, p):
+def RungaKutta2(U_n, g, a, decomp, t, p):
     """
     Synopsis
     --------
@@ -90,17 +90,19 @@ def RungaKutta2(U_n, g, a, t, p):
     """
 
     L_n = RHSOperator(U_n, g, a, t)
+    #L_n, g.speed_max = RHSOperator(U_n, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_star = U_n + L_n
     # User source term call.
-    g.boundary(U_star, p)
+    g.boundary(U_star, decomp)
     # My need to recalculate the time step here.
 
     L_star = RHSOperator(U_star, g, a, t)
+    #L_star, g.speed_max = RHSOperator(U_star, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_np1 = U_n + 0.5*(L_n + L_star)
     # User source term call.
-    g.boundary(U_np1, p)
+    g.boundary(U_np1, decomp)
 
     del L_n, U_star, L_star, U_n
 
@@ -129,7 +131,7 @@ def RungaKutta2(U_n, g, a, t, p):
     # return U_new
 
 
-def RungaKutta3(U_n, g, a, t, p):
+def RungaKutta3(U_n, g, a, decomp, t, p):
     """
     Synopsis
     --------
@@ -170,21 +172,21 @@ def RungaKutta3(U_n, g, a, t, p):
 
     U_star = U_n + L_n
     # User source term call.
-    g.boundary(U_star, p)
+    g.boundary(U_star, decomp)
     # My need to recalculate the time step here.
 
     L_star = RHSOperator(U_star, g, a, t)
 
     U_star_star = 0.25*(3.0*U_n + U_star + L_n)
     # User source term call.
-    g.boundary(U_star_star, p)
+    g.boundary(U_star_star, decomp)
     # My need to recalculate the time step here.
 
     L_star_star = RHSOperator(U_star_star, g, a, t)
 
     U_np1 = 1.0/3.0*(U_n + 2.0*U_star_star + 2.0*L_star_star)
     # User source term call.
-    g.boundary(U_np1, p)
+    g.boundary(U_np1, decomp)
 
     del L_n, U_star, U_star_star, L_star, L_star_star, U_n
 
