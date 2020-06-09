@@ -1,4 +1,5 @@
 
+import numpy as np
 from datetime import datetime
 
 
@@ -29,12 +30,7 @@ class Timer:
 
         if self.active:
 
-            if p['Dimensions'] == '1D':
-                self._resolution = p['resolution x1']
-            elif p['Dimensions'] == '2D':
-                self._resolution = p['resolution x1']*p['resolution x2']
-            else:
-                self._resolution = p['resolution x1']*p['resolution x2']*p['resolution x3']
+            self._resolution = np.prod(p['resolution'])
 
             self._resolution *= 1.0e-6
 

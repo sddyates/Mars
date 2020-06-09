@@ -2,6 +2,7 @@
 from mars import main_loop
 from mars.settings import *
 import numpy as np
+import sys
 
 class Problem:
     """
@@ -30,48 +31,40 @@ class Problem:
         self.parameter = {
             'Name':'Shock Cloud',
 
-            'Dimensions':'2D',
-            'x1 min':0.0,
-            'x1 max':1.0,
-            'x2 min':0.0,
-            'x2 max':1.0,
-            'x3 min':0.0,
-            'x3 max':1.0,
+            'Dimensions': '2D',
 
-            'resolution x1':128,
-            'resolution x2':128,
-            'resolution x3':128,
+            'min': [0.0, 0.0, 0.0],
+            'max': [1.0, 1.0, 1.0],
+            'resolution': [1, 240, 240],
 
-            'cfl':0.3,
-            'initial dt':1.0e-6,
-            'max dt increase':1.5,
+            'cfl': 0.3,
+            'initial dt': 1.0e-6,
+            'max dt increase': 1.5,
             'initial t': 0.0,
-            'max time':2.0e-1,
+            'max time': 1.0e-1,
 
             'save frequency': 1.0e-2,
             'output type': ['vtk'],
             'output primitives': True,
-            'print to file':False,
+            'print to file': False,
             'profiling': True,
-            'restart file':None,
+            'restart file': None,
 
-            'gamma':1.666666,
-            'density unit':1.0,
-            'length unit':1.0,
-            'velocity unit':1.0,
+            'gamma': 1.666666,
+            'density unit': 1.0,
+            'length unit': 1.0,
+            'velocity unit': 1.0,
 
-            'MPI': False,
-            'mpi_decomp': [1, 1, 1],
+            'mpi decomposition': [1, 2, 3],
             'optimisation': 'numba',
-            'riemann':'hll',
-            'reconstruction':'linear',
-            'limiter':'minmod',
-            'time stepping':'RK2',
-            'method':'hydro',
+            'riemann': 'hllc',
+            'reconstruction': 'linear',
+            'limiter': 'minmod',
+            'time stepping': 'RK2',
+            'method': 'hydro',
 
-            'boundaries': ['outflow', 'periodic', 'outflow'],
-
-            'internal boundary':False
+            'boundaries': ['outflow', 'outflow', 'outflow'],
+            'internal boundary': False
         }
 
     def initialise(self, V, g):
@@ -81,11 +74,11 @@ class Problem:
         z_shift = 0.5
 
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x2, g.x1, indexing='ij')
+            Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
             R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2)
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x3, g.x2, g.x1, indexing='ij')
+            Z, Y, X = np.meshgrid(g.x[0], g.x[1], g.x[2], indexing='ij')
             R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2 + (Z - z_shift)**2)
 
         shock = 0.6

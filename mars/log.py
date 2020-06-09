@@ -29,15 +29,17 @@ class Log:
         self.p = p
         self.iteration = 0
 
-        if self.p['Dimensions'] == '1D':
-            self.resolution = f"{self.p['resolution x1']}"
-        elif self.p['Dimensions'] == '2D':
-            self.resolution = f"{self.p['resolution x1']}"\
-                + f" x {self.p['resolution x2']}"
-        else:
-            self.resolution = f"{self.p['resolution x1']}"\
-                + f" x {self.p['resolution x2']}"\
-                + f" x {self.p['resolution x3']}"
+        self.resolution = f"{p['resolution']}"
+
+        # if self.p['Dimensions'] == '1D':
+        #     self.resolution = f"{self.p['resolution x1']}"
+        # elif self.p['Dimensions'] == '2D':
+        #     self.resolution = f"{self.p['resolution x1']}"\
+        #         + f" x {self.p['resolution x2']}"
+        # else:
+        #     self.resolution = f"{self.p['resolution x1']}"\
+        #         + f" x {self.p['resolution x2']}"\
+        #         + f" x {self.p['resolution x3']}"
 
 
     def logo(self):

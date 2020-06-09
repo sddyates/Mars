@@ -53,18 +53,22 @@ class OutputInput:
 
 
     def output(self, U, g, a, p):
+
         if (self._save_freq > 0.0) \
             & (g.t >= self._output_number*self._save_freq):
 
-            self._file_name = self._base_file_name + f"{self._output_number:04}"
+            if g.rank == 0:
+                self._file_name = self._base_file_name + f"{self._output_number:04}"
+                print(f"    Writing {self._io_type}: {self._output_number:04}")
 
-            print(f"    Writing {self._io_type}: {self._output_number:04}")
+            U_global = self._reduce_from_mpi(U, g)
 
-            if self._output_prims:
-                V = self._convert(U, a.gamma_1)
+            if g.rank == 0:
+                if self._output_prims:
+                    V = self._convert(U_global, a.gamma_1)
 
-            for write in self.write_file:
-                write(V, g, a, p)
+                for write in self.write_file:
+                    write(V, g, a, p)
 
             self._output_number += 1
 
@@ -74,7 +78,6 @@ class OutputInput:
     def _convert(self, U, gamma_1):
         V = np.zeros(shape=U.shape, dtype=np.float64)
         cons_to_prims(U, V, gamma_1)
-        del U
         return V
 
 
@@ -112,25 +115,50 @@ class OutputInput:
         return
 
 
+    # def _write_vtk(self, V, g, a, p):
+    #     if p['Dimensions'] == '2D':
+    #         V_vtk = np.expand_dims(V, axis=3)
+    #         V_vtk_rho = np.copy(
+    #             np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :],
+    #             order='F')
+    #         V_vtk_prs = np.copy(
+    #             np.swapaxes(V_vtk, 1, 2)[prs, g.jbeg:g.jend, g.ibeg:g.iend, :],
+    #             order='F')
+    #         V_vtk_vx1 = np.copy(
+    #             np.swapaxes(V_vtk, 1, 2)[vx1, g.jbeg:g.jend, g.ibeg:g.iend, :],
+    #             order='F')
+    #         V_vtk_vx2 = np.copy(
+    #             np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
+    #             order='F')
+    #         evtk.hl.imageToVTK(
+    #             self._file_name,
+    #             origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
+    #             spacing = (g.dx1, g.dx2, 0.0),
+    #             cellData = {"rho":V_vtk_rho,
+    #                         "prs":V_vtk_prs,
+    #                         "vx1":V_vtk_vx1,
+    #                         "vx2":V_vtk_vx2}
+    #         )
+
     def _write_vtk(self, V, g, a, p):
         if p['Dimensions'] == '2D':
             V_vtk = np.expand_dims(V, axis=3)
             V_vtk_rho = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[rho, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[rho, :, :, :],
                 order='F')
             V_vtk_prs = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[prs, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[prs, :, :, :],
                 order='F')
             V_vtk_vx1 = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[vx1, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[vx1, :, :, :],
                 order='F')
             V_vtk_vx2 = np.copy(
-                np.swapaxes(V_vtk, 1, 2)[vx2, g.jbeg:g.jend, g.ibeg:g.iend, :],
+                np.swapaxes(V_vtk, 1, 2)[vx2, :, :, :],
                 order='F')
             evtk.hl.imageToVTK(
                 self._file_name,
-                origin = (g.x1[g.ibeg], g.x2[g.jbeg], 0.0),
-                spacing = (g.dx1, g.dx2, 0.0),
+                origin = (g.x[1][g.beg[1]], g.x[0][g.beg[0]], 0.0),
+                spacing = (g.dx[1], g.dx[0], 0.0),
                 cellData = {"rho":V_vtk_rho,
                             "prs":V_vtk_prs,
                             "vx1":V_vtk_vx1,
@@ -140,9 +168,9 @@ class OutputInput:
         if p['Dimensions'] == '3D':
             evtk.hl.gridToVTK(
                 self._file_name,
-                g.x1_verts,
-                g.x2_verts,
-                g.x3_verts,
+                g.x_verts[2],
+                g.x_verts[1],
+                g.x_verts[0],
                 cellData = {"rho":V[rho].T,
                             "prs":V[prs].T,
                             "vx1":V[vx1].T,
@@ -154,12 +182,7 @@ class OutputInput:
 
 
     def _write_numpy(self, V, g, a, p):
-        if p['Dimensions'] == '1D':
-            np.save(self._file_name, (V, g.x1))
-        if p['Dimensions'] == '2D':
-            np.save(self._file_name, (V, g.x1, g.x2))
-        if p['Dimensions'] == '3D':
-            np.save(self._file_name, (V, g.x1, g.x2, g.x3))
+        np.save(self._file_name, (V, g.x))
         return
 
 
@@ -215,3 +238,54 @@ class OutputInput:
     def _read_numpy(self):
         V, x1, x2, x3 = np.load()
         None
+
+
+    def _reduce_from_mpi(self, A, grid):
+
+        if grid.decomp == None:
+            return A
+
+        size = grid.decomp.Get_size()
+        rank = grid.decomp.Get_rank()
+
+        if grid.ndims == 2:
+            sendbuf = A[: grid.gz:-grid.gz].copy()
+            recv_shape = [size, sendbuf.shape[0], sendbuf.shape[1]]
+        if grid.ndims == 3:
+            sendbuf = A[:, grid.gz:-grid.gz, grid.gz:-grid.gz].copy()
+            recv_shape = [size, sendbuf.shape[0], sendbuf.shape[1], sendbuf.shape[2]]
+        if grid.ndims == 4:
+            sendbuf = A[:, grid.gz:-grid.gz, grid.gz:-grid.gz, grid.gz:-grid.gz].copy()
+            recv_shape = [size, sendbuf.shape[0], sendbuf.shape[1], sendbuf.shape[2], sendbuf.shape[3]]
+
+        if rank == 0:
+            recvbuf = np.empty(recv_shape, dtype=np.float64)
+        else:
+            recvbuf = None
+
+        grid.decomp.Gather(sendbuf, recvbuf, root=0)
+
+        if rank == 0:
+
+            global_shape = np.array(sendbuf.shape)
+            global_shape *= np.append(1, grid.mpi_decomposition)
+            A_global = np.empty(shape=global_shape, dtype=np.float64)
+
+            for i, coords in enumerate(grid.coord_record):
+
+                start = [coords[o]*grid.nx[o] for o in range(len(grid.mpi_decomposition))]
+                end = [start[o] + grid.nx[o] for o in range(len(grid.mpi_decomposition))]
+
+                if grid.ndims == 2:
+                    A_global[:, start[0]:end[0]] = recvbuf[i]
+
+                if grid.ndims == 3:
+                    A_global[:, start[0]:end[0], start[1]:end[1]] = recvbuf[i]
+
+                if grid.ndims == 4:
+                    A_global[:, start[0]:end[0], start[1]:end[1], start[2]:end[2]] = recvbuf[i]
+
+        else:
+            A_global = None
+
+        return A_global

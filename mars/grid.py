@@ -31,7 +31,7 @@ class Grid:
     Expand the definitions to 3D.
     """
 
-    def __init__(self, p):
+    def __init__(self, p, comm):
 
         self.ndims = np.int(p['Dimensions'][0]) + 1
 
@@ -52,276 +52,87 @@ class Grid:
         elif p['reconstruction'] == 'parabolic':
             self.gz = 3
 
-        if self.ndims == 2:
+        resolution = np.array(p['resolution'], dtype=np.int)
+        mask = resolution > 1
 
-            if p['method'] == 'hydro':
-                self.nvar = 3
-            elif p['method'] == 'mhd':
-                self.nvar = 4
+        self.mpi_decomposition = np.array(p['mpi decomposition'], dtype=np.int)[mask]
+        self.periods = np.array([bc == 'periodic' for bc in self.bc_type])[mask]
 
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
+        self.decomp = comm.Create_cart(
+            dims = self.mpi_decomposition,
+            periods = self.periods,
+            reorder = True
+        )
 
-            self.nx1 = p['resolution x1']
-            self.rez = self.nx1
+        self.rank = self.decomp.Get_rank()
+        self.comm_size = self.decomp.Get_size()
+        self.mpi_coords = np.array(self.decomp.Get_coords(self.rank), dtype=np.int)
 
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx1
-            )
+        self.nx = np.array(resolution[mask]/self.mpi_decomposition, dtype=np.int)
 
-            self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
-            self.dxi = [self.dx1]
-            self.min_dxi = np.amin(self.dxi)
+        max = np.array(p['max'], dtype=np.float64)[mask]
+        min = np.array(p['min'], dtype=np.float64)[mask]
 
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
+        extent = max - min
+        self.max = min + extent/self.mpi_decomposition*(self.mpi_coords + 1)
+        self.min = min + extent/self.mpi_decomposition*self.mpi_coords
 
-            self.lower_bc_ibeg = 0
-            self.lower_bc_iend = self.gz - 1
+        self.dx = (self.max - self.min)/self.nx
 
-            self.upper_bc_ibeg = self.nx1 + self.gz
-            self.upper_bc_iend = self.nx1 + 2*self.gz - 1
+        self.beg = np.zeros_like(self.nx) + self.gz
+        self.end = self.nx + self.gz
 
-            self.imax = self.upper_bc_iend
+        self.x, self.x_verts = self._x()
 
-            self.shape_internal = [self.nvar, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
+        self.nvar = 2 + len(self.nx[self.nx > 1])
 
-            self.shape_flux = [[self.nvar, self.nx1 + 1]]
+        self.min_dx = np.amin(self.dx)
+        self.rez = np.prod(self.nx)
 
-            self.x1 = self._x1()
+        self.coord_record = [np.array(self.decomp.Get_coords(rank_cd)) for rank_cd in range(self.comm_size)]
 
-            self.x1_verts = self._x1_verts()
+        self.state_vector_shape = (np.append(self.nvar, self.nx + 2*self.gz))
 
-        if self.ndims == 3:
+        # print(f'rank: {self.rank}, mpi_decomposition: {self.mpi_decomposition}, mpi_coords: {self.mpi_coords}, nx: {self.nx}, max: {self.max}, min: {self.min}, dx: {self.dx}, beg: {self.beg}, end: {self.end}, x: {self.x}, x_vert: {self.x_verts}')
+        #
+        # sys.exit()
 
-            if p['method'] == 'hydro':
-                self.nvar = 4
-            elif p['method'] == 'mhd':
-                self.nvar = 6
+    def _x(self):
 
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
-            self.x2min = p['x2 min']
-            self.x2max = p['x2 max']
+        a = self.min - self.dx*self.gz
+        b = self.max + self.dx*self.gz
+        c = self.nx + 2*self.gz
 
-            self.nx1 = p['resolution x1']
-            self.nx2 = p['resolution x2']
-            self.rez = self.nx1*self.nx2
+        x = []
+        x_vert = []
+        for i, (A, B, C) in enumerate(zip(a, b, c)):
 
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx2,
-                2*self.gz + self.nx1
-            )
+            xi = np.linspace(A, B, C)
+            x.append(xi)
 
-            self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
-            self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
-            self.dxi = [self.dx1, self.dx2]
-            self.min_dxi = np.amin(self.dxi)
+            d = xi - self.dx[i]/2.0
+            e = xi[-1] + self.dx[i]/2.0
+            x_vert.append(np.append(d, e))
 
-            self.da = self.dx1*self.dx2
-
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
-            self.jbeg = self.gz
-            self.jend = self.nx2 + self.gz
-
-            self.lower_bc_ibeg = 0
-            self.lower_bc_iend = self.gz - 1
-            self.lower_bc_jbeg = 0
-            self.lower_bc_jend = self.gz - 1
-
-            self.upper_bc_ibeg = self.nx1 + self.gz
-            self.upper_bc_iend = self.nx1 + 2*self.gz - 1
-            self.upper_bc_jbeg = self.nx2 + self.gz
-            self.upper_bc_jend = self.nx2 + 2*self.gz - 1
-
-            self.jmax = self.upper_bc_jend
-
-            self.shape_internal = [self.nvar, self.nx2, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
-            self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
-
-            self.shape_flux = [[self.nvar, self.nx1 + 1],
-                               [self.nvar, self.nx2 + 1]]
-
-            self.x1 = self._x1()
-            self.x2 = self._x2()
-
-            self.x1_verts = self._x1_verts()
-            self.x2_verts = self._x2_verts()
-
-        if self.ndims == 4:
-
-            if p['method'] == 'hydro':
-                self.nvar = 5
-            elif p['method'] == 'mhd':
-                self.nvar = 8
-
-            self.x1min = p['x1 min']
-            self.x1max = p['x1 max']
-            self.x2min = p['x2 min']
-            self.x2max = p['x2 max']
-            self.x3min = p['x3 min']
-            self.x3max = p['x3 max']
-
-            self.nx1 = p['resolution x1']
-            self.nx2 = p['resolution x2']
-            self.nx3 = p['resolution x3']
-            self.rez = self.nx1*self.nx2*self.nx3
-
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx3,
-                2*self.gz + self.nx2,
-                2*self.gz + self.nx1
-            )
-
-            self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
-            self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
-            self.dx3 = (abs(self.x3min) + abs(self.x3max))/self.nx3
-            self.dxi = [self.dx1, self.dx2, self.dx3]
-            self.min_dxi = np.amin(self.dxi)
-
-            self.dv = self.dx1*self.dx2*self.dx3
-
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
-            self.jbeg = self.gz
-            self.jend = self.nx2 + self.gz
-            self.kbeg = self.gz
-            self.kend = self.nx3 + self.gz
-
-            self.lower_bc_ibeg = 0
-            self.lower_bc_iend = self.gz - 1
-            self.lower_bc_jbeg = 0
-            self.lower_bc_jend = self.gz - 1
-            self.lower_bc_kbeg = 0
-            self.lower_bc_kend = self.gz - 1
-
-            self.upper_bc_ibeg = self.nx1 + self.gz
-            self.upper_bc_iend = self.nx1 + 2*self.gz - 1
-            self.upper_bc_jbeg = self.nx2 + self.gz
-            self.upper_bc_jend = self.nx2 + 2*self.gz - 1
-            self.upper_bc_kbeg = self.nx3 + self.gz
-            self.upper_bc_kend = self.nx3 + 2*self.gz - 1
-
-            self.imax = self.upper_bc_iend
-            self.jmax = self.upper_bc_jend
-            self.kmax = self.upper_bc_kend
-
-            self.shape_internal = [self.nvar, self.nx3, self.nx2, self.nx1]
-            self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
-            self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
-            self.shape_flux_x3 = [self.nvar, self.nx3 + 1]
-
-            self.shape_flux = [[self.nvar, self.nx1 + 1],
-                               [self.nvar, self.nx2 + 1],
-                               [self.nvar, self.nx3 + 1]]
-
-            self.x1 = self._x1()
-            self.x2 = self._x2()
-            self.x3 = self._x3()
-
-            self.x1_verts = self._x1_verts()
-            self.x2_verts = self._x2_verts()
-            self.x3_verts = self._x3_verts()
-
-    def _x1(self):
-        a = self.x1min - self.dx1*self.gz
-        b = self.x1max + self.dx1*self.gz
-        c = self.nx1 + 2*self.gz
-        return np.linspace(a, b, c)
-
-
-    def _x1_verts(self):
-        a = self.x1 - self.dx1/2.0
-        b = self.x1[-1] + self.dx1/2.0
-        return np.append(a, b)
-
-
-    def _x2(self):
-        a = self.x2min - self.dx2*self.gz
-        b = self.x2max + self.dx2*self.gz
-        c = self.nx2 + 2*self.gz
-        return np.linspace(a, b, c)
-
-
-    def _x2_verts(self):
-        a = self.x2 - self.dx2/2.0
-        b = self.x2[-1] + self.dx2/2.0
-        return np.append(a, b)
-
-
-    def _x3(self):
-        a = self.x3min - self.dx3*self.gz
-        b = self.x3max + self.dx3*self.gz
-        c = self.nx3 + 2*self.gz
-        return np.linspace(a, b, c)
-
-
-    def _x3_verts(self):
-        a = self.x3 - self.dx3/2.0
-        b = self.x3[-1] + self.dx3/2.0
-        return np.append(a, b)
+        return np.array(x), np.array(x_vert)
 
 
     def state_vector(self):
         return np.zeros(shape=self.state_vector_shape)
-        # if p['Dimensions'] == '1D':
-        #     return np.zeros((self.nvar,
-        #                      2*self.gz + self.nx1),
-        #                      dtype=np.float64)
-        # elif p['Dimensions'] == '2D':
-        #     return np.zeros((self.nvar,
-        #                      2*self.gz + self.nx2,
-        #                      2*self.gz + self.nx1),
-        #                      dtype=np.float64)
-        # elif p['Dimensions'] == '3D':
-        #     return np.zeros((self.nvar,
-        #                      2*self.gz + self.nx3,
-        #                      2*self.gz + self.nx2,
-        #                      2*self.gz + self.nx1),
-        #                      dtype=np.float64)
-        # else:
-        #     print('Error, invalid number of dimensions.')
-        #     sys.exit()
-        # return
 
 
-    def build_fluxes(self, vxn):
-        if vxn == 2:
-            array_shape = self.shape_flux[0]
-        if vxn == 3:
-            array_shape = self.shape_flux[1]
-        if vxn == 4:
-            array_shape = self.shape_flux[2]
+    def update_dt(self):
 
-        self.flux = np.zeros(shape=array_shape)
-        self.FL = np.zeros(shape=array_shape)
-        self.FR = np.zeros(shape=array_shape)
-        self.UL = np.zeros(shape=array_shape)
-        self.UR = np.zeros(shape=array_shape)
-        self.VL = np.zeros(shape=array_shape)
-        self.VR = np.zeros(shape=array_shape)
-        self.SL = np.zeros(shape=array_shape[1])
-        self.SR = np.zeros(shape=array_shape[1])
-        self.pres = np.zeros(shape=array_shape[1])
-        return
+        local_dt_new = self.cfl*self.min_dx/self.speed_max
 
-
-    def update_dt(self, decomp):
-
-        local_dt_new = self.cfl*self.min_dxi/self.speed_max
-
-        if decomp != None:
-            dt_new = decomp.allreduce(local_dt_new, op=MPI.MIN)
+        if self.decomp != None:
+            dt_new = np.array([0.0])
+            self.decomp.Allreduce(local_dt_new, dt_new, MPI.MIN)
+            #dt_new = self.decomp.allreduce(local_dt_new, op=MPI.MIN)
         else:
-            dt_new = local_dt_new
+            dt_new = np.array([local_dt_new])
 
-        self.dt = min(dt_new, self.ddt*self.dt)
+        self.dt = min(dt_new[0], self.ddt*self.dt)
 
         if (self.t + self.dt) > self.t_max:
             self.dt = self.t_max - self.t
@@ -336,132 +147,23 @@ class Grid:
         return
 
 
-    def create_mpi_comm(self, comm, p):
-
-        if comm == None:
-            self.mpi_dims = [0, 0, 0]
-            return None
-
-        self.mpi_dims = np.array(p['mpi_decomp'])
-
-        self.mpi_decomp = self.mpi_dims[self.mpi_dims > 1]
-        if self.mpi_decomp.shape[0] == 0:
-            self.mpi_decomp = [1]
-
-        self.mpi_ndims = len(self.mpi_decomp)
-
-        self.periods = [bc == 'periodic' for bc in self.bc_type]
-
-        # print(self.mpi_dims, self.mpi_decomp, self.mpi_ndims, self.periods)
-
-        decomp = comm.Create_cart(
-            dims = self.mpi_decomp,
-            periods = self.periods[-self.mpi_ndims:],
-            reorder = True
-        )
-
-        self._modify_grid_for_mpi(p)
-
-        # rank = decomp.Get_rank()
-        # coord = decomp.Get_coords(rank)
-        # print(f'rank: {rank}, coord: {coord}')
-
-        return decomp
-
-
-    def _modify_grid_for_mpi(self, p):
-
-        if self.ndims == 2:
-            self.x1max = p['x1 max']/self.mpi_dims[2]
-            self.nx1 = np.int(p['resolution x1']/self.mpi_dims[2])
-
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
-
-            self.x1 = self._x1()
-            self.x1_verts = self._x1_verts()
-
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx1
-            )
-
-        if self.ndims == 3:
-            self.x1max = p['x1 max']/self.mpi_dims[2]
-            self.x2max = p['x2 max']/self.mpi_dims[1]
-
-            self.nx1 = np.int(p['resolution x1']/self.mpi_dims[2])
-            self.nx2 = np.int(p['resolution x2']/self.mpi_dims[1])
-
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
-            self.jbeg = self.gz
-            self.jend = self.nx2 + self.gz
-
-            self.x1 = self._x1()
-            self.x2 = self._x2()
-
-            self.x1_verts = self._x1_verts()
-            self.x2_verts = self._x2_verts()
-
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx2,
-                2*self.gz + self.nx1
-            )
-
-        if self.ndims == 4:
-            self.x1max = p['x1 max']/self.mpi_dims[2]
-            self.x2max = p['x2 max']/self.mpi_dims[1]
-            self.x3max = p['x3 max']/self.mpi_dims[0]
-
-            self.nx1 = np.int(p['resolution x1']/self.mpi_dims[2])
-            self.nx2 = np.int(p['resolution x2']/self.mpi_dims[1])
-            self.nx3 = np.int(p['resolution x3']/self.mpi_dims[0])
-
-            self.ibeg = self.gz
-            self.iend = self.nx1 + self.gz
-            self.jbeg = self.gz
-            self.jend = self.nx2 + self.gz
-            self.kbeg = self.gz
-            self.kend = self.nx3 + self.gz
-
-            self.x1 = self._x1()
-            self.x2 = self._x2()
-            self.x3 = self._x3()
-
-            self.x1_verts = self._x1_verts()
-            self.x2_verts = self._x2_verts()
-            self.x3_verts = self._x3_verts()
-
-            self.state_vector_shape = (
-                self.nvar,
-                2*self.gz + self.nx3,
-                2*self.gz + self.nx2,
-                2*self.gz + self.nx1
-            )
-
-        return
-
-
-    def boundary(self, A, decomp):
-
-        if decomp != None:
-            rank = decomp.Get_rank()
-            coord = np.array(decomp.Get_coords(rank))
+    def boundary(self, A):
 
         for dim in range(1, self.ndims):
 
-            if self.mpi_dims[dim-1] > 1:
+            if self.mpi_decomposition[dim-1] > 1:
 
-                self._internal_swapping(A, decomp, dim)
+                # print(self.mpi_decomposition, self.mpi_decomposition[dim-1], dim)
+                # sys.exit()
+
+                self._internal_swapping(A, dim)
 
                 if self.periods[dim-1] == False:
 
-                    if coord[dim-1] == 0:
+                    if self.mpi_coords[dim-1] == 0:
                         self._outflow_left(A, dim)
 
-                    if coord[dim-1] == self.mpi_dims[dim-1] - 1:
+                    if self.mpi_coords[dim-1] == self.mpi_decomposition[dim-1] - 1:
                         self._outflow_right(A, dim)
 
             else:
@@ -473,14 +175,19 @@ class Grid:
                     self._outflow_left(A, dim)
                     self._outflow_right(A, dim)
 
+        # sys.exit()
+
         return
 
 
-    def _internal_swapping(self, A, decomp, dim):
+    def _internal_swapping(self, A, dim):
 
         gz = self.gz
 
-        left, right = decomp.Shift(dim-1, 1)
+        left, right = self.decomp.Shift(dim-1, 1)
+
+        # print(self.rank, self.mpi_coords, dim-1, left, right)
+        # sys.exit()
 
         right_send = self._expand_axes([i for i in range(-2*gz, -gz)], dim)
         sendbuf_right = np.take_along_axis(A, right_send, axis=dim)
@@ -490,8 +197,8 @@ class Grid:
         sendbuf_left = np.take_along_axis(A, left_send, axis=dim)
         recvbuf_left = np.empty_like(sendbuf_left)
 
-        decomp.Sendrecv(sendbuf_right, right, 1, recvbuf_left, left, 1)
-        decomp.Sendrecv(sendbuf_left, left, 2, recvbuf_right, right, 2)
+        self.decomp.Sendrecv(sendbuf_right, right, 1, recvbuf_left, left, 1)
+        self.decomp.Sendrecv(sendbuf_left, left, 2, recvbuf_right, right, 2)
 
         right_indices = self._expand_axes([i for i in range(-gz, 0)], dim)
         np.put_along_axis(A, right_indices, recvbuf_right, axis=dim)
@@ -512,6 +219,7 @@ class Grid:
         np.put_along_axis(A, bc_indices, np.flip(bc_values, axis=dim), axis=dim)
 
         return
+
 
     def _outflow_right(self, A, dim):
 
@@ -571,6 +279,386 @@ class Grid:
         )
 
         return indices_expanded
+
+
+    # def create_mpi_comm(self, comm, p):
+    #
+    #     if p['MPI'] == False:
+    #         self.mpi_dims = [0, 0, 0]
+    #         return None
+    #
+    #     self.mpi_decomposition = np.array(p['mpi decomposition'])
+    #     self.periods = [bc == 'periodic' for bc in self.bc_type]
+    #
+    #     decomp = comm.Create_cart(
+    #         dims = self.mpi_decomposition,
+    #         periods = self.periods,
+    #         reorder = True
+    #     )
+    #
+    #     rank = decomp.Get_rank()
+    #     size = decomp.Get_size()
+    #     coord = decomp.Get_coords(rank)
+    #
+    #     print(f'size: {size}, rank: {rank}, decomp: {self.mpi_decomposition}, coord: {coord}')
+    #     sys.stdout.flush()
+    #
+    #     self._modify_grid_for_mpi(p, decomp)
+    #
+    #     return decomp
+    #
+    #
+    # def _modify_grid_for_mpi(self, p, decomp):
+    #
+    #     rank = decomp.Get_rank()
+    #     size = decomp.Get_size()
+    #     coord = decomp.Get_coords(rank)
+    #
+    #     self.max = self.max/self.mpi_dims*(coord + 1)
+    #     self.min = self.max + self.max*coord/self.mpi_dims
+    #     self.nx /= self.mpi_dims
+    #
+    #     print(self.nx, self.min, self.max, self.dx, self.min_dx, self.nvar, self.rez, self.state_vector_shape, self.beg, self.end)
+    #
+    #     if self.ndims == 2:
+    #
+    #         self.x1max = p['x1 max']/self.mpi_dims[0]*(coord[0] + 1)
+    #         self.x1min = p['x1 min'] + p['x1 max']*coord[0]/self.mpi_dims[1]
+    #         self.nx1 = np.int(p['resolution x1']/self.mpi_dims[0])
+    #
+    #         self.res = np.array([self.nvar, self.nx1])
+    #
+    #         self.ibeg = self.gz
+    #         self.iend = self.nx1 + self.gz
+    #
+    #         self.x1 = self._x1()
+    #         self.x1_verts = self._x1_verts()
+    #
+    #         self.state_vector_shape = (
+    #             self.nvar,
+    #             2*self.gz + self.nx1
+    #         )
+    #
+    #         print(f'size: {size}, rank: {rank}, coord: {coord}, res: {self.res}, x2: {self.x2min, self.x2max}, x1: {self.x1min, self.x1max}')
+    #         print(f'i:, {self.ibeg, self.iend}, j:, {self.jbeg, self.jend}')
+    #         print(f'verts: {self.x1_verts, self.x2_verts}')
+    #
+    #     if self.ndims == 3:
+    #
+    #         self.x1max = p['x1 max']/self.mpi_dims[2]*(coord[1] + 1)
+    #         self.x1min = p['x1 min'] + p['x1 max']*coord[1]/self.mpi_dims[2]
+    #
+    #         self.x2max = p['x2 max']/self.mpi_dims[1]*(coord[0] + 1)
+    #         self.x2min = p['x2 min'] + p['x2 max']*coord[0]/self.mpi_dims[1]
+    #
+    #         self.nx1 = np.int(p['resolution x1']/self.mpi_dims[2])
+    #         self.nx2 = np.int(p['resolution x2']/self.mpi_dims[1])
+    #
+    #         self.res = np.array([self.nvar, self.nx2, self.nx1])
+    #
+    #         self.ibeg = self.gz
+    #         self.iend = self.nx1 + self.gz
+    #         self.jbeg = self.gz
+    #         self.jend = self.nx2 + self.gz
+    #
+    #         self.x1 = self._x1()
+    #         self.x2 = self._x2()
+    #
+    #         self.x1_verts = self._x1_verts()
+    #         self.x2_verts = self._x2_verts()
+    #
+    #         self.state_vector_shape = (
+    #             self.nvar,
+    #             2*self.gz + self.nx2,
+    #             2*self.gz + self.nx1
+    #         )
+    #
+    #         print(f'size: {size}, rank: {rank}, coord: {coord}, res: {self.res}, x2: {self.x2min, self.x2max}, x1: {self.x1min, self.x1max}')
+    #         print(f'i:, {self.ibeg, self.iend}, j:, {self.jbeg, self.jend}')
+    #         print(f'verts: {self.x1_verts, self.x2_verts}')
+    #         sys.stdout.flush()
+    #
+    #     if self.ndims == 4:
+    #
+    #         self.x1max = p['x1 max']/self.mpi_dims[2]*(coord[2] + 1)
+    #         self.x1min = p['x1 min'] + p['x1 max']*coord[1]/self.mpi_dims[2]
+    #
+    #         self.x2max = p['x2 max']/self.mpi_dims[1]*(coord[1] + 1)
+    #         self.x2min = p['x2 min'] + p['x2 max']*coord[0]/self.mpi_dims[1]
+    #
+    #         self.x3max = p['x3 max']/self.mpi_dims[0]*(coord[0] + 1)
+    #         self.x3min = p['x3 min'] + p['x2 max']*coord[0]/self.mpi_dims[0]
+    #
+    #         self.nx1 = np.int(p['resolution x1']/self.mpi_dims[2])
+    #         self.nx2 = np.int(p['resolution x2']/self.mpi_dims[1])
+    #         self.nx3 = np.int(p['resolution x3']/self.mpi_dims[0])
+    #
+    #         self.res = np.array([self.nvar, self.nx3, self.nx2, self.nx1])
+    #
+    #         self.ibeg = self.gz
+    #         self.iend = self.nx1 + self.gz
+    #         self.jbeg = self.gz
+    #         self.jend = self.nx2 + self.gz
+    #         self.kbeg = self.gz
+    #         self.kend = self.nx3 + self.gz
+    #
+    #         self.x1 = self._x1()
+    #         self.x2 = self._x2()
+    #         self.x3 = self._x3()
+    #
+    #         self.x1_verts = self._x1_verts()
+    #         self.x2_verts = self._x2_verts()
+    #         self.x3_verts = self._x3_verts()
+    #
+    #         self.state_vector_shape = (
+    #             self.nvar,
+    #             2*self.gz + self.nx3,
+    #             2*self.gz + self.nx2,
+    #             2*self.gz + self.nx1
+    #         )
+    #
+    #     return
+
+
+        # if self.ndims == 2:
+        #
+        #     if p['method'] == 'hydro':
+        #         self.nvar = 3
+        #     elif p['method'] == 'mhd':
+        #         self.nvar = 4
+        #
+        #     self.x1min = p['x1 min']
+        #     self.x1max = p['x1 max']
+        #
+        #     self.nx1 = p['resolution x1']
+        #     self.rez = self.nx1
+        #
+        #     self.state_vector_shape = (
+        #         self.nvar,
+        #         2*self.gz + self.nx1
+        #     )
+        #
+        #     self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
+        #     self.dxi = [self.dx1]
+        #     self.min_dxi = np.amin(self.dxi)
+        #
+        #     self.ibeg = self.gz
+        #     self.iend = self.nx1 + self.gz
+        #
+        #     # self.lower_bc_ibeg = 0
+        #     # self.lower_bc_iend = self.gz - 1
+        #     #
+        #     # self.upper_bc_ibeg = self.nx1 + self.gz
+        #     # self.upper_bc_iend = self.nx1 + 2*self.gz - 1
+        #     #
+        #     # self.imax = self.upper_bc_iend
+        #     #
+        #     # self.shape_internal = [self.nvar, self.nx1]
+        #     # self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
+        #     #
+        #     # self.shape_flux = [[self.nvar, self.nx1 + 1]]
+        #
+        #     self.x1 = self._x1()
+        #
+        #     self.x1_verts = self._x1_verts()
+
+        # if self.ndims == 3:
+        #
+        #     if p['method'] == 'hydro':
+        #         self.nvar = 4
+        #     elif p['method'] == 'mhd':
+        #         self.nvar = 6
+        #
+        #     self.x1min = p['x1 min']
+        #     self.x1max = p['x1 max']
+        #     self.x2min = p['x2 min']
+        #     self.x2max = p['x2 max']
+        #
+        #     self.nx1 = p['resolution x1']
+        #     self.nx2 = p['resolution x2']
+        #     self.rez = self.nx1*self.nx2
+        #
+        #     self.state_vector_shape = (
+        #         self.nvar,
+        #         2*self.gz + self.nx2,
+        #         2*self.gz + self.nx1
+        #     )
+        #
+        #     self.res = np.array([self.nvar, self.nx2, self.nx1])
+        #
+        #     self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
+        #     self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
+        #     self.dxi = [self.dx1, self.dx2]
+        #     self.min_dxi = np.amin(self.dxi)
+        #
+        #     self.da = self.dx1*self.dx2
+        #
+        #     self.ibeg = self.gz
+        #     self.iend = self.nx1 + self.gz
+        #     self.jbeg = self.gz
+        #     self.jend = self.nx2 + self.gz
+        #
+        #     # self.lower_bc_ibeg = 0
+        #     # self.lower_bc_iend = self.gz - 1
+        #     # self.lower_bc_jbeg = 0
+        #     # self.lower_bc_jend = self.gz - 1
+        #     #
+        #     # self.upper_bc_ibeg = self.nx1 + self.gz
+        #     # self.upper_bc_iend = self.nx1 + 2*self.gz - 1
+        #     # self.upper_bc_jbeg = self.nx2 + self.gz
+        #     # self.upper_bc_jend = self.nx2 + 2*self.gz - 1
+        #     #
+        #     # self.jmax = self.upper_bc_jend
+        #     #
+        #     # self.shape_internal = [self.nvar, self.nx2, self.nx1]
+        #     # self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
+        #     # self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
+        #     #
+        #     # self.shape_flux = [[self.nvar, self.nx1 + 1],
+        #     #                    [self.nvar, self.nx2 + 1]]
+        #
+        #     self.x1 = self._x1()
+        #     self.x2 = self._x2()
+        #
+        #     self.x1_verts = self._x1_verts()
+        #     self.x2_verts = self._x2_verts()
+        #
+        # if self.ndims == 4:
+        #
+        #     if p['method'] == 'hydro':
+        #         self.nvar = 5
+        #     elif p['method'] == 'mhd':
+        #         self.nvar = 8
+        #
+        #     self.x1min = p['x1 min']
+        #     self.x1max = p['x1 max']
+        #     self.x2min = p['x2 min']
+        #     self.x2max = p['x2 max']
+        #     self.x3min = p['x3 min']
+        #     self.x3max = p['x3 max']
+        #
+        #     self.nx1 = p['resolution x1']
+        #     self.nx2 = p['resolution x2']
+        #     self.nx3 = p['resolution x3']
+        #     self.rez = self.nx1*self.nx2*self.nx3
+        #
+        #     self.state_vector_shape = (
+        #         self.nvar,
+        #         2*self.gz + self.nx3,
+        #         2*self.gz + self.nx2,
+        #         2*self.gz + self.nx1
+        #     )
+        #
+        #     self.res = np.array([self.nvar, self.nx3, self.nx2, self.nx1])
+        #
+        #     self.dx1 = (abs(self.x1min) + abs(self.x1max))/self.nx1
+        #     self.dx2 = (abs(self.x2min) + abs(self.x2max))/self.nx2
+        #     self.dx3 = (abs(self.x3min) + abs(self.x3max))/self.nx3
+        #     self.dxi = [self.dx1, self.dx2, self.dx3]
+        #     self.min_dxi = np.amin(self.dxi)
+        #
+        #     self.dv = self.dx1*self.dx2*self.dx3
+        #
+        #     self.ibeg = self.gz
+        #     self.iend = self.nx1 + self.gz
+        #     self.jbeg = self.gz
+        #     self.jend = self.nx2 + self.gz
+        #     self.kbeg = self.gz
+        #     self.kend = self.nx3 + self.gz
+        #
+        #     # self.lower_bc_ibeg = 0
+        #     # self.lower_bc_iend = self.gz - 1
+        #     # self.lower_bc_jbeg = 0
+        #     # self.lower_bc_jend = self.gz - 1
+        #     # self.lower_bc_kbeg = 0
+        #     # self.lower_bc_kend = self.gz - 1
+        #     #
+        #     # self.upper_bc_ibeg = self.nx1 + self.gz
+        #     # self.upper_bc_iend = self.nx1 + 2*self.gz - 1
+        #     # self.upper_bc_jbeg = self.nx2 + self.gz
+        #     # self.upper_bc_jend = self.nx2 + 2*self.gz - 1
+        #     # self.upper_bc_kbeg = self.nx3 + self.gz
+        #     # self.upper_bc_kend = self.nx3 + 2*self.gz - 1
+        #     #
+        #     # self.imax = self.upper_bc_iend
+        #     # self.jmax = self.upper_bc_jend
+        #     # self.kmax = self.upper_bc_kend
+        #     #
+        #     # self.shape_internal = [self.nvar, self.nx3, self.nx2, self.nx1]
+        #     # self.shape_flux_x1 = [self.nvar, self.nx1 + 1]
+        #     # self.shape_flux_x2 = [self.nvar, self.nx2 + 1]
+        #     # self.shape_flux_x3 = [self.nvar, self.nx3 + 1]
+        #     #
+        #     # self.shape_flux = [[self.nvar, self.nx1 + 1],
+        #     #                    [self.nvar, self.nx2 + 1],
+        #     #                    [self.nvar, self.nx3 + 1]]
+        #
+        #     self.x1 = self._x1()
+        #     self.x2 = self._x2()
+        #     self.x3 = self._x3()
+        #
+        #     self.x1_verts = self._x1_verts()
+        #     self.x2_verts = self._x2_verts()
+        #     self.x3_verts = self._x3_verts()
+
+
+    # def _x1(self):
+    #     a = self.x1min - self.dx1*self.gz
+    #     b = self.x1max + self.dx1*self.gz
+    #     c = self.nx1 + 2*self.gz
+    #     return np.linspace(a, b, c)
+    #
+    #
+    # def _x1_verts(self):
+    #     a = self.x1 - self.dx1/2.0
+    #     b = self.x1[-1] + self.dx1/2.0
+    #     return np.append(a, b)
+    #
+    #
+    # def _x2(self):
+    #     a = self.x2min - self.dx2*self.gz
+    #     b = self.x2max + self.dx2*self.gz
+    #     c = self.nx2 + 2*self.gz
+    #     return np.linspace(a, b, c)
+    #
+    #
+    # def _x2_verts(self):
+    #     a = self.x2 - self.dx2/2.0
+    #     b = self.x2[-1] + self.dx2/2.0
+    #     return np.append(a, b)
+    #
+    #
+    # def _x3(self):
+    #     a = self.x3min - self.dx3*self.gz
+    #     b = self.x3max + self.dx3*self.gz
+    #     c = self.nx3 + 2*self.gz
+    #     return np.linspace(a, b, c)
+    #
+    #
+    # def _x3_verts(self):
+    #     a = self.x3 - self.dx3/2.0
+    #     b = self.x3[-1] + self.dx3/2.0
+    #     return np.append(a, b)
+
+    # def build_fluxes(self, vxn):
+    #     if vxn == 2:
+    #         array_shape = self.shape_flux[0]
+    #     if vxn == 3:
+    #         array_shape = self.shape_flux[1]
+    #     if vxn == 4:
+    #         array_shape = self.shape_flux[2]
+    #
+    #     self.flux = np.zeros(shape=array_shape)
+    #     self.FL = np.zeros(shape=array_shape)
+    #     self.FR = np.zeros(shape=array_shape)
+    #     self.UL = np.zeros(shape=array_shape)
+    #     self.UR = np.zeros(shape=array_shape)
+    #     self.VL = np.zeros(shape=array_shape)
+    #     self.VR = np.zeros(shape=array_shape)
+    #     self.SL = np.zeros(shape=array_shape[1])
+    #     self.SR = np.zeros(shape=array_shape[1])
+    #     self.pres = np.zeros(shape=array_shape[1])
+    #     return
 
 
     # def boundary(self, V, p):

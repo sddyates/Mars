@@ -22,14 +22,14 @@
 ### IO
 Need to add method to io class that reduces separate ranks before sending global grid to the serial output routines.
 
-- [ ] reduction before IO
+- [x] reduction before IO
 - [ ] parallel IO
 
 ### Grid modifications
 Need to add method to modify serial grid variables as a function of the MPI decomposition.
 
-- [ ] Second state vector method which creates the local grids.
-- [ ] modify the loop limits for the spatial loops.
+- [x] Second state vector method which creates the local grids.
+- [x] modify the loop limits for the spatial loops.
 
 ### Time step calculation
 - [x] Add version to all reduce new_dt and do a min.
