@@ -35,13 +35,13 @@ class Problem:
 
             'min': [0.0, 0.0, 0.0],
             'max': [1.0, 1.0, 1.0],
-            'resolution': [1, 240, 240],
+            'resolution': [1, 768, 768],
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
             'max dt increase': 1.5,
             'initial t': 0.0,
-            'max time': 1.0e-1,
+            'max time': 1.0e-2,
 
             'save frequency': 1.0e-2,
             'output type': ['vtk'],

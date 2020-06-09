@@ -41,9 +41,10 @@ class Timer:
             self.step = 0.0
             self.step_av = 0.0
             self.total_step = 0.0
-            self.total_space_loop = 0.0
-            self.total_reconstruction = 0.0
-            self.total_riemann = 0.0
+            self.total_boundary = 0.0
+            # self.total_space_loop = 0.0
+            # self.total_reconstruction = 0.0
+            # self.total_riemann = 0.0
 
         else:
             None
@@ -75,6 +76,19 @@ class Timer:
         return
 
 
+    def start_boundary(self):
+        if self.active:
+            self._start_boundary = self.start()
+        return
+
+
+    def stop_boundary(self):
+        if self.active:
+            diff = self.stop(self._start_boundary)
+            self.total_boundary += diff
+        return
+
+
     def start_step(self):
         if self.active:
             self._start_step = self.start()
@@ -92,43 +106,43 @@ class Timer:
         return
 
 
-    def start_space_loop(self):
-        if self.active:
-            self._start_space_loop = self.start()
-        return
-
-
-    def stop_space_loop(self):
-        if self.active:
-            diff = self.stop(self._start_space_loop)
-            self.total_space_loop += diff
-        return
-
-
-    def start_reconstruction(self):
-        if self.active:
-            self._start_reconstruction = self.start()
-        return
-
-
-    def stop_reconstruction(self):
-        if self.active:
-            diff = self.stop(self._start_reconstruction)
-            self.total_reconstruction += diff
-        return
-
-
-    def start_riemann(self):
-        if self.active:
-            self._start_riemann = self.start()
-        return
-
-
-    def stop_riemann(self):
-        if self.active:
-            diff = self.stop(self._start_riemann)
-            self.total_riemann += diff
-        return
+    # def start_space_loop(self):
+    #     if self.active:
+    #         self._start_space_loop = self.start()
+    #     return
+    #
+    #
+    # def stop_space_loop(self):
+    #     if self.active:
+    #         diff = self.stop(self._start_space_loop)
+    #         self.total_space_loop += diff
+    #     return
+    #
+    #
+    # def start_reconstruction(self):
+    #     if self.active:
+    #         self._start_reconstruction = self.start()
+    #     return
+    #
+    #
+    # def stop_reconstruction(self):
+    #     if self.active:
+    #         diff = self.stop(self._start_reconstruction)
+    #         self.total_reconstruction += diff
+    #     return
+    #
+    #
+    # def start_riemann(self):
+    #     if self.active:
+    #         self._start_riemann = self.start()
+    #     return
+    #
+    #
+    # def stop_riemann(self):
+    #     if self.active:
+    #         diff = self.stop(self._start_riemann)
+    #         self.total_riemann += diff
+    #     return
 
 
     def start(self):

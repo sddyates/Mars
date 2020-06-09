@@ -31,16 +31,10 @@ class Problem:
             'Name':'Kelvin Helmholtz instability.',
 
             'Dimensions':'2D',
-            'x1 min':-0.5,
-            'x1 max':0.5,
-            'x2 min':-0.5,
-            'x2 max':0.5,
-            'x3 min':-0.5,
-            'x3 max':0.5,
 
-            'resolution x1':256,
-            'resolution x2':256,
-            'resolution x3':0,
+            'min': [-0.5, -0.5, -0.5],
+            'max': [0.5, 0.5, 0.5],
+            'resolution': [1, 128, 128],
 
             'cfl':0.3,
             'initial dt':1.0e-5,
@@ -49,7 +43,7 @@ class Problem:
             'max time': 5.0,
 
             'save frequency': 2.5e-2,
-            'output type': ['numpy'],
+            'output type': ['vtk'],
             'output primitives': True,
             'print to file':False,
             'profiling': True,
@@ -60,6 +54,7 @@ class Problem:
             'length unit':1.0,
             'velocity unit':1.0,
 
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
             'riemann':'hllc',
             'reconstruction':'linear',
@@ -67,24 +62,19 @@ class Problem:
             'time stepping':'RK2',
             'method':'hydro',
 
-            'lower x1 boundary':'reciprocal',
-            'upper x1 boundary':'reciprocal',
-            'lower x2 boundary':'reciprocal',
-            'upper x2 boundary':'reciprocal',
-            'lower x3 boundary':'reciprocal',
-            'upper x3 boundary':'reciprocal',
+            'boundaries': ['periodic', 'periodic', 'periodic'],
 
             'internal boundary':False
         }
 
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, g):
 
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
+            Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
+            Z, Y, X = np.meshgrid(g.x[0], g.x[1], g.x[2], indexing='ij')
 
         yp = 0.25
         dens_1 = 2.0

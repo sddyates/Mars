@@ -73,7 +73,12 @@ def main_loop(problem):
         problem.initialise(V, grid)
 
     #  Apply boundary conditions.
+    if rank == 0:
+        timing.start_boundary()
     grid.boundary(V)
+    if rank == 0:
+        timing.stop_boundary()
+
     if rank == 0:
         print("")
         sys.stdout.flush()

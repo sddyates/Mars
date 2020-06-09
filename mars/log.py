@@ -28,31 +28,20 @@ class Log:
 
         self.p = p
         self.iteration = 0
-
         self.resolution = f"{p['resolution']}"
-
-        # if self.p['Dimensions'] == '1D':
-        #     self.resolution = f"{self.p['resolution x1']}"
-        # elif self.p['Dimensions'] == '2D':
-        #     self.resolution = f"{self.p['resolution x1']}"\
-        #         + f" x {self.p['resolution x2']}"
-        # else:
-        #     self.resolution = f"{self.p['resolution x1']}"\
-        #         + f" x {self.p['resolution x2']}"\
-        #         + f" x {self.p['resolution x3']}"
 
 
     def logo(self):
         print("")
-        print(r"    -----------------------------------------------")
-        print(r"                                                   ")
-        print(r"        \\\\\\\\\      /\     |\\\\\ /\\\\\        ")
-        print(r"        ||  ||  \\    //\\    ||  // ||            ")
-        print(r"        ||  ||  ||   //  \\   ||\\\\ \\\\\\        ")
-        print(r"        ||  ||  ||  //\\\\\\  ||  ||     ||        ")
-        print(r"        ||  ||  || //      \\ ||  || \\\\\/ 0.2    ")
-        print(r"                                                   ")
-        print(r"    -----------------------------------------------")
+        print(r"    -------------------------------------------")
+        print(r"                                               ")
+        print(r"        \\\\\\\\\      /\     |\\\\\ /\\\\\    ")
+        print(r"        ||  ||  \\    //\\    ||  // ||        ")
+        print(r"        ||  ||  ||   //  \\   ||\\\\ \\\\\\    ")
+        print(r"        ||  ||  ||  //\\\\\\  ||  ||     ||    ")
+        print(r"        ||  ||  || //      \\ ||  || \\\\\/    ")
+        print(r"                                               ")
+        print(r"    -------------------------------------------")
         sys.stdout.flush()
         return
 
@@ -101,23 +90,25 @@ class Log:
 
         tot = timing.total_sim
         io = timing.total_io
-        space = timing.total_space_loop
-        rec = timing.total_reconstruction
-        rie = timing.total_riemann
+        boundary = timing.total_boundary
+        # space = timing.total_space_loop
+        # rec = timing.total_reconstruction
+        # rie = timing.total_riemann
 
-        space -= rec + rie
-        other = tot - io - space - rec - rie
+        # space -= rec + rie
+        other = tot - io# - space - rec - rie
 
         print("")
         print(f"    Simulation {self.p['Name']} complete...")
         print("")
         print(f"    Timings:")
-        print(f"    Total simulation:    {tot:.3f} s")
-        print(f"    Spatial integration: {space:.3f} s ({100.0*space/tot:.1f} %)")
-        print(f"    Riemann:             {rie:.3f} s ({100.0*rie/tot:.1f} %)")
-        print(f"    Reconstruction:      {rec:.3f} s ({100.0*rec/tot:.1f} %)")
-        print(f"    IO:                  {io:.3f} s ({100.0*io/tot:.1f} %)")
-        print(f"    Other:               {other:.3f} s ({100.0*other/tot:.1f} %)")
+        print(f"    Total simulation: {tot:.3f} s")
+        # print(f"    Spatial integration: {space:.3f} s ({100.0*space/tot:.1f} %)")
+        # print(f"    Riemann:             {rie:.3f} s ({100.0*rie/tot:.1f} %)")
+        # print(f"    Reconstruction:      {rec:.3f} s ({100.0*rec/tot:.1f} %)")
+        print(f"    Boundaries:       {boundary:.3f} s ({100.0*boundary/tot:.1f} %)")
+        print(f"    IO:               {io:.3f} s ({100.0*io/tot:.1f} %)")
+        # print(f"    Other:               {other:.3f} s ({100.0*other/tot:.1f} %)")
         print("")
         print(f"    Average performance: {timing.Mcell_av/self.iteration:.3f} Mcell/s")
         print(f"    Average time per iteration: {timing.step_av/self.iteration:.3f} s")

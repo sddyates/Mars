@@ -45,11 +45,11 @@ def flux_difference(U, g, a, t):
     V = np.empty(shape=U.shape, dtype=np.float64)
     cons_to_prims(U, V, a.gamma_1)
 
-    if g.rank == 0:
-        t.start_reconstruction()
+    # if g.rank == 0:
+    #     t.start_reconstruction()
     VL, VR = a.reconstruction(V)
-    if g.rank == 0:
-        t.stop_reconstruction()
+    # if g.rank == 0:
+    #     t.stop_reconstruction()
 
     UL = np.empty(shape=VL.shape, dtype=np.float64)
     UR = np.empty(shape=VR.shape, dtype=np.float64)
@@ -61,15 +61,15 @@ def flux_difference(U, g, a, t):
     flux_tensor(UL, VL, FL, g.vxntb[0], g.vxntb[1], g.vxntb[2])
     flux_tensor(UR, VR, FR, g.vxntb[0], g.vxntb[1], g.vxntb[2])
 
-    if g.rank == 0:
-        t.start_riemann()
+    # if g.rank == 0:
+    #     t.start_riemann()
     dflux, g.speed_max = a.riemann_solver(
         FL, FR, UL, UR, VL, VR,
         g.speed_max, a.gamma, g.dt/g.dx[g.vxntb[0]-2],
         g.vxntb[0], g.vxntb[1], g.vxntb[2]
     )
-    if g.rank == 0:
-        t.stop_riemann()
+    # if g.rank == 0:
+    #     t.stop_riemann()
 
     return dflux
 
@@ -103,21 +103,17 @@ def RHSOperator(U, g, a, t):
     None
     """
 
-    if g.rank == 0:
-        t.start_space_loop()
+    # if g.rank == 0:
+    #     t.start_space_loop()
 
     rhs = np.zeros(shape=U.shape, dtype=np.float64)
 
-    #  i: g.beg[2]:g.end[2]
-    #  j: g.beg[1]:g.end[1]
-    #  k: g.beg[0]:g.end[0]
-
-    if g.ndims == 2:
+    if U.ndim == 2:
 
         g.vxntb = [2, 3, 4]
         rhs[:, g.beg[0]:g.end[0]] = flux_difference(U, g, a, t)
 
-    if g.ndims == 3:
+    if U.ndim == 3:
 
         for j in range(g.beg[0], g.end[0]):
             g.vxntb = [2, 3, 4]
@@ -127,7 +123,7 @@ def RHSOperator(U, g, a, t):
             g.vxntb = [3, 2, 4]
             rhs[:, g.beg[0]:g.end[0], i] += flux_difference(U[:, :, i], g, a, t)
 
-    if g.ndims == 4:
+    if U.ndim == 4:
 
         for k in range(g.beg[0], g.end[0]):
             for j in range(g.beg[1], g.end[1]):
@@ -144,7 +140,7 @@ def RHSOperator(U, g, a, t):
                 g.vxntb = [4, 2, 3]
                 rhs[:, g.beg[0]:g.end[0], j, i] += flux_difference(U[:, :, j, i], g, a, t)
 
-    if g.rank == 0:
-        t.stop_space_loop()
+    # if g.rank == 0:
+    #     t.stop_space_loop()
 
     return rhs
