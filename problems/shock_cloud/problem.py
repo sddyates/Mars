@@ -55,7 +55,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 2, 3],
+            'mpi decomposition': [1, 1, 1],
             'optimisation': 'numba',
             'riemann': 'hllc',
             'reconstruction': 'linear',

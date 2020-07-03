@@ -35,8 +35,12 @@ class Problem:
             'x3 max': 1.0,
 
             'resolution x1': 1024,
-            'resolution x2': 128,
-            'resolution x3': 128,
+            'resolution x2': 1,
+            'resolution x3': 1,
+
+            'min': [0.0, 0.0, 0.0],
+            'max': [1.0, 1.0, 4.0*np.pi],
+            'resolution': [1, 1, 1024],
 
             'cfl': 0.6,
             'initial dt': 1.0e-4,
@@ -52,6 +56,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
+            'mpi decomposition': [1, 1, 1],
             'optimisation': 'numba',
             'riemann': 'hllc',
             'reconstruction': 'flat',
@@ -59,21 +64,17 @@ class Problem:
             'time stepping': 'RK2',
             'method': 'hydro',
 
-            'lower x1 boundary': 'reciprocal',
-            'lower x2 boundary': 'outflow',
-            'lower x3 boundary': 'outflow',
-            'upper x1 boundary': 'reciprocal',
-            'upper x2 boundary': 'outflow',
-            'upper x3 boundary': 'outflow',
+            'boundaries': ['outflow', 'outflow', 'reciprocal'],
+            'internal boundary': False
 
             'internal boundary': False
         }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, g):
 
         V[prs, :] = 2.0
         V[vx1, :] = 4.0*np.pi
-        V[rho, :] = np.sin(g.x1) + 4.0
+        V[rho, :] = np.sin(g.x[2]) + 4.0
 
         return
 

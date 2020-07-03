@@ -76,7 +76,7 @@ class Log:
 
         string = f"    n = {self.iteration}, t = {g.t:.2e}, dt = {g.dt:.2e}, {percent:.1f} %"
 
-        if timing.active & (self.iteration > 0):
+        if self.iteration > 0:
             string += f", ({timing.Mcell:.3f} Mcell/s, {timing.step:.3f} s/n)"
 
         print(string)
@@ -88,27 +88,13 @@ class Log:
 
     def end(self, timing):
 
-        tot = timing.total_sim
-        io = timing.total_io
-        boundary = timing.total_boundary
-        # space = timing.total_space_loop
-        # rec = timing.total_reconstruction
-        # rie = timing.total_riemann
-
-        # space -= rec + rie
-        other = tot - io# - space - rec - rie
-
         print("")
         print(f"    Simulation {self.p['Name']} complete...")
         print("")
         print(f"    Timings:")
-        print(f"    Total simulation: {tot:.3f} s")
-        # print(f"    Spatial integration: {space:.3f} s ({100.0*space/tot:.1f} %)")
-        # print(f"    Riemann:             {rie:.3f} s ({100.0*rie/tot:.1f} %)")
-        # print(f"    Reconstruction:      {rec:.3f} s ({100.0*rec/tot:.1f} %)")
-        print(f"    Boundaries:       {boundary:.3f} s ({100.0*boundary/tot:.1f} %)")
-        print(f"    IO:               {io:.3f} s ({100.0*io/tot:.1f} %)")
-        # print(f"    Other:               {other:.3f} s ({100.0*other/tot:.1f} %)")
+        print(f"    Total simulation: {timing.total_sim:.3f} s")
+        print(f"    Boundaries:       {timing.total_boundary:.3f} s ({100.0*timing.total_boundary/timing.total_sim:.1f} %)")
+        print(f"    IO:               {timing.total_io:.3f} s ({100.0*timing.total_io/timing.total_sim:.1f} %)")
         print("")
         print(f"    Average performance: {timing.Mcell_av/self.iteration:.3f} Mcell/s")
         print(f"    Average time per iteration: {timing.step_av/self.iteration:.3f} s")

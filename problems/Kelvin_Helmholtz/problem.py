@@ -63,7 +63,6 @@ class Problem:
             'method':'hydro',
 
             'boundaries': ['periodic', 'periodic', 'periodic'],
-
             'internal boundary':False
         }
 

@@ -29,16 +29,10 @@ class Problem:
             'Name': 'Four Quadrant',
 
             'Dimensions': '2D',
-            'x1 min': 0.0,
-            'x1 max': 1.0,
-            'x2 min': 0.0,
-            'x2 max': 1.0,
-            'x3 min': 0.0,
-            'x3 max': 1.0,
 
-            'resolution x1': 64,
-            'resolution x2': 64,
-            'resolution x3': 1,
+            'min': [0.0, 0.0, 0.0],
+            'max': [1.0, 1.0, 1.0],
+            'resolution': [1, 64, 64],
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
@@ -57,8 +51,8 @@ class Problem:
             'density unit': 1.0,
             'length unit': 1.0,
             'velocity unit': 1.0,
-            'profiling': True,
 
+            'mpi decomposition': [1, 1, 1],
             'optimisation': 'numba',
             'riemann': 'tvdlf',
             'reconstruction': 'flat',
@@ -66,19 +60,13 @@ class Problem:
             'time stepping': 'Euler',
             'method': 'hydro',
 
-            'lower x1 boundary': 'outflow',
-            'lower x2 boundary': 'outflow',
-            'lower x3 boundary': 'outflow',
-            'upper x1 boundary': 'outflow',
-            'upper x2 boundary': 'outflow',
-            'upper x3 boundary': 'outflow',
-
+            'boundaries': ['outflow', 'outflow', 'outflow'],
             'internal boundary': False
-            }
+        }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, g):
 
-        Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
+        Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
         xt = 0.8
         yt = 0.8
 

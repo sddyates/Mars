@@ -30,16 +30,10 @@ class Problem:
             'Name':'Spherical blast wave.',
 
             'Dimensions':'2D',
-            'x1 min':-0.5,
-            'x1 max':0.5,
-            'x2 min':-0.5,
-            'x2 max':0.5,
-            'x3 min':-0.5,
-            'x3 max':0.5,
 
-            'resolution x1':200,
-            'resolution x2':200,
-            'resolution x3':200,
+            'min': [-0.5, -0.5, -0.5],
+            'max': [0.5, 0.5, 0.5],
+            'resolution': [1, 512, 512],
 
             'cfl':0.3,
             'initial dt':1.0e-4,
@@ -48,7 +42,7 @@ class Problem:
             'max time':3.0e-1,
 
             'save frequency':3.0e-2,
-            'output type': ['numpy'],
+            'output type': ['vtk'],
             'output primitives': True,
             'print to file':False,
             'profiling': True,
@@ -59,6 +53,7 @@ class Problem:
             'length unit':1.0,
             'velocity unit':1.0,
 
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
             'riemann':'hllc',
             'reconstruction':'linear',
@@ -66,19 +61,18 @@ class Problem:
             'time stepping':'RK2',
             'method':'hydro',
 
-            'boundaries': ['periodic', 'periodic', 'periodic'],
-
+            'boundaries': ['outflow', 'outflow', 'outflow'],
             'internal boundary':False
             }
 
-    def initialise(self, V, g, l):
+    def initialise(self, V, g):
 
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x1, g.x2, indexing='ij')
+            Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
             R = np.sqrt(X*X + Y*Y)
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x1, g.x2, g.x3, indexing='ij')
+            Z, Y, X = np.meshgrid(g.x[0], g.x[1], g.x[2], indexing='ij')
             R = np.sqrt(X*X + Y*Y + Z*Z)
 
         V[vx1:] = 0.0
