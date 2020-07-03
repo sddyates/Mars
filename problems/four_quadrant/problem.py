@@ -32,7 +32,7 @@ class Problem:
 
             'min': [0.0, 0.0, 0.0],
             'max': [1.0, 1.0, 1.0],
-            'resolution': [1, 64, 64],
+            'resolution': [1, 1024, 1024],
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
@@ -52,7 +52,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 1, 1],
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
             'riemann': 'tvdlf',
             'reconstruction': 'flat',
