@@ -4,7 +4,7 @@ from numba import jit
 import numpy as np
 
 
-@nb.jit(cache=True)
+@nb.jit(cache=True, nopython=True)
 def minmod(V):
     """
     Synopsis

@@ -113,24 +113,3 @@ class Algorithm:
             print('Error: Invalid integrator.')
             sys.exit()
         return
-
-
-    def assign_boundary_conditions(self, p):
-        if p['Dimensions'] == '1D' and p['']:
-            g.lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            g.upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-        elif p['Dimensions'] == '2D':
-            g.lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            g.upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-            g.lowerX2BC(V, p['lower x2 boundary'], p['Dimensions'])
-            g.upperX2BC(V, p['upper x2 boundary'], p['Dimensions'])
-        elif p['Dimensions'] == '3D':
-            g.lowerX1BC(V, p['lower x1 boundary'], p['Dimensions'])
-            g.upperX1BC(V, p['upper x1 boundary'], p['Dimensions'])
-            g.lowerX2BC(V, p['lower x2 boundary'], p['Dimensions'])
-            g.upperX2BC(V, p['upper x2 boundary'], p['Dimensions'])
-            g.lowerX3BC(V, p['lower x3 boundary'], p['Dimensions'])
-            g.upperX3BC(V, p['upper x3 boundary'], p['Dimensions'])
-        else:
-            print('Error, invalid number of dimensions.')
-            sys.exit()
