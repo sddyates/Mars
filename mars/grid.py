@@ -54,27 +54,35 @@ class Grid:
         resolution = np.array(p['resolution'], dtype=np.int)
         mask = resolution > 1
 
-        self.mpi_decomposition = np.array(p['mpi decomposition'], dtype=np.int)[mask]
-        self.periods = np.array([bc == 'periodic' for bc in self.bc_type])[mask]
+        self.mpi_decomposition = np.array(
+             p['mpi decomposition'], dtype=np.int
+             )[mask]
+
+        self.periods = np.array(
+             [bc == 'periodic' for bc in self.bc_type]
+             )[mask]
 
         self.decomp = comm.Create_cart(
-            dims = self.mpi_decomposition,
-            periods = self.periods,
-            reorder = True
-        )
+            dims=self.mpi_decomposition,
+            periods=self.periods,
+            reorder=True)
 
         self.rank = self.decomp.Get_rank()
         self.comm_size = self.decomp.Get_size()
-        self.mpi_coords = np.array(self.decomp.Get_coords(self.rank), dtype=np.int)
+        self.mpi_coords = np.array(
+             self.decomp.Get_coords(self.rank), dtype=np.int)
 
-        self.nx = np.array(resolution[mask]/self.mpi_decomposition, dtype=np.int)
+        self.nx = np.array(
+             resolution[mask]/self.mpi_decomposition, dtype=np.int)
 
-        max = np.array(p['max'], dtype=np.float64)[mask]
-        min = np.array(p['min'], dtype=np.float64)[mask]
+        max_extent = np.array(p['max'], dtype=np.float64)[mask]
+        min_extent = np.array(p['min'], dtype=np.float64)[mask]
 
-        extent = max - min
-        self.max = min + extent/self.mpi_decomposition*(self.mpi_coords + 1)
-        self.min = min + extent/self.mpi_decomposition*self.mpi_coords
+        extent = max_extent - min_extent
+        self.max = min_extent \
+            + extent/self.mpi_decomposition*(self.mpi_coords + 1)
+        self.min = min_extent \
+            + extent/self.mpi_decomposition*self.mpi_coords
 
         self.dx = (self.max - self.min)/self.nx
 
@@ -88,10 +96,11 @@ class Grid:
         self.min_dx = np.amin(self.dx)
         self.rez = np.prod(self.nx)
 
-        self.coord_record = [np.array(self.decomp.Get_coords(rank_cd)) for rank_cd in range(self.comm_size)]
+        self.coord_record = [
+            np.array(self.decomp.Get_coords(rank_cd))
+            for rank_cd in range(self.comm_size)]
 
         self.state_vector_shape = (np.append(self.nvar, self.nx + 2*self.gz))
-
 
     def _x(self):
 
@@ -112,16 +121,14 @@ class Grid:
 
         return np.array(x), np.array(x_vert)
 
-
     def state_vector(self):
         return np.zeros(shape=self.state_vector_shape)
-
 
     def update_dt(self):
 
         local_dt_new = self.cfl*self.min_dx/self.speed_max
 
-        if self.decomp != None:
+        if self.decomp is not None:
             dt_new = np.array([0.0])
             self.decomp.Allreduce(local_dt_new, dt_new, MPI.MIN)
         else:

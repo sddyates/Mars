@@ -11,7 +11,6 @@ from tools import cons_to_prims
 
 class OutputInput:
 
-
     def __init__(self, p):
 
         self._output_number = 0
@@ -29,7 +28,10 @@ class OutputInput:
         self._base_file_name = self._io_folder + self._file_prefix
 
         if p['restart file'] is not None:
-            self._restart_file = self._io_folder + self._file_prefix + f"{p['restart file']:04}" + ".h5"
+            self._restart_file = self._io_folder \
+                + self._file_prefix \
+                + f"{p['restart file']:04}" \
+                + ".h5"
 
         self._recognised_types = [
             'numpy',

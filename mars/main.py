@@ -1,11 +1,10 @@
-
 __author__ = "Simon Daley-Yates"
-__version__ = "0.2"
+__version__ = "1.0"
 __license__ = "MIT"
 
-import numpy as np
 import sys
-from datetime import datetime
+import numpy as np
+#  from datetime import datetime
 from mpi4py import MPI
 
 from timer import Timer
@@ -41,8 +40,8 @@ def main_loop(problem):
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     # else:
-        # comm = None
-        # rank = 0
+    # comm = None
+    # rank = 0
 
     if rank == 0:
         timing = Timer(problem.parameter)

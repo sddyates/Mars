@@ -1,7 +1,16 @@
 
+"""
+Docstring.
+"""
+
+import sys
+sys.path.append('/home/simon/Work/Personal_projects/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Personal_projects/Mars/mars/')
+
 from mars import main_loop
 import numpy as np
 from mars.settings import *
+
 
 class Problem:
     """
@@ -34,7 +43,7 @@ class Problem:
 
             'min': [-0.5, -0.5, -0.5],
             'max': [0.5, 0.5, 0.5],
-            'resolution': [1, 128, 128],
+            'resolution': [1, 1, 1],
 
             'cfl':0.3,
             'initial dt':1.0e-5,
@@ -56,7 +65,7 @@ class Problem:
 
             'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
-            'riemann':'hllc',
+            'riemann':'hll',
             'reconstruction':'linear',
             'limiter':'minmod',
             'time stepping':'RK2',
