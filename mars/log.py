@@ -38,7 +38,6 @@ class Log:
                 + f" x {self.p['resolution x2']}"\
                 + f" x {self.p['resolution x3']}"
 
-
     def logo(self):
         print("")
         print(r"    -----------------------------------------------")
@@ -50,8 +49,6 @@ class Log:
         print(r"        ||  ||  || //      \\ ||  || \\\\\/ 0.2    ")
         print(r"                                                   ")
         print(r"    -----------------------------------------------")
-        return
-
 
     def options(self):
         print(f"    Problem settings:")
