@@ -3,7 +3,7 @@ import numba as nb
 import numpy as np
 from numba import prange
 
-from settings import *
+from .settings import *
 
 
 @nb.jit(cache=True, nopython=True)
@@ -266,7 +266,7 @@ def hllc(FL, FR, UL, UR, VL, VR,
 
     TODO
     ----
-    None
+    Put the final loop of this function back into a usable state.
     """
 
     usL = np.empty(shape=FL.shape[0], dtype=np.float64)
@@ -400,69 +400,69 @@ def hllc(FL, FR, UL, UR, VL, VR,
 
 
 
-
-    for var in range(VL.shape[0]):
-
-        for i in range(imax):
-
-            if SL[i] > 0.0:
-                flux[var, i] = FL[var, i]
-                pres[i] = VL[prs, i]
-
-            elif (SR[i] < 0.0):
-                flux[var, i] = FR[var, i]
-                pres[i] = VR[prs, i]
-
-            else:
-
-                vR[var] = VR[var, i]
-                uR = UR[var, i]
-
-                vL = VL[var, i]
-                uL = UL[var, i]
-
-                vxr = vR[vxn]
-                vxl = vL[vxn]
-
-                qL = vL[prs] + uL[mxn]*(vL[vxn] - SL[i])
-                qR = vR[prs] + uR[mxn]*(vR[vxn] - SR[i])
-
-                wL = vL[rho]*(vL[vxn] - SL[i])
-                wR = vR[rho]*(vR[vxn] - SR[i])
-
-                vs = (qR - qL)/(wR - wL)
-
-                usL[rho] = uL[rho]*(SL[i] - vxl)/(SL[i] - vs)
-                usR[rho] = uR[rho]*(SR[i] - vxr)/(SR[i] - vs)
-
-                usL[mxn] = usL[rho]*vs
-                usR[mxn] = usR[rho]*vs
-                if vars > 3:
-                    usL[mxt] = usL[rho]*vL[vxt]
-                    usR[mxt] = usR[rho]*vR[vxt]
-                if vars > 4:
-                    usL[mxt] = usL[rho]*vL[vxt]
-                    usR[mxt] = usR[rho]*vR[vxt]
-                    usL[mxb] = usL[rho]*vL[vxb]
-                    usR[mxb] = usR[rho]*vR[vxb]
-
-                usL[eng] = uL[eng]/vL[rho] \
-                           + (vs - vxl)*(vs + vL[prs]/(vL[rho]*(SL[i] - vxl)))
-                usR[eng] = uR[eng]/vR[rho] \
-                           + (vs - vxr)*(vs + vR[prs]/(vR[rho]*(SR[i] - vxr)))
-
-                usL[eng] *= usL[rho]
-                usR[eng] *= usR[rho]
-
-                if (vs >= 0.0):
-                    flux[var, i] = FL[var, i] + SL[i]*(usL[var] - uL[var])
-                    pres[i] = VL[prs, i]
-
-                else:
-                    flux[var, i] = FR[var, i] + SR[i]*(usR[var] - uR[var])
-                    pres[i] = VR[prs, i]
-
-        dflux = -(flux[var, 1:] - flux[var, :-1])*dtdx
-        dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
+    #
+    # for var in range(VL.shape[0]):
+    #
+    #     for i in range(imax):
+    #
+    #         if SL[i] > 0.0:
+    #             flux[var, i] = FL[var, i]
+    #             pres[i] = VL[prs, i]
+    #
+    #         elif (SR[i] < 0.0):
+    #             flux[var, i] = FR[var, i]
+    #             pres[i] = VR[prs, i]
+    #
+    #         else:
+    #
+    #             vR[var] = VR[var, i]
+    #             uR = UR[var, i]
+    #
+    #             vL = VL[var, i]
+    #             uL = UL[var, i]
+    #
+    #             vxr = vR[vxn]
+    #             vxl = vL[vxn]
+    #
+    #             qL = vL[prs] + uL[mxn]*(vL[vxn] - SL[i])
+    #             qR = vR[prs] + uR[mxn]*(vR[vxn] - SR[i])
+    #
+    #             wL = vL[rho]*(vL[vxn] - SL[i])
+    #             wR = vR[rho]*(vR[vxn] - SR[i])
+    #
+    #             vs = (qR - qL)/(wR - wL)
+    #
+    #             usL[rho] = uL[rho]*(SL[i] - vxl)/(SL[i] - vs)
+    #             usR[rho] = uR[rho]*(SR[i] - vxr)/(SR[i] - vs)
+    #
+    #             usL[mxn] = usL[rho]*vs
+    #             usR[mxn] = usR[rho]*vs
+    #             if vars > 3:
+    #                 usL[mxt] = usL[rho]*vL[vxt]
+    #                 usR[mxt] = usR[rho]*vR[vxt]
+    #             if vars > 4:
+    #                 usL[mxt] = usL[rho]*vL[vxt]
+    #                 usR[mxt] = usR[rho]*vR[vxt]
+    #                 usL[mxb] = usL[rho]*vL[vxb]
+    #                 usR[mxb] = usR[rho]*vR[vxb]
+    #
+    #             usL[eng] = uL[eng]/vL[rho] \
+    #                        + (vs - vxl)*(vs + vL[prs]/(vL[rho]*(SL[i] - vxl)))
+    #             usR[eng] = uR[eng]/vR[rho] \
+    #                        + (vs - vxr)*(vs + vR[prs]/(vR[rho]*(SR[i] - vxr)))
+    #
+    #             usL[eng] *= usL[rho]
+    #             usR[eng] *= usR[rho]
+    #
+    #             if (vs >= 0.0):
+    #                 flux[var, i] = FL[var, i] + SL[i]*(usL[var] - uL[var])
+    #                 pres[i] = VL[prs, i]
+    #
+    #             else:
+    #                 flux[var, i] = FR[var, i] + SR[i]*(usR[var] - uR[var])
+    #                 pres[i] = VR[prs, i]
+    #
+    #     dflux = -(flux[var, 1:] - flux[var, :-1])*dtdx
+    #     dflux[vxn, :] -= (pres[1:] - pres[:-1])*dtdx
 
     return dflux, speed_max

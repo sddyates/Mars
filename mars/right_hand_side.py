@@ -4,8 +4,8 @@ import numpy as np
 import numba as nb
 from numba import prange
 
-from settings import *
-from tools import flux_tensor, cons_to_prims, prims_to_cons
+#  from .settings import *
+from .tools import flux_tensor, cons_to_prims, prims_to_cons
 
 
 def flux_difference(U, g, a, t):

@@ -3,7 +3,7 @@ import numpy as np
 import numba as nb
 import sys
 
-from settings import *
+from .settings import *
 
 @nb.jit(cache=True)
 def flux_tensor(U, V, F, vxn, vxt, vxb):

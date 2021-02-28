@@ -2,11 +2,11 @@
 import sys
 import numpy as np
 
-from riemann_solvers import tvdlf, hll, hllc
+from .riemann_solvers import tvdlf, hll, hllc
 #  from cython_lib.riemann_solvers import tvdlf_pyx, hll_pyx, hllc_pyx
-from reconstruction import flat, minmod
+from .reconstruction import flat, minmod
 # from cython_lib.reconstruction import flat_pyx, minmod_pyx
-from time_stepping import Euler, RungaKutta2, RungaKutta3
+from .time_stepping import Euler, RungaKutta2, RungaKutta3
 
 
 class Algorithm:

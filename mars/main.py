@@ -7,12 +7,12 @@ import numpy as np
 #  from datetime import datetime
 from mpi4py import MPI
 
-from timer import Timer
-from log import Log
-from grid import Grid
-from algorithms import Algorithm
-from output import OutputInput
-from tools import prims_to_cons
+from .timer import Timer
+from .log import Log
+from .grid import Grid
+from .algorithms import Algorithm
+from .output import OutputInput
+from .tools import prims_to_cons
 
 
 def main_loop(problem):

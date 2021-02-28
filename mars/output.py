@@ -5,8 +5,8 @@ import numpy as np
 import evtk
 import h5py
 
-from settings import *
-from tools import cons_to_prims
+from .settings import *
+from .tools import cons_to_prims
 
 
 class OutputInput:

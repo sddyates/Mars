@@ -1,6 +1,6 @@
 
-from right_hand_side import RHSOperator
-from tools import prims_to_cons, cons_to_prims
+from .right_hand_side import RHSOperator
+from .tools import prims_to_cons, cons_to_prims
 
 
 def Euler(U, g, a, t, p):

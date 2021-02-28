@@ -37,42 +37,42 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name':'Kelvin Helmholtz instability.',
+            'Name': 'Kelvin Helmholtz instability.',
 
-            'Dimensions':'2D',
+            'Dimensions': '2D',
 
             'min': [-0.5, -0.5, -0.5],
             'max': [0.5, 0.5, 0.5],
-            'resolution': [1, 1, 1],
+            'resolution': [1, 256, 256],
 
-            'cfl':0.3,
-            'initial dt':1.0e-5,
-            'max dt increase':1.5,
+            'cfl': 0.3,
+            'initial dt': 1.0e-5,
+            'max dt increase': 1.5,
             'initial t': 0.0,
-            'max time': 5.0,
+            'max time': 10.0,
 
             'save frequency': 2.5e-2,
             'output type': ['vtk'],
             'output primitives': True,
-            'print to file':False,
+            'print to file': False,
             'profiling': True,
-            'restart file':None,
+            'restart file': None,
 
-            'gamma':1.4,
-            'density unit':1.0,
-            'length unit':1.0,
-            'velocity unit':1.0,
+            'gamma': 1.4,
+            'density unit': 1.0,
+            'length unit': 1.0,
+            'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 2, 2],
+            'mpi decomposition': [1, 4, 2],
             'optimisation': 'numba',
-            'riemann':'hll',
-            'reconstruction':'linear',
-            'limiter':'minmod',
-            'time stepping':'RK2',
-            'method':'hydro',
+            'riemann': 'hll',
+            'reconstruction': 'linear',
+            'limiter': 'minmod',
+            'time stepping': 'RK2',
+            'method': 'hydro',
 
             'boundaries': ['periodic', 'periodic', 'periodic'],
-            'internal boundary':False
+            'internal boundary': False
         }
 
 
