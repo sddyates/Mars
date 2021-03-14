@@ -82,13 +82,6 @@ def main_loop(problem):
         print("")
         sys.stdout.flush()
 
-    #  Check initial grid for nans.
-    if np.isnan(np.sum(V)):
-        print("Error, nan in initial conditions, exiting.")
-        print("")
-        sys.stdout.flush()
-        sys.exit()
-
     U = np.empty(shape=V.shape, dtype=np.float64)
     prims_to_cons(V, U, algorithm.igamma_1)
     del V
@@ -99,6 +92,15 @@ def main_loop(problem):
     io.output(U, grid, algorithm, problem.parameter)
     if rank == 0:
         timing.stop_io()
+
+    #  Check initial grid for nans.
+    # if np.isnan(np.sum(U)):
+    #     print("    Error, nan in initial conditions, exiting.")
+    #     print("")
+    #     print(rank, np.argwhere(np.isnan(U)), np.argwhere(np.isnan(U)).shape)
+    #     sys.stdout.flush()
+    #     comm.Abort()
+    #     sys.exit()
 
     if rank == 0:
         print("")

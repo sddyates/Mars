@@ -28,6 +28,7 @@ class Grid:
 
     TODO
     ----
+    TODO: dimenstionallity from resoltuion instead of form p['Dimensions'].
     """
 
     def __init__(self, p, comm):
@@ -89,7 +90,14 @@ class Grid:
         self.beg = np.zeros_like(self.nx) + self.gz
         self.end = self.nx + self.gz
 
-        self.x, self.x_verts = self._x()
+        self.x, self.x_verts = self._x(self.min, self.max, self.dx, self.gz, self.nx)
+
+        # Create global x and verts. This need to be replaced by changing the
+        # coords from a list of 3 1D arrays of different lengths to X[:, :, :]
+        # Like the pluto h5 outputs.
+        self.x_global, self.x_verts_global = self._x(min_extent, max_extent, self.dx, self.gz, resolution[mask])
+
+        # print(self.x_global.shape, self.x_global[0].shape, self.x_global[1].shape, self.x_global[2].shape)
 
         self.nvar = 2 + len(self.nx[self.nx > 1])
 
@@ -102,11 +110,11 @@ class Grid:
 
         self.state_vector_shape = (np.append(self.nvar, self.nx + 2*self.gz))
 
-    def _x(self):
+    def _x(self, min, max, dx, gz, nx):
 
-        a = self.min - self.dx*self.gz
-        b = self.max + self.dx*self.gz
-        c = self.nx + 2*self.gz
+        a = min - dx*gz
+        b = max + dx*gz
+        c = nx + 2*gz
 
         x = []
         x_vert = []
@@ -115,11 +123,11 @@ class Grid:
             xi = np.linspace(A, B, C)
             x.append(xi)
 
-            d = xi - self.dx[i]/2.0
-            e = xi[-1] + self.dx[i]/2.0
+            d = xi - dx[i]/2.0
+            e = xi[-1] + dx[i]/2.0
             x_vert.append(np.append(d, e))
 
-        return np.array(x), np.array(x_vert)
+        return np.array(x, dtype='object'), np.array(x_vert, dtype='object')
 
     def state_vector(self):
         return np.zeros(shape=self.state_vector_shape)
@@ -148,7 +156,6 @@ class Grid:
 
         return
 
-
     def boundary(self, A):
 
         for dim in range(1, self.ndims):
@@ -176,7 +183,6 @@ class Grid:
 
         return
 
-
     def _internal_swapping(self, A, dim):
 
         gz = self.gz
@@ -202,7 +208,6 @@ class Grid:
 
         return
 
-
     def _outflow_left(self, A, dim):
 
         gz = self.gz
@@ -214,7 +219,6 @@ class Grid:
 
         return
 
-
     def _outflow_right(self, A, dim):
 
         gz = self.gz
@@ -225,7 +229,6 @@ class Grid:
         np.put_along_axis(A, bc_indices, np.flip(bc_values, axis=dim), axis=dim)
 
         return
-
 
     def _periodic_left_right(self, A, dim):
 
@@ -243,7 +246,6 @@ class Grid:
 
         return
 
-
     def _expand_axes(self, indices, dim):
 
         if self.ndims == 2:
@@ -252,7 +254,7 @@ class Grid:
                 axis=0
             )
 
-        if self.ndims == 3:
+        elif self.ndims == 3:
             axes = [2, 1]
             return np.expand_dims(
                 np.expand_dims(
@@ -261,7 +263,7 @@ class Grid:
                 axis=axes[dim-1]
             )
 
-        if self.ndims == 4:
+        elif self.ndims == 4:
             axes = [[2, 3], [2, 1], [1, 2]]
             return np.expand_dims(
                 np.expand_dims(
@@ -272,4 +274,5 @@ class Grid:
                 axis=axes[dim-1][1]
         )
 
-        return indices_expanded
+        else:
+            return

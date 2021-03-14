@@ -1,7 +1,6 @@
 
 import sys
 
-import datetime as dt
 
 class Log:
     """
@@ -28,8 +27,6 @@ class Log:
 
         self.p = p
         self.iteration = 0
-        self.resolution = f"{p['resolution']}"
-
 
     def logo(self):
         print("")
@@ -45,14 +42,13 @@ class Log:
         sys.stdout.flush()
         return
 
-
     def options(self):
-        print(f"    Problem settings:")
+        print("    Problem settings:")
         print(f"        - Name: {self.p['Name']}")
         print(f"        - Dimensions: {self.p['Dimensions']}")
         print(f"        - Max time: {self.p['max time']}")
         print(f"        - CFL: {self.p['cfl']}")
-        print(f"        - Resolution: " + self.resolution)
+        print(f"        - Resolution: {self.p['resolution']}")
         print(f"        - Riemann: {self.p['riemann']}")
         print(f"        - Reconstruction: {self.p['reconstruction']}")
         print(f"        - Limiter: {self.p['limiter']}")
@@ -63,12 +59,10 @@ class Log:
         sys.stdout.flush()
         return
 
-
     def begin(self):
         print("    Starting time integration loop...")
         sys.stdout.flush()
         return
-
 
     def step(self, g, timing):
 
@@ -85,13 +79,12 @@ class Log:
         self.iteration += 1
         return
 
-
     def end(self, timing):
 
         print("")
         print(f"    Simulation {self.p['Name']} complete...")
         print("")
-        print(f"    Timings:")
+        print("    Timings:")
         print(f"    Total simulation: {timing.total_sim:.3f} s")
         print(f"    Boundaries:       {timing.total_boundary:.3f} s ({100.0*timing.total_boundary/timing.total_sim:.1f} %)")
         print(f"    IO:               {timing.total_io:.3f} s ({100.0*timing.total_io/timing.total_sim:.1f} %)")

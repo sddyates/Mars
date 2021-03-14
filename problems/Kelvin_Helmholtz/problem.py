@@ -9,7 +9,7 @@ sys.path.append('/home/simon/Work/Personal_projects/Mars/mars/')
 
 from mars import main_loop
 import numpy as np
-from mars.settings import *
+from mars.settings import rho, prs, vx1, vx2, vx3
 
 
 class Problem:
@@ -75,7 +75,6 @@ class Problem:
             'internal boundary': False
         }
 
-
     def initialise(self, V, g):
 
         if self.parameter['Dimensions'] == '2D':
@@ -107,7 +106,6 @@ class Problem:
         V[prs, region_2] = pres
         V[vx1, region_2] = -vel_1 + vx1_per[vx1, region_2]
         V[vx2, region_2] = vel_2 + vx2_per[vx2, region_2]
-
 
     def internal_bc(self):
         return None

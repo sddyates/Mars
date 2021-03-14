@@ -1,6 +1,5 @@
 
 from .right_hand_side import RHSOperator
-from .tools import prims_to_cons, cons_to_prims
 
 
 def Euler(U, g, a, t, p):
@@ -93,7 +92,7 @@ def RungaKutta2(U_n, g, a, t, p):
     """
 
     L_n = RHSOperator(U_n, g, a, t)
-    #L_n, g.speed_max = RHSOperator(U_n, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
+    # L_n, g.speed_max = RHSOperator(U_n, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_star = U_n + L_n
     # User source term call.
@@ -106,7 +105,7 @@ def RungaKutta2(U_n, g, a, t, p):
     # My need to recalculate the time step here.
 
     L_star = RHSOperator(U_star, g, a, t)
-    #L_star, g.speed_max = RHSOperator(U_star, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
+    # L_star, g.speed_max = RHSOperator(U_star, g.speed_max, g.dt, g.dxi, a.gamma, g.ibeg, g.iend, 0, 0)#, g.jbeg, g.jend)
 
     U_np1 = U_n + 0.5*(L_n + L_star)
     # User source term call.
@@ -121,7 +120,6 @@ def RungaKutta2(U_n, g, a, t, p):
     # Analysis function call.
 
     return U_np1
-
 
     # K1 = RHSOperator(U, g, a, t)
     #
@@ -221,8 +219,6 @@ def RungaKutta3(U_n, g, a, t, p):
     # Analysis function call.
 
     return U_np1
-
-
 
     # K1 = RHSOperator(U, g, a, t)
     #

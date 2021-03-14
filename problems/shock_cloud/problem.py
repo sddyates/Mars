@@ -1,8 +1,13 @@
 
+import sys
+sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/')
+
 from mars import main_loop
-from mars.settings import *
+from mars.settings import rho, prs, vx1, vx2, vx3
 import numpy as np
 import sys
+
 
 class Problem:
     """
@@ -29,22 +34,22 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name':'Shock Cloud',
+            'Name': 'Shock Cloud',
 
-            'Dimensions': '2D',
+            'Dimensions': '3D',
 
             'min': [0.0, 0.0, 0.0],
             'max': [1.0, 1.0, 1.0],
-            'resolution': [1, 768, 768],
+            'resolution': [128, 128, 128],
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
             'max dt increase': 1.5,
             'initial t': 0.0,
-            'max time': 1.0e-2,
+            'max time': 1.0e-1,
 
-            'save frequency': 1.0e-2,
-            'output type': ['vtk'],
+            'save interval': 1.0e-6,
+            'output type': ['vtk', 'h5'],
             'output primitives': True,
             'print to file': False,
             'profiling': True,
@@ -55,9 +60,9 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 1, 1],
+            'mpi decomposition': [1, 2, 1],
             'optimisation': 'numba',
-            'riemann': 'hllc',
+            'riemann': 'hll',
             'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
@@ -86,11 +91,13 @@ class Problem:
         V[prs, X < shock] = 167.345
         V[vx1, X < shock] = 0.0
         V[vx2, X < shock] = 0.0
+        V[vx3, X < shock] = 0.0
 
         V[rho, X > shock] = 1.0
         V[prs, X > shock] = 1.0
         V[vx1, X > shock] = -11.2536
         V[vx2, X > shock] = 0.0
+        V[vx3, X > shock] = 0.0
 
         cloud = 0.15
         V[rho, R < cloud] = 10.0
