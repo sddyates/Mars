@@ -37,7 +37,7 @@ class Grid:
 
         self.speed_max = np.float64(0.0)
         self.cfl = np.float64(p['cfl'])
-        self.small_dt = np.float64(1.0e-12)
+        self.small_dt = np.float64(1.0e-14)
         self.dt = np.float64(p['initial dt'])
         self.ddt = np.float64(p['max dt increase'])
         self.t_max = np.float64(p['max time'])

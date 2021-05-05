@@ -1,6 +1,16 @@
+
+"""
+Docstring.
+"""
+
+import sys
+sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/')
+
 from mars import main_loop
-from mars.settings import *
+from mars.settings import rho, prs, vx1, vx2
 import numpy as np
+
 
 class Problem:
     """
@@ -40,12 +50,12 @@ class Problem:
             'initial t': 0.0,
             'max time': 0.5,
 
-            'save frequency': 1.0e-2,
+            'save interval': 1.0e-2,
             'output type': ['vtk'],
             'output primitives': True,
-            'print to file':False,
+            'print to file': False,
             'profiling': True,
-            'restart file':None,
+            'restart file': None,
 
             'gamma': 1.666666,
             'density unit': 1.0,
@@ -54,8 +64,8 @@ class Problem:
 
             'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
-            'riemann': 'tvdlf',
-            'reconstruction': 'flat',
+            'riemann': 'hll',
+            'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'Euler',
             'method': 'hydro',
@@ -80,7 +90,7 @@ class Problem:
         V[vx2, region_1] = 1.206
         V[prs, region_1] = 0.029
 
-        V[rho, region_2] =  0.5323
+        V[rho, region_2] = 0.5323
         V[vx1, region_2] = 1.206
         V[vx2, region_2] = 0.0
         V[prs, region_2] = 0.3
@@ -94,7 +104,6 @@ class Problem:
         V[vx1, region_4] = 0.0
         V[vx2, region_4] = 0.0
         V[prs, region_4] = 1.5
-
 
     def internal_bc():
         return None

@@ -1,5 +1,14 @@
+
+"""
+Docstring.
+"""
+
+import sys
+sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/')
+
 from mars import main_loop
-from mars.settings import *
+from mars.settings import rho, prs, vx1, vx2, vx3
 import numpy as np
 
 
@@ -28,7 +37,7 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name': 'Spherical blast wave.',
+            'Name': 'Spherical blast wave',
 
             'Dimensions': '2D',
 
@@ -42,7 +51,7 @@ class Problem:
             'initial t': 0.0,
             'max time': 3.0e-1,
 
-            'save frequency': 3.0e-2,
+            'save interval': 3.0e-2,
             'output type': ['vtk'],
             'output primitives': True,
             'print to file': False,
@@ -54,9 +63,9 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 1, 1],
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
-            'riemann': 'tvdlf',
+            'riemann': 'hll',
             'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
@@ -68,12 +77,16 @@ class Problem:
 
     def initialise(self, V, g):
 
+        x0 = np.array(g.x[0], dtype=np.float64)
+        x1 = np.array(g.x[1], dtype=np.float64)
+
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
+            Y, X = np.meshgrid(x0, x1, indexing='ij')
             R = np.sqrt(X*X + Y*Y)
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x[0], g.x[1], g.x[2], indexing='ij')
+            x2 = np.array(g.x[2], dtype=np.float64)
+            Z, Y, X = np.meshgrid(x0, x1, x2, indexing='ij')
             R = np.sqrt(X*X + Y*Y + Z*Z)
 
         V[vx1:] = 0.0

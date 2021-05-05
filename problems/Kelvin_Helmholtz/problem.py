@@ -4,12 +4,12 @@ Docstring.
 """
 
 import sys
-sys.path.append('/home/simon/Work/Personal_projects/Mars/mars/mars/')
-sys.path.append('/home/simon/Work/Personal_projects/Mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/')
 
 from mars import main_loop
-import numpy as np
 from mars.settings import rho, prs, vx1, vx2, vx3
+import numpy as np
 
 
 class Problem:
@@ -37,7 +37,7 @@ class Problem:
 
     def __init__(self):
         self.parameter = {
-            'Name': 'Kelvin Helmholtz instability.',
+            'Name': 'Kelvin Helmholtz instability',
 
             'Dimensions': '2D',
 
@@ -51,7 +51,7 @@ class Problem:
             'initial t': 0.0,
             'max time': 10.0,
 
-            'save frequency': 2.5e-2,
+            'save interval': 2.5e-2,
             'output type': ['vtk'],
             'output primitives': True,
             'print to file': False,
@@ -63,7 +63,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 4, 2],
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
             'riemann': 'hll',
             'reconstruction': 'linear',

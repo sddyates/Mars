@@ -1,5 +1,14 @@
+
+"""
+Docstring.
+"""
+
+import sys
+sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
+sys.path.append('/home/simon/Work/Programs/Mars/mars/')
+
 from mars import main_loop
-from mars.settings import *
+from mars.settings import rho, prs, vx1, vx2, vx3
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,16 +36,6 @@ class Problem:
             'Name': 'Advection',
 
             'Dimensions': '1D',
-            'x1 min': 0.0,
-            'x1 max': 4.0*np.pi,
-            'x2 min': 0.0,
-            'x2 max': 1.0,
-            'x3 min': 0.0,
-            'x3 max': 1.0,
-
-            'resolution x1': 1024,
-            'resolution x2': 1,
-            'resolution x3': 1,
 
             'min': [0.0, 0.0, 0.0],
             'max': [1.0, 1.0, 4.0*np.pi],
@@ -45,36 +44,40 @@ class Problem:
             'cfl': 0.6,
             'initial dt': 1.0e-4,
             'max dt increase': 1.0,
+            'initial t': 0.0,
             'max time': 1.0,
 
-            'plot frequency': 1.0e-1,
+            'save interval': 1.0e-1,
+            'output type': ['vtk'],
+            'output primitives': True,
             'print to file': False,
             'profiling': True,
+            'restart file': None,
 
             'gamma': 1.666666,
             'density unit': 1.0,
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 1, 1],
+            'mpi decomposition': [1, 1, 4],
             'optimisation': 'numba',
-            'riemann': 'hllc',
-            'reconstruction': 'flat',
+            'riemann': 'hll',
+            'reconstruction': 'linear',
             'limiter': 'minmod',
             'time stepping': 'RK2',
             'method': 'hydro',
 
             'boundaries': ['outflow', 'outflow', 'reciprocal'],
             'internal boundary': False
-
-            'internal boundary': False
         }
 
     def initialise(self, V, g):
 
+        x0 = np.array(g.x[0], dtype=np.float64)
+
         V[prs, :] = 2.0
         V[vx1, :] = 4.0*np.pi
-        V[rho, :] = np.sin(g.x[2]) + 4.0
+        V[rho, :] = np.sin(x0) + 4.0
 
         return
 
@@ -85,16 +88,16 @@ class Problem:
 if __name__ == "__main__":
 
     p = Problem()
-    main_loop(p)
-    '''
+    # main_loop(p)
+
     resol = np.logspace(np.log10(8), np.log10(1024), 10, dtype=np.int32, endpoint=True)
-    #resol = np.linspace(8, 1024, 10, dtype=np.int32, endpoint=True)
+    resol = np.linspace(8, 1024, 10, dtype=np.int32, endpoint=True)
     error1 = []
     error2 = []
     for (recon, error) in zip(['linear', 'flat'], [error1, error2]):
         p.parameter['reconstruction'] = recon
         for res in resol:
-            p.parameter['resolution x1'] = res
+            p.parameter['resolution'] = [1, 1, res]
             U = main_loop(p)
             V2 = np.zeros_like(U[rho])
             V2 = np.sin(grid.x1) + 4.0
@@ -105,9 +108,8 @@ if __name__ == "__main__":
     ax1.loglog(resol, error2, 'C1o-', label='flat')
     ax1.set_xlabel(r'Resolution')
     ax1.set_ylabel(r'Error')
-    #ax1.set_yscale('log')
-    #ax1.set_ylim(1.0e-2, 1.0e+1)
+    # ax1.set_yscale('log')
+    # ax1.set_ylim(1.0e-2, 1.0e+1)
     plt.legend()
-    plt.savefig(f'output/error_sin.png')
+    plt.savefig('output/error_sin.png')
     plt.close()
-    '''

@@ -1,4 +1,8 @@
 
+"""
+Docstring.
+"""
+
 import sys
 sys.path.append('/home/simon/Work/Programs/Mars/mars/mars/')
 sys.path.append('/home/simon/Work/Programs/Mars/mars/')
@@ -6,7 +10,6 @@ sys.path.append('/home/simon/Work/Programs/Mars/mars/')
 from mars import main_loop
 from mars.settings import rho, prs, vx1, vx2, vx3
 import numpy as np
-import sys
 
 
 class Problem:
@@ -36,11 +39,11 @@ class Problem:
         self.parameter = {
             'Name': 'Shock Cloud',
 
-            'Dimensions': '3D',
+            'Dimensions': '2D',
 
             'min': [0.0, 0.0, 0.0],
             'max': [1.0, 1.0, 1.0],
-            'resolution': [128, 128, 128],
+            'resolution': [1, 512, 512],
 
             'cfl': 0.3,
             'initial dt': 1.0e-6,
@@ -48,7 +51,7 @@ class Problem:
             'initial t': 0.0,
             'max time': 1.0e-1,
 
-            'save interval': 1.0e-6,
+            'save interval': 1.0e-2,
             'output type': ['vtk', 'h5'],
             'output primitives': True,
             'print to file': False,
@@ -60,7 +63,7 @@ class Problem:
             'length unit': 1.0,
             'velocity unit': 1.0,
 
-            'mpi decomposition': [1, 2, 1],
+            'mpi decomposition': [1, 2, 2],
             'optimisation': 'numba',
             'riemann': 'hll',
             'reconstruction': 'linear',
@@ -78,26 +81,32 @@ class Problem:
         y_shift = 0.5
         z_shift = 0.5
 
+        x0 = np.array(g.x[0], dtype=np.float64)
+        x1 = np.array(g.x[1], dtype=np.float64)
+
         if self.parameter['Dimensions'] == '2D':
-            Y, X = np.meshgrid(g.x[0], g.x[1], indexing='ij')
-            R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2)
+            Y, X = np.meshgrid(x0, x1, indexing='ij')
+            R = np.sqrt((X - x_shift)**2.0 + (Y - y_shift)**2.0)
 
         if self.parameter['Dimensions'] == '3D':
-            Z, Y, X = np.meshgrid(g.x[0], g.x[1], g.x[2], indexing='ij')
-            R = np.sqrt((X - x_shift)**2 + (Y - y_shift)**2 + (Z - z_shift)**2)
+            x2 = np.array(g.x[2], dtype=np.float64)
+            Z, Y, X = np.meshgrid(x0, x1, x2, indexing='ij')
+            R = np.sqrt((X - x_shift)**2.0 + (Y - y_shift)**2.0 + (Z - z_shift)**2.0)
 
         shock = 0.6
         V[rho, X < shock] = 3.86859
         V[prs, X < shock] = 167.345
         V[vx1, X < shock] = 0.0
         V[vx2, X < shock] = 0.0
-        V[vx3, X < shock] = 0.0
+        if self.parameter['Dimensions'] == '3D':
+            V[vx3, X < shock] = 0.0
 
         V[rho, X > shock] = 1.0
         V[prs, X > shock] = 1.0
         V[vx1, X > shock] = -11.2536
         V[vx2, X > shock] = 0.0
-        V[vx3, X > shock] = 0.0
+        if self.parameter['Dimensions'] == '3D':
+            V[vx3, X < shock] = 0.0
 
         cloud = 0.15
         V[rho, R < cloud] = 10.0

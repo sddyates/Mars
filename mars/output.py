@@ -242,7 +242,7 @@ class OutputInput:
         rank = grid.decomp.Get_rank()
 
         if grid.ndims == 2:
-            sendbuf = A[: grid.gz:-grid.gz].copy()
+            sendbuf = A[:, grid.gz:-grid.gz].copy()
             recv_shape = [size, sendbuf.shape[0], sendbuf.shape[1]]
         if grid.ndims == 3:
             sendbuf = A[:, grid.gz:-grid.gz, grid.gz:-grid.gz].copy()
