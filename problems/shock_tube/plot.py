@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+from tqdm import tqdm
 from settings import *
 
 
 def line_plot():
 
-    for num in range(0, 11):
+    for num in tqdm(range(0, len(os.listdir('output/1D/')))):
 
         f, ax1 = plt.subplots()
 
@@ -23,7 +25,13 @@ def line_plot():
         ax1.set_xlabel(r'$x$')
         ax1.set_ylabel(r'$\rho, p, v_{x1}$')
 
+        ax1.set_ylim(-0.1, 1.1)
+
         plt.legend()
+
+        if not os.path.isdir(f'output/plots'):
+            os.makedirs(f'output/plots')
+
         plt.savefig(f'output/plots/line_{num:04}.png')
         plt.close()
 

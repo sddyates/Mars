@@ -40,9 +40,9 @@ class Problem:
             'initial dt': 1.0e-5,
             'max dt increase': 1.5,
             'initial t': 0.0,
-            'max time': 1.0,
+            'max time': 5.0,
 
-            'save frequency': 1.0e-1,
+            'save frequency': 1.0e-2,
             'output primitives': True,
             'output type': ['numpy'],
             'print to file': False,
